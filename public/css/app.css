@@ -1,0 +1,22 @@
+
+/* =====  BASE =====  */
+@import url('./base/global.css');
+
+
+
+/* =====  COMPONENTS =====  */
+@import url('./components/tables.css');
+@import url('./components/ui.css');
+
+
+
+/* =====  LAYOUT =====  */
+@import url('./layout/header.css');
+@import url('./layout/navbar.css');
+@import url('./layout/sidebar.css');
+
+
+
+/* =====  PAGE =====  */
+@import url('./pages/dashboard.css');
+@import url('./pages/login.css');

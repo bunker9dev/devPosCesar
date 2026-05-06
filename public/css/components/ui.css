@@ -1,0 +1,66 @@
+/* ===== ALERTS ===== */
+.alert {
+    padding: 10px;
+    margin: 10px 0;
+    border-left: 4px solid red;
+    background: rgba(255,0,0,0.1);
+}
+
+
+
+/* ===== CARDS ===== */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.card {
+    background: #0b1f2e;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,255,255,0.1);
+    box-shadow: 0 0 15px rgba(0,255,255,0.05);
+}
+
+
+/* ===== RESPONSIVE ===== */
+@media(max-width: 900px){
+    .cards {
+        grid-template-columns: repeat(2,1fr);
+    }
+  
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #7aa8c4;
+}
+
+.card h1 {
+    margin-top: 10px;
+}
+
+
+/* ===== GRID ===== */
+.grid {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width: 900px){
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ===== PANEL ===== */
+.panel {
+    background: #0b1f2e;
+    padding: 20px;
+    border-radius: 12px;
+}

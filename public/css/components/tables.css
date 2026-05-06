@@ -1,0 +1,10 @@
+/* ===== TABLE ===== */
+.table {
+    margin-top: 20px;
+}
+
+.table div {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+}
