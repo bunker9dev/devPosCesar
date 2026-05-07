@@ -13,9 +13,7 @@
 
     <div class="container">
 
-        
-        
-    
+        <?php require $content; ?>
 
     </div>
 

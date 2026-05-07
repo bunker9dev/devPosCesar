@@ -1,8 +1,8 @@
 <aside class="sidebar">
     <ul>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/usuarios">Usuarios</a></li>
-        <li><a href="/proveedores">Proveedores</a></li>
-        <li><a href="/productos">Productos</a></li>
+        <li><a href="<?= BASE_URL ?>/dashboard">Dashboard</a></li>
+        <li><a href="<?= BASE_URL ?>/usuarios">Usuarios</a></li>
+        <li><a href="<?= BASE_URL ?>/proveedores">Proveedores</a></li>
+        <li><a href="<?= BASE_URL ?>/productos">Productos</a></li>
     </ul>
 </aside>

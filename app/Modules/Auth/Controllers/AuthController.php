@@ -1,6 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../../../core/Controller.php';
+namespace App\Modules\Auth\Controllers;
+
+use App\Core\Controller;
 
 class AuthController extends Controller
 {
@@ -8,10 +10,12 @@ class AuthController extends Controller
     // Mostrar formulario de login
     public function index()
     {
-        $this->view(
-            __DIR__ . '/../Views/login.php',
-            ["title" => "Login"],
-            "auth" // 👈 usa layout de login (sin sidebar)
+        $this->render(
+            'Modules/Auth/Views/login',
+            [
+                'title' => 'Login'
+            ],
+            'mainLogin'
         );
     }
 
@@ -28,14 +32,15 @@ class AuthController extends Controller
             header("Location: " . BASE_URL . "/dashboard");
             exit;
         } else {
-            $this->view(
-                __DIR__ . '/../Views/login.php',
+            $this->render(
+                'Modules/Auth/Views/login',
                 [
                     "title" => "Login",
                     "error" => "Usuario o contraseña incorrectos"
                 ],
-                "auth"
+                "mainLogin"
             );
+
         }
     }
 }
