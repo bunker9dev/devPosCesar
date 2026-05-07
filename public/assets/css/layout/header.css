@@ -1,0 +1,68 @@
+/* ===== HEADER ===== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.search {
+    padding: 10px;
+    width: 300px;
+    background: #0b1f2e;
+    border: none;
+    border-radius: 8px;
+    color: white;
+}
+/* CONTENEDOR PRINCIPAL */
+.header2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px ;
+    
+}
+
+/* LADO IZQUIERDO */
+.header-left h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+/* LADO DERECHO */
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+/* BREADCRUMB */
+.breadcrumb {
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+}
+
+/* SEPARADOR */
+.breadcrumb li::after {
+    content: "/";
+    margin-left: 8px;
+    color: #888;
+}
+
+.breadcrumb li:last-child::after {
+    content: "";
+}
+
+/* LINK */
+.breadcrumb a {
+    text-decoration: none;
+    color: #00f7ff;
+}
+
+/* ACTIVO */
+.breadcrumb .active {
+    color: #aaa;
+}

@@ -1,5 +1,5 @@
 {
-    "name": "arenas/devposcesar",
+    "name": "arenas/devposcesar_d",
     "autoload": {
         "psr-4": {
             "App\\": "app/"

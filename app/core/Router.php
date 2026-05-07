@@ -18,7 +18,7 @@ class Router
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
         // quitar base del proyecto
-        $uri = str_replace('/DEVPOSCESAR/public', '', $uri);
+        $uri = str_replace('/DEVPOSCESAR_D/public', '', $uri);
 
         // limpiar slash final
         $uri = rtrim($uri, '/') ?: '/';
@@ -34,7 +34,7 @@ class Router
         list($controller, $method) = explode('@', $action);
 
         // 🔥 ESTA LÍNEA ES CLAVE
-        $controller = "App\\Modulos\\" . $controller;
+        $controller = "App\\Modules\\" . $controller;
 
         $controllerInstance = new $controller();
 
