@@ -11,7 +11,17 @@
 
 <body>
 
-<?= $content ?>
+    <div class="container">
+
+        
+        
+    
+
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/index.js"></script>
 
 </body>
+
 </html>

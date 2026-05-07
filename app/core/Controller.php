@@ -3,24 +3,20 @@ namespace App\Core;
 
 class Controller {
 
-    protected function render($view, $data = []) {
+    protected function render($view, $data = [], $layout = 'main')
+{
+    $viewPath = __DIR__ . '/../' . $view . '.php';
 
-        // Validar que la vista exista
-        $viewPath = __DIR__ . '/../' . $view . '.php';
-
-        if (!file_exists($viewPath)) {
-            die("Vista no encontrada: " . $view);
-        }
-
-        // Convertir array a variables
-        extract($data);
-
-        // Pasar ruta de contenido al layout
-        $content = $viewPath;
-
-        // Cargar layout principal
-        require __DIR__ . '/../Views/layouts/main.php';
+    if (!file_exists($viewPath)) {
+        die("Vista no encontrada: " . $view);
     }
+
+    extract($data);
+
+    $content = $viewPath;
+
+    require __DIR__ . "/../Views/layouts/{$layout}.php";
+}
 
     protected function redirect($url) {
         header("Location: $url");
