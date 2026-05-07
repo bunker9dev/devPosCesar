@@ -1,5 +1,9 @@
 <?php
+
+session_start();
+
 define('BASE_URL', '/devposcesar_d/public');
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\Router;
@@ -12,3 +16,4 @@ require __DIR__ . '/../app/Routes/web.php';
 
 // 🔥 3. Ejecutar rutas
 $router->dispatch();
+

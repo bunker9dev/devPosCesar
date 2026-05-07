@@ -7,6 +7,12 @@ class DashboardController extends Controller {
 
     public function index() {
 
+        // 🔐 Validación 
+        if(!isset($_SESSION['user'])){
+            header("Location: " . BASE_URL . "/login");
+            exit;
+        }
+
         $data = [
             'stock' => 8450,
             'activos' => 1250,
@@ -15,11 +21,8 @@ class DashboardController extends Controller {
             'title' => 'devPosSoho'
         ];
 
+
         $this->render('Modules/Dashboard/Views/index', $data);
     }
 
-//     public function index() {
-//     echo "OK CONTROLLER FUNCIONANDO";
-//     die();
-// }
 }
