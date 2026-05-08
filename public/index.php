@@ -2,7 +2,7 @@
 
 session_start();
 
-define('BASE_URL', '/devposcesar_d/public');
+define('BASE_URL', '/DEVPOSCESAR_D/public');
 
 require __DIR__ . '/../vendor/autoload.php';
 
