@@ -1,11 +1,111 @@
-.login-container {
-    height: 100vh;
+/* ===== CONTENEDOR PRINCIPAL ===== */
+
+
+.login_container {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    height: 100vh;
+    background: var(--bg);
+    width: 100%;
 }
 
-.login-box {
+.login_image {
+    flex: 2;
+    overflow: hidden;
+    display: flex;
+}
+
+/* IMAGEN */
+.login_image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* DERECHA  */
+.login_form {
+    flex: 1;
+    background: var(--bg);
+    color: var(--text-prim);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 40px;
+}
+
+/* FORM */
+.login_form form {
     width: 300px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* INPUTS */
+.login_form input {
+    padding: 10px;
+    border: 1px solid var(--border-glow);
+    outline: none;
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+    color: var(--text-prim);
+}
+
+/* BOTÓN */
+.login_form button {
+    padding: 10px;
+    background: var(--primary);
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius);
+    color: #000;
+    transition: 0.3s;
+}
+
+.login_form button:hover {
+    background: var(--primary-hover);
+}
+
+/* TEXTO ERROR */
+.login_error {
+    color: var(--danger);
+    font-size: 14px;
+}
+
+/* ===== TABLET ===== */
+@media (max-width: 1024px) {
+    .login_container {
+        flex-direction: column;
+    }
+
+    .login_image {
+        flex: none;
+        height: 40%;
+    }
+
+    .login_form {
+        flex: none;
+        height: 60%;
+    }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+    .login_image {
+        display: none; /* ocultamos imagen */
+    }
+
+    .login_form {
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+    }
+
+    .login_form form {
+        width: 100%;
+    }
 }

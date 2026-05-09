@@ -9,7 +9,7 @@
    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/app.css">
 </head>
 
-<body>
+<body class="login_body">
 
     <div class="container">
 

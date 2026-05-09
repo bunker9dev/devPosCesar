@@ -1,24 +1,30 @@
 
-/* ===== vARIABLES ===== */
+/* ===== VARIABLES ===== */
 :root {
+  /* BASE */
   --bg: #050b12;
   --bg-sider: #081520;
-  --right: #00ffff1a;
+  --bg-soft: #0a1622;
 
-  /* TEXTO*/
+  /* EFECTOS */
+  --right: #00ffff1a;         /* fondo suave */
+  --border-glow: #00ffff33;   /* borde suave */
+
+  /* COLORES PRINCIPALES */
+  --primary: #00ffff;
+  --primary-hover: #00e6e6;
+
+  /* TEXTO */
   --text-prim: #e6f1ff;
   --text-sidebar: #00f7ff;
   --text-white: #ffffff;
+  --text-muted: #8aa0b5;
 
+  /* ESTADOS */
+  --danger: #ff4d4d;
 
-/*   
-  --primary: #667eea;
-  --secondary: #764ba2;
-  --success: #28a745;
-  --danger: #dc3545;
-  --gray: #f5f5f5;
-
-  --radius: 8px; */
+  /* UI */
+  --radius: 8px;
 }
 
 
@@ -39,12 +45,13 @@ body {
   background: var(--bg);
   color: var(--text-prim);
   display: flex;
-  max-width: 2000px;
+  
 }
 
 .container {
   display: flex;
   width: 100%;
+  max-width: 2000px;
 }
 
 /* ===== MAIN ===== */
