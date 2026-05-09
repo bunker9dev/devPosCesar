@@ -16,7 +16,7 @@
         <?php require __DIR__ . '/../partials/sidebar.php'; ?>
         <div class="main">
             <?php require __DIR__ . '/../partials/header.php'; ?>
-            <?php require $content; ?>
+            <?= $content ?>
         </div>
 
     </div>

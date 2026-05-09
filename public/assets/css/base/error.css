@@ -1,0 +1,95 @@
+/* ===== ERROR 404  ===== */
+.error_body {
+    background: #050b12;
+    color: #e6f1ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.error_div {
+    text-align: center;
+}
+
+.error_div h1 {
+    font-size: 64px;
+    margin-bottom: 10px;
+}
+
+.error_div h2 {
+    margin-bottom: 10px;
+}
+
+.error_div a {
+    display: inline-block;
+    padding-top: 20px;
+    color: #00ffff;
+    text-decoration: none;
+}
+
+.error_div a:hover {
+    
+    color: #36b0b0;
+    
+}
+
+/* ===== ERROR 500 TERMINAL ===== */
+
+.error_terminal {
+    background: #000;
+    color: #00ff9f;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Courier New", monospace;
+}
+
+.error_terminal_window {
+    width: 500px;
+    max-width: 90%;
+    padding: 20px;
+    border: 1px solid #00ff9f;
+    box-shadow: 0 0 15px #00ff9f;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.error_terminal_window p {
+    margin: 5px 0;
+}
+
+.error_prompt {
+    color: #00ffff;
+}
+
+.error_line {
+    color: #ff4d4d;
+}
+
+/* cursor parpadeante */
+.error_blink {
+    animation: error_blink_anim 1s infinite;
+}
+
+@keyframes error_blink_anim {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0; }
+}
+
+/* botón */
+.error_btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 6px 12px;
+    border: 1px solid #00ff9f;
+    color: #00ff9f;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.error_btn:hover {
+    background: #00ff9f;
+    color: #000;
+    box-shadow: 0 0 10px #00ff9f;
+}

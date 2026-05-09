@@ -1,6 +1,7 @@
 
 /* =====  BASE =====  */
 @import url('./base/global.css');
+@import url('./base/error.css');
 
 
 
@@ -20,3 +21,4 @@
 /* =====  PAGE =====  */
 @import url('./pages/dashboard.css');
 @import url('./pages/login.css');
+
