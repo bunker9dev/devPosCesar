@@ -32,15 +32,10 @@ class AuthController extends Controller
             header("Location: " . BASE_URL . "/dashboard");
             exit;
         } else {
-            $this->render(
-                'Modules/Auth/Views/login',
-                [
-                    "title" => "Login",
-                    "error" => "Usuario o contraseña incorrectos"
-                ],
-                "mainLogin"
-            );
+            $_SESSION['error'] = "Usuario o contraseña incorrectos";
 
+            header("Location: " . BASE_URL . "/login");
+            exit;
         }
     }
 }

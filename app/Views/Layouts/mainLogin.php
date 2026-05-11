@@ -17,9 +17,10 @@
 
     </div>
 
-    <script src="/js/app.js"></script>
-    <script src="/js/index.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/app.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/index.js"></script>
 
+    <script src="<?= BASE_URL ?>/assets/js/login.js"></script>
 </body>
 
 </html>
