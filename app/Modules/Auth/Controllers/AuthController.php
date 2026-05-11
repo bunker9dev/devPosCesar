@@ -38,4 +38,33 @@ class AuthController extends Controller
             exit;
         }
     }
+
+    public function logout()
+{
+    // Destruir variables de sesión
+    $_SESSION = [];
+
+    // Destruir cookie de sesión (muy importante)
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
+        );
+    }
+
+    // Destruir sesión
+    session_destroy();
+
+    // Redirigir
+    header("Location: " . BASE_URL . "/login");
+    exit;
+}
+
+
 }

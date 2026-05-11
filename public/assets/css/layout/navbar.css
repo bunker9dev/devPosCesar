@@ -1,0 +1,107 @@
+/* ===== NAV ===== */
+.nav {
+  width: 100%;
+  height: 60px;
+  background: var(--bg-sider);
+  border-bottom: 1px solid var(--border-glow);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 20px;
+}
+
+/* IZQUIERDA */
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
+/* BOTÓN MENU */
+.nav-toggle {
+  font-size: 20px;
+  background: none;
+  border: none;
+  color: var(--text-prim);
+  cursor: pointer;
+}
+
+/* DERECHA */
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+/* USUARIO */
+.nav-user {
+  position: relative;
+}
+
+/* TRIGGER */
+.nav-user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* AVATAR */
+.nav-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border-glow);
+  object-fit: cover;
+}
+
+/* NOMBRE */
+.nav-username {
+  color: var(--text-prim);
+  font-size: 14px;
+}
+
+/* DROPDOWN */
+.nav-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+
+  background: var(--bg-soft);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius);
+
+  min-width: 150px;
+  padding: 10px;
+
+  display: none;
+  flex-direction: column;
+}
+
+/* ACTIVO */
+.nav-dropdown.active {
+  display: flex;
+}
+
+/* LINK */
+.nav-dropdown a {
+  color: var(--text-prim);
+  text-decoration: none;
+  padding: 8px;
+  border-radius: var(--radius);
+  transition: 0.2s;
+}
+
+/* HOVER */
+.nav-dropdown a:hover {
+  background: var(--right);
+}
+
+/* LOGOUT */
+.nav-logout {
+  color: var(--danger);
+}
+
+.nav-logout:hover {
+  color: #ff6666;
+}

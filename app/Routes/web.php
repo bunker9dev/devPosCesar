@@ -11,3 +11,6 @@ $router->get('/login', 'Auth\\Controllers\\AuthController@index');
 
 // PROCESAR LOGIN
 $router->post('/auth/login', 'Auth\\Controllers\\AuthController@login');
+
+//SALIR
+$router->get('/logout', 'Auth\\Controllers\\AuthController@logout');
