@@ -2,7 +2,7 @@
 
 session_start();
 
-define('BASE_URL', '/DEVPOSCESAR_D/public');
+define('BASE_URL', (isset($_SERVER['HTTPS']) ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']);
 
 require __DIR__ . '/../vendor/autoload.php';
 

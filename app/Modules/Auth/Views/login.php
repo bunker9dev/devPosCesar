@@ -1,7 +1,7 @@
 <div class="login_container">
 <!-- IZQUIERDA: IMAGEN -->
     <div class="login_image">
-        <img src="<?= BASE_URL ?>/assets/img/login-bg3.png" alt="Login">
+        <img src="<?= BASE_URL ?>/assets/img/login-bg450x300.png" alt="Login">
     </div>
 
     <!-- DERECHA: FORM -->
