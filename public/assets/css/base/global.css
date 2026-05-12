@@ -1,4 +1,3 @@
-
 /* ===== VARIABLES ===== */
 :root {
   /* BASE */
@@ -7,8 +6,8 @@
   --bg-soft: #0a1622;
 
   /* EFECTOS */
-  --right: #00ffff1a;         /* fondo suave */
-  --border-glow: #00ffff33;   /* borde suave */
+  --right: #00ffff1a; 
+  --border-glow: #00ffff33; 
 
   /* COLORES PRINCIPALES */
   --primary: #00ffff;
@@ -21,13 +20,25 @@
   --text-muted: #8aa0b5;
 
   /* ESTADOS */
-  --danger: #ff4d4d;
-
+ --danger: #ff4d4d;             
+--danger-strong: #ff6666; 
+--danger-bg: rgba(255, 77, 77, 0.15);
+--danger-border: rgba(255, 77, 77, 0.4);
+;
   /* UI */
   --radius: 8px;
+  /* BOTONES */
+  --btn-text-dark: #000000;
+
+  /* BADGES */
+  --success: #00ffcc;
+  --success-bg: #00ff9633;
+
+   /* TABLAS */
+  --table-header-th: #0d4061;
+  --table-header-bg: #071a26;
+  --table-header-border: #00ffff33;
 }
-
-
 
 /* ===== RESET ===== */
 * {
@@ -37,15 +48,12 @@
   font-family: "Segoe UI", sans-serif;
 }
 
-
-
 /* ===== BODY ===== */
 
 body {
   background: var(--bg);
   color: var(--text-prim);
   display: flex;
-  
 }
 
 .container {
@@ -56,13 +64,12 @@ body {
 
 /* ===== MAIN ===== */
 .main {
-    flex: 1;
-    padding: 20px;
+  flex: 1;
+  padding: 20px;
 }
-
 
 /* ===== NEON EFFECT ===== */
 .neon {
-    color: #00f7ff;
-    text-shadow: 0 0 10px #00f7ff;
+  color: #00f7ff;
+  text-shadow: 0 0 10px #00f7ff;
 }

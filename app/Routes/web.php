@@ -1,16 +1,36 @@
 <?php
 
-// DASHBOARD
-$router->get('/dashboard', 'Dashboard\\Controllers\\DashboardController@index');
+// ==============================
+// AUTH
+// ==============================
 
-// HOME (puede ser dashboard o login)
+// HOME
 $router->get('/', 'Auth\\Controllers\\AuthController@index');
 
-// LOGIN (mostrar formulario)
+// LOGIN
 $router->get('/login', 'Auth\\Controllers\\AuthController@index');
-
-// PROCESAR LOGIN
 $router->post('/auth/login', 'Auth\\Controllers\\AuthController@login');
 
-//SALIR
+// LOGOUT
 $router->get('/logout', 'Auth\\Controllers\\AuthController@logout');
+
+
+// ==============================
+// DASHBOARD
+// ==============================
+
+$router->get('/dashboard', 'Dashboard\\Controllers\\DashboardController@index');
+
+
+// ==============================
+// USERS (ADMIN)
+// ==============================
+
+$router->get('/users', 'Users\\Controllers\\UsersController@index');
+$router->get('/users/create', 'Users\\Controllers\\UsersController@create');
+$router->post('/users/store', 'Users\\Controllers\\UsersController@store');
+
+$router->get('/users/edit', 'Users\\Controllers\\UsersController@edit'); // ?id=1
+$router->post('/users/update', 'Users\\Controllers\\UsersController@update');
+
+$router->get('/users/toggle', 'Users\\Controllers\\UsersController@toggle');

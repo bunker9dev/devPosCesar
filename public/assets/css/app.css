@@ -22,4 +22,5 @@
 /* =====  PAGE =====  */
 @import url('./pages/dashboard.css');
 @import url('./pages/login.css');
+@import url('./pages/user.css');
 
