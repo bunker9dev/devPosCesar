@@ -1,25 +1,47 @@
 <?php
+
 namespace App\Core;
 
-class Controller {
+class Controller
+{
 
     protected function render($view, $data = [], $layout = 'main')
-{
-    $viewPath = __DIR__ . '/../' . $view . '.php';
+    {
+        $viewPath = __DIR__ . '/../' . $view . '.php';
 
-    if (!file_exists($viewPath)) {
-        die("Vista no encontrada: " . $view);
+        if (!file_exists($viewPath)) {
+            die("Vista no encontrada: " . $view);
+        }
+
+        extract($data);
+
+        $content = $viewPath;
+
+        require __DIR__ . "/../Views/layouts/{$layout}.php";
     }
 
-    extract($data);
-
-    $content = $viewPath;
-
-    require __DIR__ . "/../Views/layouts/{$layout}.php";
-}
-
-    protected function redirect($url) {
+    protected function redirect($url)
+    {
         header("Location: $url");
         exit;
+    }
+
+    protected function auth()
+    {
+        if (empty($_SESSION['user'])) {
+            $this->redirect(BASE_URL . "/login");
+        }
+    }
+
+    protected function isAdmin()
+    {
+        return ($_SESSION['user']['rol'] ?? null) == 1;
+    }
+
+    protected function onlyAdmin()
+    {
+        if (!$this->isAdmin()) {
+            $this->redirect(BASE_URL . "/dashboard");
+        }
     }
 }
