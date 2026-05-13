@@ -34,3 +34,11 @@ $router->get('/users/edit', 'Users\\Controllers\\UsersController@edit'); // ?id=
 $router->post('/users/update', 'Users\\Controllers\\UsersController@update');
 
 $router->get('/users/toggle', 'Users\\Controllers\\UsersController@toggle');
+
+$router->post('/users/check-username', 'Users\\Controllers\\UsersController@checkUsername');
+
+// ==============================
+// AJAX
+// ==============================
+
+$router->post('/api/users/check-username', 'Users\\Controllers\\UsersController@checkUsername');

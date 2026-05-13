@@ -25,9 +25,11 @@
 
 /* ===== SUCCESS ===== */
 .alerta-success {
-  background: var(--success-bg);
-  border-color: var(--success-border);
+ background: var(--success-bg);
   color: var(--success);
+  padding: 10px;
+  border-radius: var(--radius);
+  margin-bottom: 15px;
 }
 
 /* ===== WARNING ===== */

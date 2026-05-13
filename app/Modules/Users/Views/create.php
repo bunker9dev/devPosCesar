@@ -2,7 +2,8 @@
 
     <div class="form-group">
         <label>Username</label>
-        <input name="username" placeholder="Username" required>
+        <input id="username" name="username" placeholder="Username" required>
+        <small class="input-msg"></small>
     </div>
 
     <div class="form-group">
@@ -16,14 +17,15 @@
     </div>
 
     <div class="form-group">
-        <label>Password</label>
-        <input type="password" name="password" placeholder="Password" required>
-    </div>
+    <label>Password</label>
+    <input id="password" type="password" name="password" required>
+    <small class="input-msg"></small>
+</div>
 
     <div class="form-group">
         <label>Rol</label>
         <select name="rol_id">
-            <?php foreach($roles as $r): ?>
+            <?php foreach ($roles as $r): ?>
                 <option value="<?= $r['id'] ?>">
                     <?= ucfirst($r['nombre']) ?>
                 </option>
@@ -37,3 +39,7 @@
     </div>
 
 </form>
+
+<!-- scritps para ajax -->
+ <script>window.BASE_URL = "<?= BASE_URL ?>";</script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-create.js"></script>

@@ -22,8 +22,21 @@
 
     </div>
 
+    <!-- 🔥 TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- 🔥 FLASH DESDE PHP -->
+    <script>
+        window.APP_FLASH = {
+            success: <?= json_encode($_SESSION['success'] ?? null) ?>,
+            error: <?= json_encode($_SESSION['error'] ?? null) ?>
+        };
+    </script>
+
+    <?php unset($_SESSION['success'], $_SESSION['error']); ?>
+
     <script type="module" src="<?= BASE_URL ?>/assets/js/core/app.js"></script>
-  
+
 
 </body>
 
