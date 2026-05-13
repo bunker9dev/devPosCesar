@@ -76,20 +76,3 @@
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0; }
 }
-
-/* botón */
-.error_btn {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 6px 12px;
-    border: 1px solid #00ff9f;
-    color: #00ff9f;
-    text-decoration: none;
-    transition: 0.3s;
-}
-
-.error_btn:hover {
-    background: #00ff9f;
-    color: #000;
-    box-shadow: 0 0 10px #00ff9f;
-}

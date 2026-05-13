@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Sistema POS' ?></title>
+    <title>SISTEMA POS CESAR</title>
     <!-- <title>devCesar</title> -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/app.css">
 </head>

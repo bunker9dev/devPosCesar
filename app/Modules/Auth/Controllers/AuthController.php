@@ -10,7 +10,8 @@ class AuthController extends Controller
     // Mostrar formulario de login
     public function index()
     {
-           // Si ya está logueado → redirigir
+
+        // Si ya está logueado → redirigir
         if (!empty($_SESSION['user'])) {
             $this->redirect(BASE_URL . "/dashboard");
         }
@@ -25,76 +26,163 @@ class AuthController extends Controller
     }
 
     // 🔐 PROCESAR LOGIN REAL + AUDITORÍA
+    // public function login()
+    // {
+    //     global $db;
+
+    //     // ✔️ Evitar login si ya está autenticado
+    //     if (!empty($_SESSION['user'])) {
+    //         $this->redirect(BASE_URL . "/dashboard");
+    //     }
+
+    //     $username = strtolower($_POST['user'] ?? '');
+    //     $pass = $_POST['pass'] ?? '';
+
+    //     // 🔎 Buscar usuario
+    //     $stmt = $db->prepare("SELECT * FROM usuarios WHERE username = ? LIMIT 1");
+    //     $stmt->bind_param("s", $username);
+    //     $stmt->execute();
+
+    //     $result = $stmt->get_result();
+    //     $usuario = $result->fetch_assoc();
+
+    //     // Usuario no existe
+    //     if (!$usuario) {
+    //         auditoria("LOGIN_FAIL", "usuarios", null, "Usuario no encontrado: $username");
+
+    //         $_SESSION['error'] = "Usuario o contraseña incorrectos";
+    //         header("Location: " . BASE_URL . "/login");
+    //         exit;
+    //     }
+
+    //     // Password incorrecto
+    //     if (!password_verify($pass, $usuario['password'])) {
+    //         auditoria("LOGIN_FAIL", "usuarios", $usuario['id'], "Password incorrecto");
+
+    //         $_SESSION['error'] = "Usuario o contraseña incorrectos";
+    //         header("Location: " . BASE_URL . "/login");
+    //         exit;
+    //     }
+
+    //     // Usuario inactivo
+    //     if ($usuario['estado'] == 0) {
+    //         auditoria("LOGIN_BLOCKED", "usuarios", $usuario['id'], "Usuario inactivo");
+
+    //         $_SESSION['error'] = "Usuario inactivo";
+    //         header("Location: " . BASE_URL . "/login");
+    //         exit;
+    //     }
+
+    //     // LOGIN EXITOSO
+    //     $_SESSION['user'] = [
+    //         'id' => $usuario['id'],
+    //         'username' => $usuario['username'],
+    //         'rol' => $usuario['rol_id']
+    //     ];
+
+    //     auditoria("LOGIN", "usuarios", $usuario['id'], "Inicio de sesión exitoso");
+
+    //     header("Location: " . BASE_URL . "/dashboard");
+    //     exit;
+    // }
+
     public function login()
     {
+        // var_dump($_SERVER['REQUEST_METHOD']);
+        // die("ENTRÓ AL LOGIN");
+
         global $db;
 
-         // ✔️ Evitar login si ya está autenticado
-        if (!empty($_SESSION['user'])) {
-            $this->redirect(BASE_URL . "/dashboard");
+        if (!$db) {
+            die("Error: no hay conexión a BD");
         }
 
         $username = strtolower($_POST['user'] ?? '');
         $pass = $_POST['pass'] ?? '';
 
-        // 🔎 Buscar usuario
-        $stmt = $db->prepare("SELECT * FROM usuarios WHERE username = ? LIMIT 1");
+        $stmt = $db->prepare("
+            SELECT u.*, r.nombre AS rol_nombre 
+            FROM usuarios u
+            JOIN roles r ON u.rol_id = r.id
+            WHERE u.username = ?
+            LIMIT 1
+        ");
+
+        if (!$stmt) {
+            die("Error en prepare: " . $db->error);
+        }
+
         $stmt->bind_param("s", $username);
         $stmt->execute();
 
         $result = $stmt->get_result();
+
+        if (!$result) {
+            die("Error en query");
+        }
+
         $usuario = $result->fetch_assoc();
 
-        // Usuario no existe
         if (!$usuario) {
-            auditoria("LOGIN_FAIL", "usuarios", null, "Usuario no encontrado: $username");
-
             $_SESSION['error'] = "Usuario o contraseña incorrectos";
             header("Location: " . BASE_URL . "/login");
             exit;
         }
 
-        // Password incorrecto
         if (!password_verify($pass, $usuario['password'])) {
-            auditoria("LOGIN_FAIL", "usuarios", $usuario['id'], "Password incorrecto");
-
             $_SESSION['error'] = "Usuario o contraseña incorrectos";
             header("Location: " . BASE_URL . "/login");
             exit;
         }
 
-        // Usuario inactivo
         if ($usuario['estado'] == 0) {
-            auditoria("LOGIN_BLOCKED", "usuarios", $usuario['id'], "Usuario inactivo");
-
             $_SESSION['error'] = "Usuario inactivo";
             header("Location: " . BASE_URL . "/login");
             exit;
         }
 
-        // LOGIN EXITOSO
         $_SESSION['user'] = [
             'id' => $usuario['id'],
             'username' => $usuario['username'],
-            'rol' => $usuario['rol_id']
+            'nombre' => $usuario['nombre'],
+            'apellido' => $usuario['apellido'],
+            'rol' => $usuario['rol_id'],
+            'rol_nombre' => $usuario['rol_nombre']
         ];
 
-        auditoria("LOGIN", "usuarios", $usuario['id'], "Inicio de sesión exitoso");
+        // PRUEBA 
+        // auditoria("TEST", "usuarios", 1, "PRUEBA DIRECTA", "auth");
+        // die("se ejecutó auditoría");
+
+        auditoria("LOGIN", "usuarios", $usuario['id'], "Inicio de sesión exitoso", "auth");
 
         header("Location: " . BASE_URL . "/dashboard");
         exit;
     }
 
-    // LOGOUT CON AUDITORÍA
+
+
+
+
+
+
     public function logout()
     {
-        if (!empty($_SESSION['user'])) {
-            auditoria("LOGOUT", "usuarios", $_SESSION['user']['id'], "Cierre de sesión");
+        // AUDITORÍA
+        if (!empty($_SESSION['user']) && isset($_SESSION['user']['id'])) {
+            auditoria(
+                "LOGOUT",
+                "usuarios",
+                $_SESSION['user']['id'],
+                "Usuario cerró sesión manualmente",
+                "auth"
+            );
         }
 
-        // Limpiar sesión
+        // limpiar sesión
         $_SESSION = [];
 
+        // eliminar cookie
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(
@@ -108,8 +196,10 @@ class AuthController extends Controller
             );
         }
 
+        // destruir sesión
         session_destroy();
 
+        // redirigir
         header("Location: " . BASE_URL . "/login");
         exit;
     }

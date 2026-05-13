@@ -1,26 +1,37 @@
 <?php
 
-function auditoria($accion, $tabla, $registro_id = null, $descripcion = null) {
+function auditoria($accion, $tabla, $registro_id = null, $descripcion = null, $modulo = null) {
 
     global $db;
 
-    $usuario_id = $_SESSION['user']['id'] ?? null;
-    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
-    $agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    if (!$db) return;
+
+    $usuario_id = $_SESSION['user']['id'] ?? 0;
+    $registro_id = $registro_id ?? 0;
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $modulo = $modulo ?? 'general';
 
     $stmt = $db->prepare("INSERT INTO auditoria 
-        (usuario_id, accion, tabla, registro_id, descripcion, ip, user_agent)
-        VALUES (?, ?, ?, ?, ?, ?, ?)");
+        (usuario_id, accion, tabla, registro_id, descripcion, ip, user_agent, modulo)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+    if (!$stmt) {
+        error_log("Error auditoria: " . $db->error);
+        return;
+    }
 
     $stmt->bind_param(
-        "ississs",
+        "ississss",
         $usuario_id,
         $accion,
         $tabla,
         $registro_id,
         $descripcion,
         $ip,
-        $agent
+        $agent,
+        $modulo
     );
 
     $stmt->execute();

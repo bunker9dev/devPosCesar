@@ -21,9 +21,8 @@
                 <?php endif; ?>
 
                 <span class="nav-username">
-                    <!-- <?= $_SESSION["nombre"] . " " . $_SESSION["apellido"] ?> -->
-                     Antonio Arenas
-
+                    <?= $_SESSION['user']['nombre'] . " " . $_SESSION['user']['apellido'] ?>
+                    <p><small>(<?= $_SESSION['user']['rol_nombre'] ?>)</small></p>
                 </span>
             </div>
 
