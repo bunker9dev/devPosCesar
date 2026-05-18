@@ -5,9 +5,10 @@
 </div>
 
 <div class="table-container">
-    <table class="table-users">
+    <table id="tablaUsuarios" class="table-users display nowrap" style="width:100%">
         <thead>
             <tr>
+                <th></th>
                 <th>ID</th>
                 <th>Usuario</th>
                 <th>Nombre</th>
@@ -20,21 +21,23 @@
         <tbody>
             <?php foreach ($users as $u): ?>
                 <tr>
+                    <th></th>
                     <td data-label="ID"><?= $u['id'] ?></td>
                     <td data-label="Usuario"><?= $u['username'] ?></td>
                     <td data-label="Nombre"><?= $u['nombre'] ?></td>
                     <td data-label="Rol"><?= $u['rol'] ?></td>
 
-                    <td data-label="Estado">
-                        <span class="badge <?= $u['estado'] ? 'active' : 'inactive' ?>">
+                    <<td data-label="Estado">
+                        <span
+                            class="badge estado-toggle <?= $u['estado'] ? 'active' : 'inactive' ?>"
+                            data-id="<?= $u['id'] ?>"
+                            data-estado="<?= $u['estado'] ?>">
                             <?= $u['estado'] ? 'Activo' : 'Inactivo' ?>
                         </span>
-                    </td>
-
-                    <td data-label="Acciones" class="actions">
-                        <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-edit">Editar</a>
-                        <a href="<?= BASE_URL ?>/users/toggle?id=<?= $u['id'] ?>" class="btn-toggle">Estado</a>
-                    </td>
+                        </td>
+                        <td data-label="Acciones" class="actions">
+                            <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-edit">Editar</a>
+                        </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>

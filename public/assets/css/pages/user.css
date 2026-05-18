@@ -27,7 +27,7 @@
 }
 
 .table-users thead {
-  background: var(--table-header-th);
+  background: var(--bg-button);
   border-bottom: 1px solid var(--table-header-border);
 }
 
@@ -53,21 +53,29 @@
 
 /* BADGES */
 .badge {
+  display: inline-block;
+  min-width: 90px;           /* 🔥 mismo ancho siempre */
+  text-align: center;
   padding: 4px 10px;
   border-radius: var(--radius);
-  font-size: 16px;
+  font-size: 14px;
+  box-sizing: border-box;    /* 🔥 incluye border en tamaño */
+  border: 1px solid transparent;
 }
 
+/* ACTIVO */
 .badge.active {
   background: var(--success-bg);
   color: var(--success);
 }
 
+/* INACTIVO */
 .badge.inactive {
   background: var(--danger-bg);
   color: var(--danger-strong);
-  border: 1px solid var(--danger-border);
-  box-shadow: 0 0 6px rgba(255, 77, 77, 0.2);
+
+  /* 🔥 sombra sin afectar tamaño */
+  box-shadow: inset 0 0 4px rgba(255, 77, 77, 0.3);
 }
 
 /* ACCIONES */
@@ -84,6 +92,28 @@
 .btn-toggle {
   color: var(--danger);
   text-decoration: none;
+}
+
+/* CLICK INTERACTIVO */
+.badge.estado-toggle {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* HOVER */
+.badge.estado-toggle:hover {
+  transform: scale(1.08);
+  opacity: 0.85;
+}
+
+/* CLICK (feedback) */
+.badge.estado-toggle:active {
+  transform: scale(0.95);
+}
+
+.badge.estado-toggle.loading {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 

@@ -34,4 +34,4 @@ toggle.addEventListener('click', () => {
 
 // #################################################            ################################################# 
 
-console.log("navbar funcionando");
+// console.log("navbar funcionando");

@@ -3,7 +3,7 @@
     <div class="form-group">
         <label>Username</label>
         <input id="username" name="username" placeholder="Username" required>
-        <small class="input-msg"></small>
+        <small id="username-msg" class="input-msg"></small>
     </div>
 
     <div class="form-group">
@@ -17,10 +17,10 @@
     </div>
 
     <div class="form-group">
-    <label>Password</label>
-    <input id="password" type="password" name="password" required>
-    <small class="input-msg"></small>
-</div>
+        <label>Password</label>
+        <input id="password" type="password" name="password" required>
+        <small id="password-msg" class="input-msg"></small>
+    </div>
 
     <div class="form-group">
         <label>Rol</label>
@@ -41,5 +41,7 @@
 </form>
 
 <!-- scritps para ajax -->
- <script>window.BASE_URL = "<?= BASE_URL ?>";</script>
+<script>
+    window.BASE_URL = "<?= BASE_URL ?>";
+</script>
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-create.js"></script>

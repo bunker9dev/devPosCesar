@@ -33,7 +33,7 @@ $router->post('/users/store', 'Users\\Controllers\\UsersController@store');
 $router->get('/users/edit', 'Users\\Controllers\\UsersController@edit'); // ?id=1
 $router->post('/users/update', 'Users\\Controllers\\UsersController@update');
 
-$router->get('/users/toggle', 'Users\\Controllers\\UsersController@toggle');
+
 
 $router->post('/users/check-username', 'Users\\Controllers\\UsersController@checkUsername');
 
@@ -42,3 +42,12 @@ $router->post('/users/check-username', 'Users\\Controllers\\UsersController@chec
 // ==============================
 
 $router->post('/api/users/check-username', 'Users\\Controllers\\UsersController@checkUsername');
+
+
+// ==============================
+// USER
+// ==============================
+
+
+use App\Modules\Users\Controllers\UserController;
+$router->post('/users/toggle', 'Users\\Controllers\\UsersController@toggle'); 

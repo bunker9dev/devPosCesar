@@ -185,29 +185,87 @@ class UsersController extends Controller
         return $this->redirect(BASE_URL . "/users");
     }
 
-    // 🔁 ACTIVAR / INACTIVAR
-    public function toggle()
-    {
-        $this->auth();
-        $this->onlyAdmin();
+ public function toggle()
+{
 
-        global $db;
+    // 🔥 Limpiar cualquier salida previa (evita romper JSON)
+    if (ob_get_length()) ob_clean();
 
-        $id = (int) ($_GET['id'] ?? 0);
+    header('Content-Type: application/json');
 
+    try {
+
+        // 🔹 Conexión (más seguro que global)
+        $db = conectarDB();
+
+        // 🔐 VALIDACIÓN SIN REDIRECT (AJAX)
+        if (!isset($_SESSION['user'])) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'No autenticado'
+            ]);
+            exit;
+        }
+
+        // 🔐 ROLES PERMITIDOS
+        if (!in_array($_SESSION['user']['rol'], [1,2])) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'No autorizado'
+            ]);
+            exit;
+        }
+
+        // 🔹 Datos desde JS
+        $id = $_POST['id'] ?? null;
+        $estado = $_POST['estado'] ?? null;
+
+        if (!$id) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'ID inválido'
+            ]);
+            exit;
+        }
+
+        // 🔹 Query
         $stmt = $db->prepare("
             UPDATE usuarios 
-            SET estado = IF(estado=1,0,1) 
+            SET estado = ? 
             WHERE id = ?
         ");
 
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+        if (!$stmt) {
+            throw new Exception($db->error);
+        }
 
-        auditoria("UPDATE", "usuarios", $id, "Cambio de estado", "users");
+        $stmt->bind_param("ii", $estado, $id);
 
-        return $this->redirect(BASE_URL . "/users");
+        if (!$stmt->execute()) {
+            throw new Exception($stmt->error);
+        }
+
+        // 🔹 Auditoría (opcional)
+        if (function_exists('auditoria')) {
+            auditoria("UPDATE", "usuarios", $id, "Cambio de estado", "users");
+        }
+
+        // ✅ RESPUESTA FINAL
+        echo json_encode([
+            'ok' => true
+        ]);
+        exit;
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            'ok' => false,
+            'error' => $e->getMessage()
+        ]);
+        exit;
     }
+}
+
 
     // 🔍 VALIDAR USERNAME (AJAX)
     public function checkUsername()
@@ -241,3 +299,236 @@ class UsersController extends Controller
         ]);
     }
 }
+
+
+// #######################################################################################################################################
+
+
+// namespace App\Modules\Users\Controllers;
+
+// use App\Core\Controller;
+
+// class UsersController extends Controller
+// {
+
+//     /* =========================================================
+//        🔐 VALIDACIÓN DE SESIÓN
+//        (Debe ser protected por herencia)
+//     ========================================================= */
+//     protected function auth()
+//     {
+//         if (!isset($_SESSION['user'])) {
+//             header("Location: " . BASE_URL . "/login");
+//             exit;
+//         }
+//     }
+
+//     /* =========================================================
+//        🔐 SOLO ADMIN
+//        (Debe ser protected por herencia)
+//     ========================================================= */
+//     protected function onlyAdmin()
+//     {
+//         if ($_SESSION['user']['rol'] !== 'admin') {
+//             header("Location: " . BASE_URL . "/dashboard");
+//             exit;
+//         }
+//     }
+
+//     /* =========================================================
+//        📄 LISTADO DE USUARIOS
+//     ========================================================= */
+//     public function index()
+//     {
+//         $this->auth();
+
+//         global $db;
+
+//         $result = $db->query("SELECT * FROM usuarios ORDER BY id DESC");
+//         $users = $result->fetch_all(MYSQLI_ASSOC);
+
+//         return $this->view('Users::index', [
+//             'users' => $users
+//         ]);
+//     }
+
+//     /* =========================================================
+//        ➕ FORMULARIO CREAR
+//     ========================================================= */
+//     public function create()
+//     {
+//         $this->auth();
+//         $this->onlyAdmin();
+
+//         return $this->view('Users::create');
+//     }
+
+//     /* =========================================================
+//        💾 GUARDAR USUARIO
+//     ========================================================= */
+//     public function store()
+//     {
+//         $this->auth();
+//         $this->onlyAdmin();
+
+//         global $db;
+
+//         $username = trim($_POST['username'] ?? '');
+//         $nombre   = trim($_POST['nombre'] ?? '');
+//         $password = $_POST['password'] ?? '';
+//         $rol      = $_POST['rol'] ?? 'usuario';
+
+//         if (!$username || !$nombre || !$password) {
+//             $_SESSION['error'] = "Todos los campos son obligatorios";
+//             return $this->redirect(BASE_URL . "/users/create");
+//         }
+
+//         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+
+//         $stmt = $db->prepare("
+//             INSERT INTO usuarios (username, nombre, password, rol, estado) 
+//             VALUES (?, ?, ?, ?, 1)
+//         ");
+
+//         $stmt->bind_param("ssss", $username, $nombre, $passwordHash, $rol);
+//         $stmt->execute();
+
+//         auditoria("INSERT", "usuarios", $stmt->insert_id, "Nuevo usuario", "users");
+
+//         $_SESSION['success'] = "Usuario creado correctamente";
+//         return $this->redirect(BASE_URL . "/users");
+//     }
+
+//     /* =========================================================
+//        ✏️ FORMULARIO EDITAR
+//     ========================================================= */
+//     public function edit()
+//     {
+//         $this->auth();
+//         $this->onlyAdmin();
+
+//         global $db;
+
+//         $id = $_GET['id'] ?? null;
+
+//         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id = ?");
+//         $stmt->bind_param("i", $id);
+//         $stmt->execute();
+
+//         $user = $stmt->get_result()->fetch_assoc();
+
+//         return $this->view('Users::edit', [
+//             'user' => $user
+//         ]);
+//     }
+
+//     /* =========================================================
+//        🔄 ACTUALIZAR USUARIO
+//     ========================================================= */
+//     public function update()
+//     {
+//         $this->auth();
+//         $this->onlyAdmin();
+
+//         global $db;
+
+//         $id       = $_POST['id'] ?? null;
+//         $username = trim($_POST['username'] ?? '');
+//         $nombre   = trim($_POST['nombre'] ?? '');
+//         $rol      = $_POST['rol'] ?? 'usuario';
+
+//         $stmt = $db->prepare("
+//             UPDATE usuarios 
+//             SET username = ?, nombre = ?, rol = ? 
+//             WHERE id = ?
+//         ");
+
+//         $stmt->bind_param("sssi", $username, $nombre, $rol, $id);
+//         $stmt->execute();
+
+//         auditoria("UPDATE", "usuarios", $id, "Actualización de usuario", "users");
+
+//         $_SESSION['success'] = "Usuario actualizado";
+//         return $this->redirect(BASE_URL . "/users");
+//     }
+
+//     /* =========================================================
+//        🔄 TOGGLE ESTADO (AJAX)
+//        🔥 AHORA DEVUELVE JSON (NO HTML)
+//     ========================================================= */
+//     public function toggle()
+//     {
+//         $this->auth();
+//         $this->onlyAdmin();
+
+//         header('Content-Type: application/json');
+
+//         global $db;
+
+//         try {
+
+//             $id = $_POST['id'] ?? null;
+//             $estado = $_POST['estado'] ?? null;
+
+//             if (!$id) {
+//                 echo json_encode([
+//                     'ok' => false,
+//                     'error' => 'ID inválido'
+//                 ]);
+//                 return;
+//             }
+
+//             $stmt = $db->prepare("
+//                 UPDATE usuarios 
+//                 SET estado = ? 
+//                 WHERE id = ?
+//             ");
+
+//             if (!$stmt) {
+//                 throw new \Exception($db->error);
+//             }
+
+//             $stmt->bind_param("ii", $estado, $id);
+
+//             if (!$stmt->execute()) {
+//                 throw new \Exception($stmt->error);
+//             }
+
+//             auditoria("UPDATE", "usuarios", $id, "Cambio de estado", "users");
+
+//             echo json_encode([
+//                 'ok' => true
+//             ]);
+
+//         } catch (\Exception $e) {
+
+//             echo json_encode([
+//                 'ok' => false,
+//                 'error' => $e->getMessage()
+//             ]);
+//         }
+//     }
+
+//     /* =========================================================
+//        🔍 VALIDAR USERNAME (AJAX)
+//     ========================================================= */
+//     public function checkUsername()
+//     {
+//         header('Content-Type: application/json');
+
+//         global $db;
+
+//         $username = $_POST['username'] ?? '';
+
+//         $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ?");
+//         $stmt->bind_param("s", $username);
+//         $stmt->execute();
+
+//         $result = $stmt->get_result();
+
+//         echo json_encode([
+//             'success' => true,
+//             'exists' => $result->num_rows > 0
+//         ]);
+//     }
+// }

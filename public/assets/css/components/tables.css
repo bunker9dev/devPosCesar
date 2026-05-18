@@ -8,3 +8,43 @@
     justify-content: space-between;
     margin: 8px 0;
 }
+
+td.control {
+    cursor: pointer;
+}
+
+td.control::before {
+    content: '+';
+    font-weight: bold;
+    color: #2563eb;
+}
+
+tr.shown td.control::before {
+    content: '−';
+}
+
+@media (max-width: 768px) {
+
+    table.dataTable thead {
+        display: none;
+    }
+
+    table.dataTable tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    table.dataTable tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px;
+    }
+
+    table.dataTable tbody td::before {
+        content: attr(data-label);
+        font-weight: bold;
+    }
+}
