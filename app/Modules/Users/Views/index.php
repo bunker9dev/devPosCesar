@@ -27,7 +27,7 @@
                     <td data-label="Nombre"><?= $u['nombre'] ?></td>
                     <td data-label="Rol"><?= $u['rol'] ?></td>
 
-                    <<td data-label="Estado">
+                    <td data-label="Estado">
                         <span
                             class="badge estado-toggle <?= $u['estado'] ? 'active' : 'inactive' ?>"
                             data-id="<?= $u['id'] ?>"

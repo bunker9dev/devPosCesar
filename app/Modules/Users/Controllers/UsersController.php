@@ -16,7 +16,8 @@ class UsersController extends Controller
 
         $query = "SELECT u.*, r.nombre as rol 
                   FROM usuarios u
-                  JOIN roles r ON u.rol_id = r.id";
+                  JOIN roles r ON u.rol_id = r.id
+                  ORDER BY u.id ASC";
 
         $result = $db->query($query);
 

@@ -1,4 +1,7 @@
-/* ===== TABLE ===== */
+/* =========================================================
+   🔹 TABLE BASE
+========================================================= */
+
 .table {
     margin-top: 20px;
 }
@@ -9,19 +12,134 @@
     margin: 8px 0;
 }
 
+
+/* =========================================================
+   🔹 DATATABLE STRUCTURE
+========================================================= */
+
+/* HEADER (botones + buscador) */
+.dt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px 20px;
+}
+
+/* TABLA */
+.dt-table {
+    width: 100%;
+    padding: 0 20px;
+}
+
+/* FOOTER (length + paginación) */
+.dt-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    margin-top: 10px;
+}
+
+
+/* =========================================================
+   🔹 DATATABLE CONTROLS
+========================================================= */
+
+/* 🔍 Buscador */
+.dataTables_filter input {
+    border-radius: var(--radius);
+    padding: 6px;
+    border: 1px solid var(--border-glow);
+    background: var(--bg-soft);
+    color: var(--text-white);
+}
+
+/* 🔽 Selector "Mostrar registros" */
+.dataTables_length select {
+    background: var(--bg-soft) !important;
+    color: var(--primary) !important;
+    border: 1px solid var(--border-glow) !important;
+    border-radius: var(--radius);
+    padding: 4px 8px;
+    outline: none;
+}
+
+.dataTables_length select option {
+    background: var(--bg-main);
+    color: var(--text-white);
+}
+
+.dataTables_length select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 6px var(--border-glow);
+}
+
+
+/* =========================================================
+   🔹 DATATABLE BUTTONS
+========================================================= */
+
+.dt-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.dt-button {
+    background: var(--bg-button) !important;
+    color: var(--text-sidebar) !important;
+    border-radius: var(--radius) !important;
+    padding: 8px 12px !important;
+    border: none !important;
+}
+
+.dt-button:hover {
+    background: var(--bg-button-hover) !important;
+}
+
+
+/* =========================================================
+   🔹 RESPONSIVE CONTROL (+ / -)
+========================================================= */
+
 td.control {
+    text-align: center;
     cursor: pointer;
 }
 
+/* estado cerrado (+) */
 td.control::before {
-    content: '+';
+    content: "+";
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--btn-text-dark);
     font-weight: bold;
-    color: #2563eb;
+    font-size: 14px;
+    text-align: center;
+    transition: 0.2s;
 }
 
-tr.shown td.control::before {
-    content: '−';
+/* hover */
+td.control:hover::before {
+    background: var(--primary-hover);
+    transform: scale(1.1);
 }
+
+/* estado abierto (-) */
+tr.shown td.control::before {
+    content: "−";
+    background: var(--danger);
+    color: var(--text-white);
+}
+
+
+/* =========================================================
+   🔹 MOBILE RESPONSIVE TABLE
+========================================================= */
 
 @media (max-width: 768px) {
 
@@ -32,9 +150,10 @@ tr.shown td.control::before {
     table.dataTable tbody tr {
         display: block;
         margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        border: 1px solid var(--border-glow);
+        border-radius: var(--radius);
         padding: 10px;
+        background: var(--bg-soft);
     }
 
     table.dataTable tbody td {
@@ -46,5 +165,6 @@ tr.shown td.control::before {
     table.dataTable tbody td::before {
         content: attr(data-label);
         font-weight: bold;
+        color: var(--text-muted);
     }
 }

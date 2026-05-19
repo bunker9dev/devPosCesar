@@ -239,6 +239,65 @@ import { post } from "../core/api.js";
 // Sistema de eventos global (arquitectura)
 import { Events } from "../core/events.js";
 
+/* =========================================================
+   🔹 DATATABLE PRO USUARIOS
+========================================================= */
+export function initTablaUsuarios() {
+
+    const tabla = document.getElementById("tablaUsuarios");
+    if (!tabla) return;
+
+    new DataTable("#tablaUsuarios", {
+
+        responsive: {
+            details: {
+                type: 'column',
+                target: 0
+            }
+        },
+
+        columnDefs: [
+            {
+                className: 'control',
+                orderable: false,
+                targets: 0
+            }
+        ],
+
+        order: [1, 'asc'],
+
+        dom: 'Bfrtip',
+
+        buttons: [
+            {
+                extend: 'excel',
+                text: 'Excel'
+            },
+            {
+                extend: 'pdf',
+                text: 'PDF'
+            },
+            {
+                extend: 'print',
+                text: 'Print'
+            }
+        ],
+
+        language: {
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
+            paginate: {
+                next: "→",
+                previous: "←"
+            }
+        }
+
+    });
+
+    console.log("DATATABLE PRO USERS");
+}
+
 
 // =========================================================
 // 🔹 VALIDACIÓN DE USERNAME
@@ -499,5 +558,8 @@ Events.on("users:create", () => {
 
 // Página: listado usuarios
 Events.on("users:index", () => {
+     console.log("INIT USERS MODULE");
+
+    initTablaUsuarios();   // 🔥 ESTO FALTABA
     initUserToggle();
 });

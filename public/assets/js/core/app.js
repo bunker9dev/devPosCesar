@@ -4,6 +4,7 @@ import { initNavbar } from "../modules/navbar.js";
 // IMPORTAR MÓDULOS (eventos)
 import "../modules/alerts.js";
 import "../modules/users.js";
+import '../modules/sidebar.js';
 
 // IMPORTAR PÁGINAS
 import "../pages/dashboard.js";
@@ -12,6 +13,9 @@ import "../modules/tablaVentas.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initNavbar();
+
+ // sidebar
+  Events.emit("sidebar:init");
 
   // dashboard
   if (document.getElementById("chart")) {
@@ -36,4 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
      
     Events.emit("users:index");
   }
+
+
 });

@@ -2,7 +2,7 @@
 
     <!-- IZQUIERDA -->
     <div class="nav-left">
-        <button class="nav-toggle" id="nav-toggle">
+        <button id="toggleSidebar" class="btn-toggle">
             ☰
         </button>
     </div>
