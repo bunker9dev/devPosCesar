@@ -131,3 +131,90 @@
 .sidebar.collapsed a:hover::before {
     opacity: 1;
 }
+
+/* =========================================================
+   🔹 SIDEBAR MOBILE (OFFCANVAS PRO)
+========================================================= */
+
+/* overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s;
+  z-index: 998;
+}
+
+/* activo */
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* sidebar base */
+.sidebar {
+  transition: 0.3s ease;
+}
+
+/* 🔥 MOBILE */
+@media (max-width: 768px) {
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px; /* oculto */
+    height: 100%;
+    width: 240px;
+    z-index: 999;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  /* cuando está abierto */
+  .sidebar.active {
+    left: 0;
+  }
+}
+ /* boton hamburgesa */
+.btn-toggle {
+  background: var(--bg-button);
+  color: var(--primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.btn-toggle:hover {
+  background: var(--bg-button-hover);
+}
+
+@media (max-width: 768px) {
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    height: 100%;
+    width: 240px;
+    z-index: 999;
+
+    /* 🔥 IMPORTANTE */
+    transform: translateX(0);
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  /* 🔥 EVITA QUE EL collapsed AFECTE EN MOBILE */
+  .sidebar.collapsed {
+    width: 240px;
+  }
+}
