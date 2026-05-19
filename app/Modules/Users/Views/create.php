@@ -1,4 +1,4 @@
-<form method="POST" action="<?= BASE_URL ?>/users/store" class="form-users">
+<form method="POST" action="<?= BASE_URL ?>/users/store" enctype="multipart/form-data" class="form-users">
 
     <div class="form-group">
         <label>Username</label>
@@ -14,6 +14,19 @@
     <div class="form-group">
         <label>Apellido</label>
         <input name="apellido" placeholder="Apellido">
+    </div>
+
+    <!-- Avatar -->
+    <div class="form-group">
+        <label>Agregar Avatar</label>
+        <input type="file" name="imagen" accept="image/*">
+    </div>
+    <div class="form-group">
+        <label>Avatar actual</label>
+        <img
+            src="<?= BASE_URL ?>/assets/img/users/<?= $user['imagen'] ?>"
+            class="avatar-preview"
+            id="preview">
     </div>
 
     <div class="form-group">

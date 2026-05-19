@@ -27,7 +27,7 @@ class UsersController extends Controller
         ]);
     }
 
-    // ➕ FORM CREAR
+    // FORM CREAR
     public function create()
     {
         $this->auth();
@@ -85,11 +85,65 @@ class UsersController extends Controller
             $errors['rol_id'] = "Selecciona un rol";
         }
 
-        if (!empty($errors)) {
-            $_SESSION['errors'] = $errors;
-            $_SESSION['old'] = $_POST;
+        // SUBIR IMAGEN
 
-            return $this->redirect(BASE_URL . "/users/create");
+        $imagenNombre = "default.png";
+
+        if (!empty($_FILES['imagen']['name'])) {
+
+            $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
+            // 🔥 DEBUG AQUÍ
+            // echo $carpeta;
+            // die;
+
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0755, true);
+            }
+
+            // 🔥 EXTENSIÓN
+            $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+            $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (!in_array($ext, $permitidas)) {
+                $imagenNombre = "default.png";
+            } else {
+
+                // 🔥 👉 AQUÍ VA TU VALIDACIÓN MIME
+                $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+
+                $permitidosMime = ['image/jpeg', 'image/png', 'image/webp'];
+
+                if (!in_array($mime, $permitidosMime)) {
+                    $imagenNombre = "default.png";
+                } else {
+
+                    // 🔥 NOMBRE ÚNICO
+                    $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
+
+                    $rutaCompleta = $carpeta . $imagenNombre;
+
+                    // 🔥 MOVER ARCHIVO
+                    if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
+                        $imagenNombre = "default.png";
+                    }
+
+                    // // 🔥 DEBUG PRO
+                    // if (!file_exists($carpeta)) {
+                    //     die("La carpeta NO existe: " . $carpeta);
+                    // }
+
+                    // if (!is_writable($carpeta)) {
+                    //     die("La carpeta NO tiene permisos de escritura: " . $carpeta);
+                    // }
+
+                    // if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
+                    //     die("Error moviendo archivo a: " . $rutaCompleta);
+                    // }
+
+                    // echo "Imagen subida correctamente en: " . $rutaCompleta;
+                    // die;
+                }
+            }
         }
 
         // 🔐 HASH
@@ -97,15 +151,15 @@ class UsersController extends Controller
 
         // 🔥 INSERT
         $stmt = $db->prepare("
-            INSERT INTO usuarios (username, nombre, apellido, password, rol_id)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO usuarios (username, nombre, apellido, imagen, password, rol_id)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
 
         if (!$stmt) {
             die("Error prepare: " . $db->error);
         }
 
-        $stmt->bind_param("ssssi", $username, $nombre, $apellido, $password, $rol);
+        $stmt->bind_param("sssssi", $username, $nombre, $apellido, $imagenNombre, $password, $rol);
 
         if (!$stmt->execute()) {
 
@@ -137,12 +191,29 @@ class UsersController extends Controller
 
         $id = (int) ($_GET['id'] ?? 0);
 
+        if (!$id) {
+            $_SESSION['error'] = "ID inválido";
+            return $this->redirect(BASE_URL . "/users");
+        }
+
+        // obtener usuario
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
         $user = $stmt->get_result()->fetch_assoc();
 
+        if (!$user) {
+            $_SESSION['error'] = "Usuario no encontrado";
+            return $this->redirect(BASE_URL . "/users");
+        }
+
+        // imagen por defecto si no tiene
+        if (empty($user['imagen'])) {
+            $user['imagen'] = "default.png";
+        }
+
+        // roles
         $roles = $db->query("SELECT * FROM roles")->fetch_all(MYSQLI_ASSOC);
 
         $this->render('Modules/Users/Views/edit', [
@@ -170,105 +241,129 @@ class UsersController extends Controller
             return $this->redirect(BASE_URL . "/users");
         }
 
+        //  1. VALIDAR QUE EL USUARIO EXISTE
+        $stmt = $db->prepare("SELECT id, rol_id FROM usuarios WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $userDB = $stmt->get_result()->fetch_assoc();
+
+        if (!$userDB) {
+            $_SESSION['error'] = "Usuario no existe";
+            return $this->redirect(BASE_URL . "/users");
+        }
+
+        //  2. EVITAR QUE SE CAMBIEN A SUPER (opcional)
+        if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
+            $_SESSION['error'] = "No puedes asignar rol SUPER";
+            return $this->redirect(BASE_URL . "/users");
+        }
+
+        //  3. EVITAR AUTO-MODIFICACIÓN DE ROL (opcional)
+        if ($id == $_SESSION['user']['id']) {
+            $_SESSION['error'] = "No puedes cambiar tu propio rol";
+            return $this->redirect(BASE_URL . "/users");
+        }
+
+        //  4. UPDATE SEGURO (SIN username)
         $stmt = $db->prepare("
-            UPDATE usuarios 
-            SET nombre=?, apellido=?, rol_id=? 
-            WHERE id=?
-        ");
+        UPDATE usuarios 
+        SET nombre = ?, apellido = ?, rol_id = ?
+        WHERE id = ?
+    ");
 
         $stmt->bind_param("ssii", $nombre, $apellido, $rol, $id);
         $stmt->execute();
 
+        //  5. AUDITORÍA
         auditoria("UPDATE", "usuarios", $id, "Actualización de usuario", "users");
 
         $_SESSION['success'] = "Usuario actualizado";
 
         return $this->redirect(BASE_URL . "/users");
     }
+    public function toggle()
+    {
 
- public function toggle()
-{
+        //  Limpiar cualquier salida previa (evita romper JSON)
+        if (ob_get_length()) ob_clean();
 
-    // 🔥 Limpiar cualquier salida previa (evita romper JSON)
-    if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
 
-    header('Content-Type: application/json');
+        try {
 
-    try {
+            //  Conexión (más seguro que global)
+            $db = conectarDB();
 
-        // 🔹 Conexión (más seguro que global)
-        $db = conectarDB();
+            //  VALIDACIÓN SIN REDIRECT (AJAX)
+            if (!isset($_SESSION['user'])) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'No autenticado'
+                ]);
+                exit;
+            }
 
-        // 🔐 VALIDACIÓN SIN REDIRECT (AJAX)
-        if (!isset($_SESSION['user'])) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'No autenticado'
-            ]);
-            exit;
-        }
+            //  ROLES PERMITIDOS
+            if (!in_array($_SESSION['user']['rol'], [1, 2])) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'No autorizado'
+                ]);
+                exit;
+            }
 
-        // 🔐 ROLES PERMITIDOS
-        if (!in_array($_SESSION['user']['rol'], [1,2])) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'No autorizado'
-            ]);
-            exit;
-        }
+            //  Datos desde JS
+            $id = $_POST['id'] ?? null;
+            $estado = $_POST['estado'] ?? null;
 
-        // 🔹 Datos desde JS
-        $id = $_POST['id'] ?? null;
-        $estado = $_POST['estado'] ?? null;
+            if (!$id) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'ID inválido'
+                ]);
+                exit;
+            }
 
-        if (!$id) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'ID inválido'
-            ]);
-            exit;
-        }
-
-        // 🔹 Query
-        $stmt = $db->prepare("
+            //  Query
+            $stmt = $db->prepare("
             UPDATE usuarios 
             SET estado = ? 
             WHERE id = ?
         ");
 
-        if (!$stmt) {
-            throw new Exception($db->error);
+            if (!$stmt) {
+                throw new Exception($db->error);
+            }
+
+            $stmt->bind_param("ii", $estado, $id);
+
+            if (!$stmt->execute()) {
+                throw new Exception($stmt->error);
+            }
+
+            //  Auditoría (opcional)
+            if (function_exists('auditoria')) {
+                auditoria("UPDATE", "usuarios", $id, "Cambio de estado", "users");
+            }
+
+            // RESPUESTA FINAL
+            echo json_encode([
+                'ok' => true
+            ]);
+            exit;
+        } catch (Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit;
         }
-
-        $stmt->bind_param("ii", $estado, $id);
-
-        if (!$stmt->execute()) {
-            throw new Exception($stmt->error);
-        }
-
-        // 🔹 Auditoría (opcional)
-        if (function_exists('auditoria')) {
-            auditoria("UPDATE", "usuarios", $id, "Cambio de estado", "users");
-        }
-
-        // ✅ RESPUESTA FINAL
-        echo json_encode([
-            'ok' => true
-        ]);
-        exit;
-
-    } catch (Exception $e) {
-
-        echo json_encode([
-            'ok' => false,
-            'error' => $e->getMessage()
-        ]);
-        exit;
     }
-}
 
 
-    // 🔍 VALIDAR USERNAME (AJAX)
+    // VALIDAR USERNAME (AJAX)
     public function checkUsername()
     {
         global $db;

@@ -5,13 +5,14 @@
 </div>
 
 <div class="table-container">
-    <table id="tablaUsuarios" class="table-users display nowrap" style="width:100%">
+    <table id="tablaUsuarios" class="table-users display " >
         <thead>
             <tr>
                 <th></th>
                 <th>ID</th>
                 <th>Usuario</th>
                 <th>Nombre</th>
+                <th>Foto</th>
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -25,6 +26,10 @@
                     <td data-label="ID"><?= $u['id'] ?></td>
                     <td data-label="Usuario"><?= $u['username'] ?></td>
                     <td data-label="Nombre"><?= $u['nombre'] ?></td>
+                    <td>
+                        <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>"
+                            class="avatar">
+                    </td>
                     <td data-label="Rol"><?= $u['rol'] ?></td>
 
                     <td data-label="Estado">
@@ -34,10 +39,10 @@
                             data-estado="<?= $u['estado'] ?>">
                             <?= $u['estado'] ? 'Activo' : 'Inactivo' ?>
                         </span>
-                        </td>
-                        <td data-label="Acciones" class="actions">
-                            <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-edit">Editar</a>
-                        </td>
+                    </td>
+                    <td data-label="Acciones" class="actions">
+                        <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-edit">Editar</a>
+                    </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>

@@ -14,11 +14,7 @@
         <div class="nav-user" id="nav-user">
 
             <div class="nav-user-trigger">
-                <?php if (!empty($_SESSION["foto"])): ?>
-                    <img src="<?= $_SESSION["foto"] ?>" class="nav-avatar">
-                <?php else: ?>
-                    <img src="<?= BASE_URL ?>/assets/img/usuarios/default/anonymous.png" class="nav-avatar">
-                <?php endif; ?>
+                <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>" class="nav-avatar">
 
                 <span class="nav-username">
                     <?= $_SESSION['user']['nombre'] . " " . $_SESSION['user']['apellido'] ?>

@@ -41,5 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
     Events.emit("users:index");
   }
 
+  // Previsualizar imagen
+  if (document.querySelector('input[name="imagen"]')) {
+    Events.emit("users:edit");
+}
+
 
 });

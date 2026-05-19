@@ -48,8 +48,8 @@
 
 /* AVATAR */
 .nav-avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 2px solid var(--border-glow);
   object-fit: cover;
