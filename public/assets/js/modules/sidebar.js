@@ -1,25 +1,32 @@
+import { Events } from "../core/events.js";
+
 export function initSidebar() {
 
     const btn = document.getElementById("toggleSidebar");
     const sidebar = document.querySelector(".sidebar");
     const overlay = document.getElementById("sidebarOverlay");
 
-    if (!btn || !sidebar) return;
+    if (!btn || !sidebar) {
+        console.log("Sidebar no encontrado");
+        return;
+    }
+
+    console.log("Sidebar INIT OK");
 
     btn.addEventListener("click", () => {
 
-        // 🔥 MOBILE
         if (window.innerWidth <= 768) {
             sidebar.classList.toggle("active");
-            overlay.classList.toggle("active");
-        } 
-        // 🔥 DESKTOP
-        else {
+
+            if (overlay) {
+                overlay.classList.toggle("active");
+            }
+
+        } else {
             sidebar.classList.toggle("collapsed");
         }
     });
 
-    // 🔥 cerrar al hacer click fuera
     if (overlay) {
         overlay.addEventListener("click", () => {
             sidebar.classList.remove("active");
@@ -27,3 +34,8 @@ export function initSidebar() {
         });
     }
 }
+
+
+Events.on("sidebar:init", () => {
+    initSidebar();
+});

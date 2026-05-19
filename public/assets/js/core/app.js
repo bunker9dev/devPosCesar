@@ -1,6 +1,7 @@
 import { Events } from "./events.js";
 import { initNavbar } from "../modules/navbar.js";
 
+
 // IMPORTAR MÓDULOS (eventos)
 import "../modules/alerts.js";
 import "../modules/users.js";

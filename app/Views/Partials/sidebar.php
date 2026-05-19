@@ -1,4 +1,20 @@
 <aside class="sidebar">
+    <div class="sidebar-nav">
+        <div class="nav-user" id="nav-user">
+
+            <div class="nav-user-trigger">
+                <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>" class="nav-avatar">
+
+                <span class="nav-username">
+                    <?= $_SESSION['user']['nombre'] . " " . $_SESSION['user']['apellido'] ?>
+                    <p><small>(<?= $_SESSION['user']['rol_nombre'] ?>)</small></p>
+                </span>
+            </div>
+
+        </div>
+    </div>
+
+
     <ul>
         <li>
             <a href="<?= BASE_URL ?>/dashboard" data-tooltip="Dashboard">
