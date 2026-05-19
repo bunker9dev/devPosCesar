@@ -5,7 +5,7 @@
 </div>
 
 <div class="table-container">
-    <table id="tablaUsuarios" class="table-users display " >
+    <table id="tablaUsuarios" class="table-users display ">
         <thead>
             <tr>
                 <th></th>
@@ -40,9 +40,13 @@
                             <?= $u['estado'] ? 'Activo' : 'Inactivo' ?>
                         </span>
                     </td>
-                    <td data-label="Acciones" class="actions">
-                        <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-edit">Editar</a>
+                    <td data-label="Acciones">
+                        <div class="actions">
+                            <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">Editar</a>
+                            <a href="<?= BASE_URL ?>/users/delete?id=<?= $u['id'] ?>" class="btn-action delete">Eliminar</a>
+                        </div>
                     </td>
+
                 </tr>
             <?php endforeach; ?>
         </tbody>

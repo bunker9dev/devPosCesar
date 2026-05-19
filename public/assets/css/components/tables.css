@@ -73,19 +73,68 @@
    🔹 ACCIONES
 ========================================================= */
 
+
 .actions {
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
-.btn-edit {
+/* base */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 10px;
+  border-radius: var(--radius);
+
+  font-size: 13px;
+  text-decoration: none;
+
+  transition: 0.2s;
+}
+
+/* EDIT */
+.btn-action.edit {
   color: var(--primary);
-  text-decoration: none;
+  border: 1px solid var(--primary);
+  background: transparent;
 }
 
-.btn-toggle {
+.btn-action.edit:hover {
+  background: var(--primary);
+  color: var(--bg-main);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+/* DELETE */
+.btn-action.delete {
   color: var(--danger);
-  text-decoration: none;
+  border: 1px solid var(--danger);
+  background: transparent;
+}
+
+.btn-action.delete:hover {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 0 8px var(--danger);
+
+}
+
+@media (max-width: 990px) {
+
+  .actions {
+    flex-direction: row; /* horizontal */
+  }
+
+  .actions a {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+}
 }
 
 /* =========================================================
@@ -218,11 +267,10 @@ table.dataTable.dtr-column > tbody > tr > td.dtr-control:before,
 table.dataTable.dtr-column > tbody > tr > th.dtr-control:before,
 table.dataTable.dtr-column > tbody > tr > td.control:before,
 table.dataTable.dtr-column > tbody > tr > th.control:before {
-
   content: "+" !important;
   color: var(--primary) !important;
   background: var(--bg-button);
-  white-space: normal !important;
+  white-space: nowrap !important;
 
   border-radius: 50%;
   width: 22px;
@@ -242,7 +290,6 @@ table.dataTable.dtr-column > tbody > tr.parent > td.dtr-control:before,
 table.dataTable.dtr-column > tbody > tr.parent > th.dtr-control:before,
 table.dataTable.dtr-column > tbody > tr.parent > td.control:before,
 table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
-
   content: "−" !important;
   color: var(--danger) !important;
   background: var(--danger-bg);
@@ -265,7 +312,6 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
 }
 
 @media (max-width: 460px) {
-
   /* 🔥 contenedor limpio */
   .table-container {
     border: none;
@@ -278,7 +324,6 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
   .table-users tr,
   .table-users td {
     display: block;
-    
   }
 
   /* 🔥 ocultar header */
@@ -302,7 +347,7 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
     justify-content: space-between;
     align-items: center;
     padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .table-users td:last-child {

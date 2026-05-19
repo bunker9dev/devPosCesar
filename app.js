@@ -9,25 +9,40 @@ function showSection(id) {
 
 // #################################################    NAVBAR  ################################################# 
 // Toggle dropdown usuario
-const user = document.getElementById('nav-user');
-const dropdown = document.getElementById('nav-dropdown');
+document.addEventListener("DOMContentLoaded", () => {
 
-user.addEventListener('click', () => {
-    dropdown.classList.toggle('active');
-});
+    const user = document.getElementById('nav-user');
+    const dropdown = document.getElementById('nav-dropdown');
+    const toggle = document.getElementById('nav-toggle');
 
-// Cerrar si hace click fuera
-document.addEventListener('click', (e) => {
-    if (!user.contains(e.target)) {
-        dropdown.classList.remove('active');
+    if (!user || !dropdown) {
+        console.log("Navbar no encontrado");
+        return;
     }
-});
 
-// Botón menú (para sidebar futuro)
-const toggle = document.getElementById('nav-toggle');
+    console.log("NAVBAR OK");
 
-toggle.addEventListener('click', () => {
-    console.log("Toggle sidebar"); // luego conectas tu sidebar aquí
+    // Toggle dropdown
+    user.addEventListener('click', (e) => {
+        console.log("CLICK NAVBAR");
+        e.stopPropagation();
+        dropdown.classList.toggle('active');
+    });
+
+    // Cerrar si hace click fuera
+    document.addEventListener('click', (e) => {
+        if (!user.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // Botón menú
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            console.log("Toggle sidebar");
+        });
+    }
+
 });
 
 

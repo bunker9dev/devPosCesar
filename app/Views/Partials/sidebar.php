@@ -2,7 +2,7 @@
     <div class="sidebar-nav">
         <div class="nav-user" id="nav-user">
 
-            <div class="nav-user-trigger">
+            <div class="nav-user-sidebar">
                 <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>" class="nav-avatar">
 
                 <span class="nav-username">

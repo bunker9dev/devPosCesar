@@ -10,6 +10,8 @@
   justify-content: space-between;
 
   padding: 0 20px;
+  overflow: visible;
+ 
 }
 
 /* IZQUIERDA */
@@ -39,7 +41,8 @@
 }
 
 /* TRIGGER */
-.nav-user-trigger {
+.nav-user-trigger,
+.nav-user-sidebar {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -80,6 +83,7 @@
 
   display: none;
   flex-direction: column;
+   z-index: 1200;
 }
 
 /* ACTIVO */
@@ -108,4 +112,28 @@
 
 .nav-logout:hover {
   color: #ff6666;
+}
+
+/* =========================================================
+   🔹 COLLAPSE HEADER (USUARIO)
+========================================================= */
+
+.sidebar.collapsed .nav-username {
+    display: none;
+}
+
+/* centrar avatar */
+.sidebar.collapsed .nav-user-trigger {
+    justify-content: center;
+}
+
+/* ajustar avatar */
+.sidebar.collapsed .nav-avatar {
+    margin: 0 auto;
+    display: block;
+}
+.sidebar.collapsed .sidebar-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
