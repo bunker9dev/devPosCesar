@@ -26,6 +26,16 @@
             <input type="text" name="apellido" value="<?= $user['apellido'] ?>">
         </div>
 
+        <div class="form-group">
+            <label>Nueva contraseña</label>
+            <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Nueva contraseña">
+                <small class="input-msg"></small>
+        </div>
+
         <!-- Avatar -->
         <div class="form-group">
             <label>Avatar actual</label>
@@ -64,7 +74,11 @@
 
 
 
-
+<!-- scritps para ajax -->
+<script>
+    window.BASE_URL = "<?= BASE_URL ?>";
+</script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-edit.js"></script>
 
 
 

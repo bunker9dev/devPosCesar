@@ -195,37 +195,43 @@ export function initUserValidation() {
 // =========================================================
 // 🔹 VALIDACIÓN DE PASSWORD
 // =========================================================
+
 export function initPasswordValidation() {
-  const input = document.getElementById("password");
-  if (!input) return;
+    const input = document.getElementById("password");
+    if (!input) return;
 
-  const msg = document.getElementById("password-msg");
-  if (!msg) return;
+    // 🔥 buscar el mensaje RELATIVO al input
+    const msg = input.parentElement.querySelector(".input-msg");
 
-  input.addEventListener("input", () => {
-    const value = input.value;
+    input.addEventListener("input", () => {
 
-    // campo vacío
-    if (value.length === 0) {
-      msg.textContent = "";
-      input.classList.remove("input-error");
-      return;
-    }
+        const value = input.value;
 
-    // mínimo
-    if (value.length < 4) {
-      msg.textContent = "Mínimo 4 caracteres";
-      msg.style.color = "red";
-      input.classList.add("input-error");
-      input.dataset.valid = "false";
-    } else {
-      msg.textContent = "✔️ Password válido";
-      msg.style.color = "lime";
-      input.classList.remove("input-error");
-      input.dataset.valid = "true";
-    }
-  });
+        // 👉 en EDIT: si está vacío → no validar
+        if (value.length === 0) {
+            msg.textContent = "";
+            input.dataset.valid = "true";
+            input.classList.remove("input-error");
+            return;
+        }
+
+        if (value.length < 6) {
+            msg.textContent = "Mínimo 6 caracteres";
+            msg.style.color = "red";
+            input.dataset.valid = "false";
+            input.classList.add("input-error");
+        } else {
+            msg.textContent = "✔ Password válido";
+            msg.style.color = "lime";
+            input.dataset.valid = "true";
+            input.classList.remove("input-error");
+        }
+
+    });
+
 }
+
+
 
 // =========================================================
 // BLOQUEAR ENVÍO SI HAY ERRORES

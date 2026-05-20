@@ -126,22 +126,6 @@ class UsersController extends Controller
                     if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
                         $imagenNombre = "default.png";
                     }
-
-                    // // 🔥 DEBUG PRO
-                    // if (!file_exists($carpeta)) {
-                    //     die("La carpeta NO existe: " . $carpeta);
-                    // }
-
-                    // if (!is_writable($carpeta)) {
-                    //     die("La carpeta NO tiene permisos de escritura: " . $carpeta);
-                    // }
-
-                    // if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
-                    //     die("Error moviendo archivo a: " . $rutaCompleta);
-                    // }
-
-                    // echo "Imagen subida correctamente en: " . $rutaCompleta;
-                    // die;
                 }
             }
         }
@@ -224,6 +208,125 @@ class UsersController extends Controller
     }
 
     // 🔄 ACTUALIZAR
+    // public function update()
+    // {
+    //     $this->auth();
+    //     $this->onlyAdmin();
+
+    //     global $db;
+
+    //     $id = (int) ($_POST['id'] ?? 0);
+    //     $nombre = trim($_POST['nombre'] ?? '');
+    //     $apellido = trim($_POST['apellido'] ?? '');
+    //     $rol = (int) ($_POST['rol_id'] ?? 0);
+
+    //     if (!$id || !$nombre || !$rol) {
+    //         $_SESSION['error'] = "Datos inválidos";
+    //         return $this->redirect(BASE_URL . "/users");
+    //     }
+
+    //     //   VALIDAR QUE EL USUARIO EXISTE
+    //     $stmt = $db->prepare("SELECT id, rol_id, imagen FROM usuarios WHERE id = ?");
+    //     $stmt->bind_param("i", $id);
+    //     $stmt->execute();
+
+    //     $userDB = $stmt->get_result()->fetch_assoc();
+
+    //     if (!$userDB) {
+    //         $_SESSION['error'] = "Usuario no existe";
+    //         return $this->redirect(BASE_URL . "/users");
+    //     }
+
+    //     //   EVITAR QUE SE CAMBIEN A SUPER (opcional)
+    //     if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
+    //         $_SESSION['error'] = "No puedes asignar rol SUPER";
+    //         return $this->redirect(BASE_URL . "/users");
+    //     }
+
+    //     //  EVITAR AUTO-MODIFICACIÓN DE ROL (opcional)
+    //     if ($id == $_SESSION['user']['id']) {
+    //         $_SESSION['error'] = "No puedes cambiar tu propio rol";
+    //         return $this->redirect(BASE_URL . "/users");
+    //     }
+
+    //     //  USAR IMAGEN ACTUAL (CORRECTO)
+    //     $imagenNombre = $userDB['imagen'] ?? 'default.png';
+
+    //     //  PROCESAR NUEVA IMAGEN
+    //     if (!empty($_FILES['imagen']['name']) && $_FILES['imagen']['error'] === 0) {
+
+    //         $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
+
+    //         if (!is_dir($carpeta)) {
+    //             mkdir($carpeta, 0755, true);
+    //         }
+
+    //         $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+    //         $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+
+    //         if (in_array($ext, $permitidas)) {
+
+    //             // 🔥 borrar imagen anterior
+    //             if (!empty($userDB['imagen']) && $userDB['imagen'] !== 'default.png') {
+    //                 $old = $carpeta . $userDB['imagen'];
+    //                 if (file_exists($old)) {
+    //                     unlink($old);
+    //                 }
+    //             }
+
+    //             // 🔥 generar nombre correcto
+    //             $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
+
+    //             move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta . $imagenNombre);
+    //         }
+
+    //         if (!empty($passwordRaw)) {
+
+    //             $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
+
+    //             $stmt = $db->prepare("
+    //             UPDATE usuarios 
+    //             SET nombre = ?, apellido = ?, rol_id = ?, imagen = ?, password = ?
+    //             WHERE id = ?
+    //         ");
+
+    //             $stmt->bind_param("ssissi", $nombre, $apellido, $rol, $imagenNombre, $password, $id);
+    //             $stmt->execute();
+    //         } else {
+
+    //             $stmt = $db->prepare("
+    //                 UPDATE usuarios 
+    //                 SET nombre = ?, apellido = ?, rol_id = ?, imagen = ?
+    //                 WHERE id = ?
+    //             ");
+
+    //             $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagenNombre, $id);
+    //             $stmt->execute();
+    //         }
+    //     }
+    //     if (!empty($passwordRaw) && strlen($passwordRaw) < 4) {
+    //         $_SESSION['error'] = "Password mínimo 4 caracteres";
+    //         return $this->redirect(BASE_URL . "/users");
+    //     }
+
+    //     //  4. UPDATE SEGURO (SIN username)
+    //     $stmt = $db->prepare("
+    //         UPDATE usuarios 
+    //         SET nombre = ?, apellido = ?, rol_id = ?, imagen = ?
+    //         WHERE id = ?
+    //     ");
+
+    //     $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagenNombre, $id);
+    //     $stmt->execute();
+
+    //     //  5. AUDITORÍA
+    //     auditoria("UPDATE", "usuarios", $id, "Actualización de usuario", "users");
+
+    //     $_SESSION['success'] = "Usuario actualizado";
+
+    //     return $this->redirect(BASE_URL . "/users");
+    // }
+
     public function update()
     {
         $this->auth();
@@ -235,17 +338,17 @@ class UsersController extends Controller
         $nombre = trim($_POST['nombre'] ?? '');
         $apellido = trim($_POST['apellido'] ?? '');
         $rol = (int) ($_POST['rol_id'] ?? 0);
+        $passwordRaw = $_POST['password'] ?? null;
 
         if (!$id || !$nombre || !$rol) {
             $_SESSION['error'] = "Datos inválidos";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        //  1. VALIDAR QUE EL USUARIO EXISTE
-        $stmt = $db->prepare("SELECT id, rol_id FROM usuarios WHERE id = ?");
+        // 🔍 verificar usuario
+        $stmt = $db->prepare("SELECT id, rol_id, imagen FROM usuarios WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-
         $userDB = $stmt->get_result()->fetch_assoc();
 
         if (!$userDB) {
@@ -253,35 +356,89 @@ class UsersController extends Controller
             return $this->redirect(BASE_URL . "/users");
         }
 
-        //  2. EVITAR QUE SE CAMBIEN A SUPER (opcional)
+        // 🔒 reglas de seguridad
         if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
             $_SESSION['error'] = "No puedes asignar rol SUPER";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        //  3. EVITAR AUTO-MODIFICACIÓN DE ROL (opcional)
         if ($id == $_SESSION['user']['id']) {
             $_SESSION['error'] = "No puedes cambiar tu propio rol";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        //  4. UPDATE SEGURO (SIN username)
-        $stmt = $db->prepare("
-        UPDATE usuarios 
-        SET nombre = ?, apellido = ?, rol_id = ?
-        WHERE id = ?
-    ");
+        // 🔐 validar password
+        if (!empty($passwordRaw) && strlen($passwordRaw) < 6) {
+            $_SESSION['error'] = "Password mínimo 6 caracteres";
+            return $this->redirect(BASE_URL . "/users");
+        }
 
-        $stmt->bind_param("ssii", $nombre, $apellido, $rol, $id);
+        // 🖼️ imagen actual
+        $imagenNombre = $userDB['imagen'] ?? 'default.png';
+
+        // 🖼️ nueva imagen
+        if (!empty($_FILES['imagen']['name']) && $_FILES['imagen']['error'] === 0) {
+
+            $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
+
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0755, true);
+            }
+
+            $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+            $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (in_array($ext, $permitidas)) {
+
+                // borrar anterior
+                if (!empty($userDB['imagen']) && $userDB['imagen'] !== 'default.png') {
+                    $old = $carpeta . $userDB['imagen'];
+                    if (file_exists($old)) unlink($old);
+                }
+
+                $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
+                move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta . $imagenNombre);
+            }
+        }
+
+        // 🔥 CONSTRUIR UPDATE DINÁMICO
+        if (!empty($passwordRaw)) {
+
+            $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
+
+            $stmt = $db->prepare("
+            UPDATE usuarios 
+            SET nombre=?, apellido=?, rol_id=?, imagen=?, password=? 
+            WHERE id=?
+        ");
+
+            $stmt->bind_param("ssissi", $nombre, $apellido, $rol, $imagenNombre, $password, $id);
+        } else {
+
+            $stmt = $db->prepare("
+            UPDATE usuarios 
+            SET nombre=?, apellido=?, rol_id=?, imagen=? 
+            WHERE id=?
+        ");
+
+            $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagenNombre, $id);
+        }
+
         $stmt->execute();
 
-        //  5. AUDITORÍA
         auditoria("UPDATE", "usuarios", $id, "Actualización de usuario", "users");
 
-        $_SESSION['success'] = "Usuario actualizado";
+        $_SESSION['success'] = "Usuario actualizado correctamente";
 
         return $this->redirect(BASE_URL . "/users");
     }
+
+
+
+
+
+
+
     public function toggle()
     {
 
