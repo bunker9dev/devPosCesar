@@ -33,12 +33,24 @@
                     <td data-label="Rol"><?= $u['rol'] ?></td>
 
                     <td data-label="Estado">
+
                         <span
-                            class="badge estado-toggle <?= $u['estado'] ? 'active' : 'inactive' ?>"
+                            class="badge estado-toggle 
+                            <?= $u['estado'] == 1 ? 'active' : ($u['estado'] == 2 ? 'inactive' : 'deleted') ?>"
+
                             data-id="<?= $u['id'] ?>"
                             data-estado="<?= $u['estado'] ?>">
-                            <?= $u['estado'] ? 'Activo' : 'Inactivo' ?>
+
+                            <?php if ($u['estado'] == 1): ?>
+                                Activo
+                            <?php elseif ($u['estado'] == 2): ?>
+                                Inactivo
+                            <?php else: ?>
+                                Eliminado
+                            <?php endif; ?>
+
                         </span>
+
                     </td>
                     <td data-label="Acciones">
                         <div class="actions">

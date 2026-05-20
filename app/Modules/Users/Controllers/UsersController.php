@@ -14,10 +14,21 @@ class UsersController extends Controller
 
         global $db;
 
-        $query = "SELECT u.*, r.nombre as rol 
+        // 🔥 SUPER → ve todo
+        if ($_SESSION['user']['rol'] == 1) {
+
+            $query = "SELECT u.*, r.nombre as rol 
+                  FROM usuarios u
+                  JOIN roles r ON u.rol_id = r.id";
+        } else {
+
+            // 🔥 ADMIN → NO ve eliminados
+            $query = "SELECT u.*, r.nombre as rol 
                   FROM usuarios u
                   JOIN roles r ON u.rol_id = r.id
-                  ORDER BY u.id ASC";
+                  WHERE u.estado IN (1,2)";
+        }
+
 
         $result = $db->query($query);
 
@@ -207,126 +218,6 @@ class UsersController extends Controller
         ]);
     }
 
-    // 🔄 ACTUALIZAR
-    // public function update()
-    // {
-    //     $this->auth();
-    //     $this->onlyAdmin();
-
-    //     global $db;
-
-    //     $id = (int) ($_POST['id'] ?? 0);
-    //     $nombre = trim($_POST['nombre'] ?? '');
-    //     $apellido = trim($_POST['apellido'] ?? '');
-    //     $rol = (int) ($_POST['rol_id'] ?? 0);
-
-    //     if (!$id || !$nombre || !$rol) {
-    //         $_SESSION['error'] = "Datos inválidos";
-    //         return $this->redirect(BASE_URL . "/users");
-    //     }
-
-    //     //   VALIDAR QUE EL USUARIO EXISTE
-    //     $stmt = $db->prepare("SELECT id, rol_id, imagen FROM usuarios WHERE id = ?");
-    //     $stmt->bind_param("i", $id);
-    //     $stmt->execute();
-
-    //     $userDB = $stmt->get_result()->fetch_assoc();
-
-    //     if (!$userDB) {
-    //         $_SESSION['error'] = "Usuario no existe";
-    //         return $this->redirect(BASE_URL . "/users");
-    //     }
-
-    //     //   EVITAR QUE SE CAMBIEN A SUPER (opcional)
-    //     if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
-    //         $_SESSION['error'] = "No puedes asignar rol SUPER";
-    //         return $this->redirect(BASE_URL . "/users");
-    //     }
-
-    //     //  EVITAR AUTO-MODIFICACIÓN DE ROL (opcional)
-    //     if ($id == $_SESSION['user']['id']) {
-    //         $_SESSION['error'] = "No puedes cambiar tu propio rol";
-    //         return $this->redirect(BASE_URL . "/users");
-    //     }
-
-    //     //  USAR IMAGEN ACTUAL (CORRECTO)
-    //     $imagenNombre = $userDB['imagen'] ?? 'default.png';
-
-    //     //  PROCESAR NUEVA IMAGEN
-    //     if (!empty($_FILES['imagen']['name']) && $_FILES['imagen']['error'] === 0) {
-
-    //         $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
-
-    //         if (!is_dir($carpeta)) {
-    //             mkdir($carpeta, 0755, true);
-    //         }
-
-    //         $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
-    //         $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
-
-    //         if (in_array($ext, $permitidas)) {
-
-    //             // 🔥 borrar imagen anterior
-    //             if (!empty($userDB['imagen']) && $userDB['imagen'] !== 'default.png') {
-    //                 $old = $carpeta . $userDB['imagen'];
-    //                 if (file_exists($old)) {
-    //                     unlink($old);
-    //                 }
-    //             }
-
-    //             // 🔥 generar nombre correcto
-    //             $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
-
-    //             move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta . $imagenNombre);
-    //         }
-
-    //         if (!empty($passwordRaw)) {
-
-    //             $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
-
-    //             $stmt = $db->prepare("
-    //             UPDATE usuarios 
-    //             SET nombre = ?, apellido = ?, rol_id = ?, imagen = ?, password = ?
-    //             WHERE id = ?
-    //         ");
-
-    //             $stmt->bind_param("ssissi", $nombre, $apellido, $rol, $imagenNombre, $password, $id);
-    //             $stmt->execute();
-    //         } else {
-
-    //             $stmt = $db->prepare("
-    //                 UPDATE usuarios 
-    //                 SET nombre = ?, apellido = ?, rol_id = ?, imagen = ?
-    //                 WHERE id = ?
-    //             ");
-
-    //             $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagenNombre, $id);
-    //             $stmt->execute();
-    //         }
-    //     }
-    //     if (!empty($passwordRaw) && strlen($passwordRaw) < 4) {
-    //         $_SESSION['error'] = "Password mínimo 4 caracteres";
-    //         return $this->redirect(BASE_URL . "/users");
-    //     }
-
-    //     //  4. UPDATE SEGURO (SIN username)
-    //     $stmt = $db->prepare("
-    //         UPDATE usuarios 
-    //         SET nombre = ?, apellido = ?, rol_id = ?, imagen = ?
-    //         WHERE id = ?
-    //     ");
-
-    //     $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagenNombre, $id);
-    //     $stmt->execute();
-
-    //     //  5. AUDITORÍA
-    //     auditoria("UPDATE", "usuarios", $id, "Actualización de usuario", "users");
-
-    //     $_SESSION['success'] = "Usuario actualizado";
-
-    //     return $this->redirect(BASE_URL . "/users");
-    // }
-
     public function update()
     {
         $this->auth();
@@ -434,91 +325,139 @@ class UsersController extends Controller
     }
 
 
+public function toggle()
+{
+    // 🔹 limpiar buffer (evita romper JSON)
+    if (ob_get_length()) ob_clean();
 
+    header('Content-Type: application/json');
 
+    try {
 
+        $db = conectarDB();
 
+        // 🔒 AUTENTICACIÓN
+        if (!isset($_SESSION['user'])) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'No autenticado'
+            ]);
+            exit;
+        }
 
-    public function toggle()
-    {
+        // 🔒 ROLES PERMITIDOS (SUPER y ADMIN)
+        if (!in_array($_SESSION['user']['rol'], [1, 2])) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'No autorizado'
+            ]);
+            exit;
+        }
 
-        //  Limpiar cualquier salida previa (evita romper JSON)
-        if (ob_get_length()) ob_clean();
+        $id = $_POST['id'] ?? null;
 
-        header('Content-Type: application/json');
+        if (!$id) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'ID inválido'
+            ]);
+            exit;
+        }
 
-        try {
+        // 🔍 OBTENER USUARIO
+        $stmt = $db->prepare("
+            SELECT id, estado, username 
+            FROM usuarios 
+            WHERE id = ?
+        ");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
 
-            //  Conexión (más seguro que global)
-            $db = conectarDB();
+        $userDB = $stmt->get_result()->fetch_assoc();
 
-            //  VALIDACIÓN SIN REDIRECT (AJAX)
-            if (!isset($_SESSION['user'])) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'No autenticado'
-                ]);
-                exit;
-            }
+        if (!$userDB) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'Usuario no existe'
+            ]);
+            exit;
+        }
 
-            //  ROLES PERMITIDOS
-            if (!in_array($_SESSION['user']['rol'], [1, 2])) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'No autorizado'
-                ]);
-                exit;
-            }
+        $estadoActual = (int)$userDB['estado'];
 
-            //  Datos desde JS
-            $id = $_POST['id'] ?? null;
-            $estado = $_POST['estado'] ?? null;
+        // 🚨 NO TOCAR ELIMINADOS
+        if ($estadoActual === 0) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'Usuario eliminado'
+            ]);
+            exit;
+        }
 
-            if (!$id) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'ID inválido'
-                ]);
-                exit;
-            }
+        // 🔄 CALCULAR NUEVO ESTADO (1 ↔ 2)
+        $nuevoEstado = ($estadoActual === 1) ? 2 : 1;
 
-            //  Query
-            $stmt = $db->prepare("
+        // 🔥 UPDATE
+        $stmt = $db->prepare("
             UPDATE usuarios 
             SET estado = ? 
             WHERE id = ?
         ");
+        $stmt->bind_param("ii", $nuevoEstado, $id);
+        $stmt->execute();
 
-            if (!$stmt) {
-                throw new Exception($db->error);
-            }
+        // 🧠 FUNCION TEXTO ESTADO
+        $estadoTexto = function ($estado) {
+            return match ($estado) {
+                1 => 'Activo',
+                2 => 'Inactivo',
+                0 => 'Eliminado',
+                default => 'Desconocido'
+            };
+        };
 
-            $stmt->bind_param("ii", $estado, $id);
+        // 🔍 USUARIO QUE REALIZA LA ACCIÓN
+        $usuarioAccion = $_SESSION['user']['username'] ?? 'Sistema';
 
-            if (!$stmt->execute()) {
-                throw new Exception($stmt->error);
-            }
+        // 📝 DETALLE AUDITORÍA
+        $detalle = "Usuario: {$userDB['username']} | Estado: " 
+                 . $estadoTexto($estadoActual) . " → " 
+                 . $estadoTexto($nuevoEstado) 
+                 . " | Por: {$usuarioAccion}";
 
-            //  Auditoría (opcional)
-            if (function_exists('auditoria')) {
-                auditoria("UPDATE", "usuarios", $id, "Cambio de estado", "users");
-            }
-
-            // RESPUESTA FINAL
-            echo json_encode([
-                'ok' => true
-            ]);
-            exit;
-        } catch (Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
-            exit;
+        // 📊 AUDITORÍA
+        if (function_exists('auditoria')) {
+            auditoria(
+                "UPDATE",
+                "usuarios",
+                $id,
+                $detalle,
+                "users"
+            );
         }
-    }
 
+        // ✅ RESPUESTA
+        echo json_encode([
+            'ok' => true,
+            'estado' => $nuevoEstado,
+            'estado_texto' => $estadoTexto($nuevoEstado)
+        ]);
+        exit;
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            'ok' => false,
+            'error' => $e->getMessage()
+        ]);
+        exit;
+    }
+}
+
+
+
+
+    
 
     // VALIDAR USERNAME (AJAX)
     public function checkUsername()

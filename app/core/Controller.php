@@ -2,8 +2,12 @@
 
 namespace App\Core;
 
+define('ROL_SUPER', 1);
+define('ROL_ADMIN', 2);
+
 class Controller
 {
+
 
     protected function render($view, $data = [], $layout = 'main')
     {
@@ -35,7 +39,8 @@ class Controller
 
     protected function isAdmin()
     {
-        return ($_SESSION['user']['rol'] ?? null) == 1;
+
+        return in_array($_SESSION['user']['rol'] ?? null, [ROL_SUPER, ROL_ADMIN]);
     }
 
     protected function onlyAdmin()

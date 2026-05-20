@@ -33,7 +33,7 @@
                 type="password"
                 name="password"
                 placeholder="Nueva contraseña">
-                <small class="input-msg"></small>
+            <small class="input-msg"></small>
         </div>
 
         <!-- Avatar -->
@@ -55,9 +55,15 @@
             <label>Rol</label>
             <select name="rol_id">
                 <?php foreach ($roles as $r): ?>
-                    <option value="<?= $r['id'] ?>" <?= $r['id'] == $user['rol_id'] ? 'selected' : '' ?>>
+
+                    <?php if ($r['id'] == 1 && $_SESSION['user']['rol'] != 1) continue; ?>
+
+                    <option
+                        value="<?= $r['id'] ?>"
+                        <?= $r['id'] == $user['rol_id'] ? 'selected' : '' ?>>
                         <?= $r['nombre'] ?>
                     </option>
+
                 <?php endforeach; ?>
             </select>
         </div>

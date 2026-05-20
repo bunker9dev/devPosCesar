@@ -37,6 +37,12 @@
   --success: #00ffcc;
   --success-bg: #00ff9633;
 
+/* ESTADO ELIMINADO (NEUTRO) */
+--deleted: #5c6b7a;
+--deleted-bg: rgba(92, 107, 122, 0.12);
+--deleted-border: rgba(92, 107, 122, 0.25);
+
+
    /* TABLAS */
   --table-header-th: #0d4061;
   --table-header-bg: #071a26;

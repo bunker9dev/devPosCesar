@@ -265,38 +265,45 @@ export function initUserFormValidation() {
 // =========================================================
 export function initUserToggle() {
   document.addEventListener("click", async (e) => {
-    // detectar click incluso en hijos (mejor práctica)
+
     const el = e.target.closest(".estado-toggle");
     if (!el) return;
+    console.log("CLICK", el.dataset.id, el.dataset.estado);
 
-    // evitar múltiples clicks mientras procesa
+    // NO permitir toggle en eliminados
+    const estadoActual = parseInt(el.dataset.estado);
+    if (estadoActual === 0) return;
+
     if (el.classList.contains("loading")) return;
 
     const id = el.dataset.id;
-    const estadoActual = parseInt(el.dataset.estado);
-    const nuevoEstado = estadoActual === 1 ? 0 : 1;
 
-    // feedback visual
     el.classList.add("loading");
 
     try {
-      const res = await post("/users/toggle", {
-        id,
-        estado: nuevoEstado,
-      });
+      // YA NO ENVÍAS ESTADO
+      const res = await post("/users/toggle", { id });
 
       if (!res || !res.ok) {
-        throw new Error("Error backend");
+        throw new Error(res?.error || "Error backend");
       }
+
+      const nuevoEstado = res.estado;
 
       // =============================
       // ACTUALIZAR UI
       // =============================
       el.dataset.estado = nuevoEstado;
-      el.textContent = nuevoEstado ? "Activo" : "Inactivo";
 
-      el.classList.toggle("active");
-      el.classList.toggle("inactive");
+      el.textContent = nuevoEstado == 1 ? "Activo" : "Inactivo";
+
+      el.classList.remove("active", "inactive");
+
+      if (nuevoEstado == 1) {
+        el.classList.add("active");
+      } else {
+        el.classList.add("inactive");
+      }
 
       // =============================
       // EVENTO GLOBAL
@@ -305,20 +312,20 @@ export function initUserToggle() {
         id,
         estado: nuevoEstado,
       });
+
     } catch (error) {
       console.error(error);
 
-      // usar sistema de alertas (mejor que alert)
       Events.emit("alerts:show", {
         type: "error",
-        message: "Error al cambiar estado",
+        message: error.message || "Error al cambiar estado",
       });
+
     } finally {
       el.classList.remove("loading");
     }
   });
 }
-
 // =========================================================
 //  HELPER PARA MENSAJES
 // =========================================================
