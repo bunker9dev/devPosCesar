@@ -56,6 +56,14 @@
                         <div class="actions">
                             <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">Editar</a>
                             <a href="<?= BASE_URL ?>/users/delete?id=<?= $u['id'] ?>" class="btn-action delete">Eliminar</a>
+                            <?php if ($_SESSION['user']['rol'] == 1 && $u['estado'] == 0): ?>
+                                <button
+                                    class="btn-restore"
+                                    data-id="<?= $u['id'] ?>">
+                                    Restaurar
+                                </button>
+                            <?php endif; ?>
+
                         </div>
                     </td>
 

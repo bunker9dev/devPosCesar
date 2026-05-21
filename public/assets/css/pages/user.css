@@ -125,3 +125,33 @@
 .toast.error {
   background: #ff4d4d;
 }
+
+
+/* boton restaurar */
+.btn-restore {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+
+  color: var(--success);
+  border: 1px solid var(--success);
+
+  background: transparent;
+
+  transition: all 0.25s ease;
+}
+
+/* 🔥 HOVER PRO */
+.btn-restore:hover {
+  background: var(--success-bg);
+  color: var(--text-white);
+  box-shadow: 0 0 8px var(--success);
+}
+
+/* 🔥 CLICK EFECTO */
+.btn-restore:active {
+  transform: scale(0.95);
+}

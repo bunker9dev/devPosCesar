@@ -35,6 +35,7 @@ $router->post('/users/update', 'Users\\Controllers\\UsersController@update');
 
 
 
+
 $router->post('/users/check-username', 'Users\\Controllers\\UsersController@checkUsername');
 
 // ==============================
@@ -42,7 +43,6 @@ $router->post('/users/check-username', 'Users\\Controllers\\UsersController@chec
 // ==============================
 
 $router->post('/api/users/check-username', 'Users\\Controllers\\UsersController@checkUsername');
-$router->post('/users/restore', 'Users\\Controllers\\UsersController@restore');
 
 
 // ==============================
@@ -51,4 +51,5 @@ $router->post('/users/restore', 'Users\\Controllers\\UsersController@restore');
 
 
 use App\Modules\Users\Controllers\UserController;
-$router->post('/users/toggle', 'Users\\Controllers\\UsersController@toggle'); 
+$router->post('/users/toggle', 'Users\\Controllers\\UsersController@toggle');  
+

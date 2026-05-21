@@ -2,11 +2,12 @@
 // 📦 IMPORTS
 // =========================================================
 
+// Sistema de eventos global (arquitectura)
+import { Events } from "../core/events.js";
+
 // Helper para peticiones HTTP (POST)
 import { post } from "../core/api.js";
 
-// Sistema de eventos global (arquitectura)
-import { Events } from "../core/events.js";
 
 export function initTablaUsuarios() {
   const tabla = document.getElementById("tablaUsuarios");
@@ -263,15 +264,14 @@ export function initUserFormValidation() {
 // =========================================================
 //  TOGGLE DE ESTADO (ACTIVO / INACTIVO)
 // =========================================================
-export function initUserToggle() {
+function initUserToggle() {
   document.addEventListener("click", async (e) => {
 
     const el = e.target.closest(".estado-toggle");
     if (!el) return;
-    console.log("CLICK", el.dataset.id, el.dataset.estado);
 
-    // NO permitir toggle en eliminados
     const estadoActual = parseInt(el.dataset.estado);
+
     if (estadoActual === 0) return;
 
     if (el.classList.contains("loading")) return;
@@ -281,36 +281,30 @@ export function initUserToggle() {
     el.classList.add("loading");
 
     try {
-      // YA NO ENVÍAS ESTADO
       const res = await post("/users/toggle", { id });
 
-      if (!res || !res.ok) {
-        throw new Error(res?.error || "Error backend");
-      }
-
-      const nuevoEstado = res.estado;
+      if (!res.ok) throw new Error(res.error);
 
       // =============================
       // ACTUALIZAR UI
       // =============================
-      el.dataset.estado = nuevoEstado;
-
-      el.textContent = nuevoEstado == 1 ? "Activo" : "Inactivo";
+      el.dataset.estado = res.estado;
+      el.textContent = res.estado_texto;
 
       el.classList.remove("active", "inactive");
 
-      if (nuevoEstado == 1) {
+      if (res.estado == 1) {
         el.classList.add("active");
       } else {
         el.classList.add("inactive");
       }
 
       // =============================
-      // EVENTO GLOBAL
+      // 🔥 EVENTO GLOBAL (AQUÍ VA)
       // =============================
       Events.emit("users:updated", {
         id,
-        estado: nuevoEstado,
+        estado: res.estado,
       });
 
     } catch (error) {
@@ -326,6 +320,9 @@ export function initUserToggle() {
     }
   });
 }
+
+
+
 // =========================================================
 //  HELPER PARA MENSAJES
 // =========================================================
@@ -348,6 +345,8 @@ function showMsg(el, text, type) {
     el.classList.add("loading");
   }
 }
+
+
 
 // =========================================================
 //  PREVIEW IMAGENES
@@ -373,6 +372,47 @@ export function initImagePreview() {
 }
 
 // =========================================================
+//  RESTAURAR USUARIOS ELIMIDANDOS
+// =========================================================
+
+export function initUserRestore() {
+  document.addEventListener("click", async (e) => {
+
+    const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
+
+    console.log("CLICK RESTORE"); // 🔥 DEBUG
+
+    const id = btn.dataset.id;
+
+    if (!confirm("¿Restaurar usuario?")) return;
+
+    try {
+      const res = await post("/users/restore", { id });
+
+      console.log(res); // 🔥 DEBUG
+
+      if (!res.ok) throw new Error(res.error);
+
+      const row = btn.closest("tr");
+      const badge = row.querySelector(".estado-toggle");
+
+      badge.dataset.estado = 2;
+      badge.textContent = "Inactivo";
+
+      badge.classList.remove("deleted");
+      badge.classList.add("inactive");
+
+      btn.remove();
+
+    } catch (err) {
+      console.error(err);
+    }
+  });
+}
+
+
+// =========================================================
 //  INTEGRACIÓN CON EVENTS (ARQUITECTURA)
 // =========================================================
 
@@ -381,14 +421,16 @@ Events.on("users:create", () => {
   initUserValidation();
   initPasswordValidation();
   initUserFormValidation();
+  
 });
 
 // Página: listado usuarios
 Events.on("users:index", () => {
   console.log("INIT USERS MODULE");
 
-  initTablaUsuarios(); //
+  initTablaUsuarios(); 
   initUserToggle();
+  initUserRestore();
 });
 
 //  visualizar imagen

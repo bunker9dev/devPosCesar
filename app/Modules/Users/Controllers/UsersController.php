@@ -55,6 +55,127 @@ class UsersController extends Controller
     }
 
     // 💾 GUARDAR
+    // public function store()
+    // {
+    //     $this->auth();
+    //     $this->onlyAdmin();
+
+    //     global $db;
+
+    //     // 🔥 LIMPIAR
+    //     $username = strtolower(trim($_POST['username'] ?? ''));
+    //     $nombre = trim($_POST['nombre'] ?? '');
+    //     $apellido = trim($_POST['apellido'] ?? '');
+    //     $passwordRaw = $_POST['password'] ?? '';
+    //     $rol = (int) ($_POST['rol_id'] ?? 0);
+
+    //     // ARRAY DE ERRORES
+    //     $errors = [];
+
+    //     // VALIDACIONES
+
+    //     if (!$username) {
+    //         $errors['username'] = "Username obligatorio";
+    //     } elseif (!preg_match('/^[a-z0-9_]{3,20}$/', $username)) {
+    //         $errors['username'] = "Username inválido";
+    //     }
+
+    //     if (!$nombre) {
+    //         $errors['nombre'] = "Nombre obligatorio";
+    //     } elseif (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}$/', $nombre)) {
+    //         $errors['nombre'] = "Nombre inválido";
+    //     }
+
+    //     if (!$passwordRaw) {
+    //         $errors['password'] = "Password obligatorio";
+    //     } elseif (strlen($passwordRaw) < 4) {
+    //         $errors['password'] = "Password mínimo 4 caracteres";
+    //     }
+
+    //     if (!$rol) {
+    //         $errors['rol_id'] = "Selecciona un rol";
+    //     }
+
+    //     // SUBIR IMAGEN
+
+    //     $imagenNombre = "default.png";
+
+    //     if (!empty($_FILES['imagen']['name'])) {
+
+    //         $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
+    //         // 🔥 DEBUG AQUÍ
+    //         // echo $carpeta;
+    //         // die;
+
+    //         if (!is_dir($carpeta)) {
+    //             mkdir($carpeta, 0755, true);
+    //         }
+
+    //         // 🔥 EXTENSIÓN
+    //         $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+    //         $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+
+    //         if (!in_array($ext, $permitidas)) {
+    //             $imagenNombre = "default.png";
+    //         } else {
+
+    //             // 🔥 👉 AQUÍ VA TU VALIDACIÓN MIME
+    //             $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+
+    //             $permitidosMime = ['image/jpeg', 'image/png', 'image/webp'];
+
+    //             if (!in_array($mime, $permitidosMime)) {
+    //                 $imagenNombre = "default.png";
+    //             } else {
+
+    //                 // 🔥 NOMBRE ÚNICO
+    //                 $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
+
+    //                 $rutaCompleta = $carpeta . $imagenNombre;
+
+    //                 // 🔥 MOVER ARCHIVO
+    //                 if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
+    //                     $imagenNombre = "default.png";
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // 🔐 HASH
+    //     $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
+
+    //     // 🔥 INSERT
+    //     $stmt = $db->prepare("
+    //         INSERT INTO usuarios (username, nombre, apellido, imagen, password, rol_id)
+    //         VALUES (?, ?, ?, ?, ?, ?)
+    //     ");
+
+    //     if (!$stmt) {
+    //         die("Error prepare: " . $db->error);
+    //     }
+
+    //     $stmt->bind_param("sssssi", $username, $nombre, $apellido, $imagenNombre, $password, $rol);
+
+    //     if (!$stmt->execute()) {
+
+    //         // 🔥 MANEJO ERROR UNIQUE
+    //         if ($db->errno == 1062) {
+    //             $_SESSION['error'] = "El username ya está en uso";
+    //         } else {
+    //             $_SESSION['error'] = "Error al guardar usuario";
+    //         }
+
+    //         return $this->redirect(BASE_URL . "/users/create");
+    //     }
+
+    //     // 🧾 AUDITORÍA
+    //     auditoria("CREATE", "usuarios", $stmt->insert_id, "Creación de usuario", "users");
+
+    //     $_SESSION['success'] = "Usuario creado correctamente";
+
+    //     return $this->redirect(BASE_URL . "/users");
+    // }
+
     public function store()
     {
         $this->auth();
@@ -69,10 +190,11 @@ class UsersController extends Controller
         $passwordRaw = $_POST['password'] ?? '';
         $rol = (int) ($_POST['rol_id'] ?? 0);
 
-        // ARRAY DE ERRORES
         $errors = [];
 
+        // =============================
         // VALIDACIONES
+        // =============================
 
         if (!$username) {
             $errors['username'] = "Username obligatorio";
@@ -96,44 +218,49 @@ class UsersController extends Controller
             $errors['rol_id'] = "Selecciona un rol";
         }
 
+        // 🔒 PROTEGER SUPER
+        if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
+            $errors['rol_id'] = "No puedes asignar rol SUPER";
+        }
+
+        // =============================
+        // VALIDAR DUPLICADO
+        // =============================
+        $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ? LIMIT 1");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+
+        if ($stmt->get_result()->num_rows > 0) {
+            $errors['username'] = "El username ya existe";
+        }
+
+        // =============================
         // SUBIR IMAGEN
+        // =============================
 
         $imagenNombre = "default.png";
 
         if (!empty($_FILES['imagen']['name'])) {
 
             $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
-            // 🔥 DEBUG AQUÍ
-            // echo $carpeta;
-            // die;
 
             if (!is_dir($carpeta)) {
                 mkdir($carpeta, 0755, true);
             }
 
-            // 🔥 EXTENSIÓN
             $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
             $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
 
-            if (!in_array($ext, $permitidas)) {
-                $imagenNombre = "default.png";
-            } else {
+            if (in_array($ext, $permitidas)) {
 
-                // 🔥 👉 AQUÍ VA TU VALIDACIÓN MIME
                 $mime = mime_content_type($_FILES['imagen']['tmp_name']);
-
                 $permitidosMime = ['image/jpeg', 'image/png', 'image/webp'];
 
-                if (!in_array($mime, $permitidosMime)) {
-                    $imagenNombre = "default.png";
-                } else {
+                if (in_array($mime, $permitidosMime)) {
 
-                    // 🔥 NOMBRE ÚNICO
                     $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
-
                     $rutaCompleta = $carpeta . $imagenNombre;
 
-                    // 🔥 MOVER ARCHIVO
                     if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
                         $imagenNombre = "default.png";
                     }
@@ -141,35 +268,43 @@ class UsersController extends Controller
             }
         }
 
-        // 🔐 HASH
+        // =============================
+        // SI HAY ERRORES
+        // =============================
+        if (!empty($errors)) {
+            $_SESSION['error'] = $errors;
+            return $this->redirect(BASE_URL . "/users/create");
+        }
+
+        // =============================
+        // HASH
+        // =============================
         $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
 
-        // 🔥 INSERT
+        // =============================
+        // INSERT
+        // =============================
         $stmt = $db->prepare("
-            INSERT INTO usuarios (username, nombre, apellido, imagen, password, rol_id)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
-
-        if (!$stmt) {
-            die("Error prepare: " . $db->error);
-        }
+        INSERT INTO usuarios 
+        (username, nombre, apellido, imagen, password, rol_id, estado)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
+    ");
 
         $stmt->bind_param("sssssi", $username, $nombre, $apellido, $imagenNombre, $password, $rol);
 
         if (!$stmt->execute()) {
-
-            // 🔥 MANEJO ERROR UNIQUE
-            if ($db->errno == 1062) {
-                $_SESSION['error'] = "El username ya está en uso";
-            } else {
-                $_SESSION['error'] = "Error al guardar usuario";
-            }
-
+            $_SESSION['error'] = "Error al guardar usuario";
             return $this->redirect(BASE_URL . "/users/create");
         }
 
-        // 🧾 AUDITORÍA
-        auditoria("CREATE", "usuarios", $stmt->insert_id, "Creación de usuario", "users");
+        // =============================
+        // AUDITORÍA
+        // =============================
+        $admin = $_SESSION['user']['username'] ?? 'Sistema';
+
+        $detalle = "Usuario creado: {$username} | Rol: {$rol} | Por: {$admin}";
+
+        auditoria("CREATE", "usuarios", $stmt->insert_id, $detalle, "users");
 
         $_SESSION['success'] = "Usuario creado correctamente";
 
@@ -325,141 +460,138 @@ class UsersController extends Controller
     }
 
 
-public function toggle()
-{
-    // 🔹 limpiar buffer (evita romper JSON)
-    if (ob_get_length()) ob_clean();
+    public function toggle()
+    {
+        // 🔹 limpiar buffer (evita romper JSON)
+        if (ob_get_length()) ob_clean();
 
-    header('Content-Type: application/json');
+        header('Content-Type: application/json');
 
-    try {
+        try {
 
-        $db = conectarDB();
+            $db = conectarDB();
 
-        // 🔒 AUTENTICACIÓN
-        if (!isset($_SESSION['user'])) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'No autenticado'
-            ]);
-            exit;
-        }
+            // 🔒 AUTENTICACIÓN
+            if (!isset($_SESSION['user'])) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'No autenticado'
+                ]);
+                exit;
+            }
 
-        // 🔒 ROLES PERMITIDOS (SUPER y ADMIN)
-        if (!in_array($_SESSION['user']['rol'], [1, 2])) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'No autorizado'
-            ]);
-            exit;
-        }
+            // 🔒 ROLES PERMITIDOS (SUPER y ADMIN)
+            if (!in_array($_SESSION['user']['rol'], [1, 2])) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'No autorizado'
+                ]);
+                exit;
+            }
 
-        $id = $_POST['id'] ?? null;
+            $id = $_POST['id'] ?? null;
 
-        if (!$id) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'ID inválido'
-            ]);
-            exit;
-        }
+            if (!$id) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'ID inválido'
+                ]);
+                exit;
+            }
 
-        // 🔍 OBTENER USUARIO
-        $stmt = $db->prepare("
+            // 🔍 OBTENER USUARIO
+            $stmt = $db->prepare("
             SELECT id, estado, username 
             FROM usuarios 
             WHERE id = ?
         ");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
 
-        $userDB = $stmt->get_result()->fetch_assoc();
+            $userDB = $stmt->get_result()->fetch_assoc();
 
-        if (!$userDB) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'Usuario no existe'
-            ]);
-            exit;
-        }
+            if (!$userDB) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'Usuario no existe'
+                ]);
+                exit;
+            }
 
-        $estadoActual = (int)$userDB['estado'];
+            $estadoActual = (int)$userDB['estado'];
 
-        // 🚨 NO TOCAR ELIMINADOS
-        if ($estadoActual === 0) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'Usuario eliminado'
-            ]);
-            exit;
-        }
+            // 🚨 NO TOCAR ELIMINADOS
+            if ($estadoActual === 0) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'Usuario eliminado'
+                ]);
+                exit;
+            }
 
-        // 🔄 CALCULAR NUEVO ESTADO (1 ↔ 2)
-        $nuevoEstado = ($estadoActual === 1) ? 2 : 1;
+            // 🔄 CALCULAR NUEVO ESTADO (1 ↔ 2)
+            $nuevoEstado = ($estadoActual === 1) ? 2 : 1;
 
-        // 🔥 UPDATE
-        $stmt = $db->prepare("
+            // 🔥 UPDATE
+            $stmt = $db->prepare("
             UPDATE usuarios 
             SET estado = ? 
             WHERE id = ?
         ");
-        $stmt->bind_param("ii", $nuevoEstado, $id);
-        $stmt->execute();
+            $stmt->bind_param("ii", $nuevoEstado, $id);
+            $stmt->execute();
 
-        // 🧠 FUNCION TEXTO ESTADO
-        $estadoTexto = function ($estado) {
-            return match ($estado) {
-                1 => 'Activo',
-                2 => 'Inactivo',
-                0 => 'Eliminado',
-                default => 'Desconocido'
+            // 🧠 FUNCION TEXTO ESTADO
+            $estadoTexto = function ($estado) {
+                return match ($estado) {
+                    1 => 'Activo',
+                    2 => 'Inactivo',
+                    0 => 'Eliminado',
+                    default => 'Desconocido'
+                };
             };
-        };
 
-        // 🔍 USUARIO QUE REALIZA LA ACCIÓN
-        $usuarioAccion = $_SESSION['user']['username'] ?? 'Sistema';
+            // 🔍 USUARIO QUE REALIZA LA ACCIÓN
+            $usuarioAccion = $_SESSION['user']['username'] ?? 'Sistema';
 
-        // 📝 DETALLE AUDITORÍA
-        $detalle = "Usuario: {$userDB['username']} | Estado: " 
-                 . $estadoTexto($estadoActual) . " → " 
-                 . $estadoTexto($nuevoEstado) 
-                 . " | Por: {$usuarioAccion}";
+            // 📝 DETALLE AUDITORÍA
+            $detalle = "Usuario: {$userDB['username']} | Estado: "
+                . $estadoTexto($estadoActual) . " → "
+                . $estadoTexto($nuevoEstado)
+                . " | Por: {$usuarioAccion}";
 
-        // 📊 AUDITORÍA
-        if (function_exists('auditoria')) {
-            auditoria(
-                "UPDATE",
-                "usuarios",
-                $id,
-                $detalle,
-                "users"
-            );
+            // 📊 AUDITORÍA
+            if (function_exists('auditoria')) {
+                auditoria(
+                    "UPDATE",
+                    "usuarios",
+                    $id,
+                    $detalle,
+                    "users"
+                );
+            }
+
+            // ✅ RESPUESTA
+            echo json_encode([
+                'ok' => true,
+                'estado' => $nuevoEstado,
+                'estado_texto' => $estadoTexto($nuevoEstado)
+            ]);
+            exit;
+        } catch (Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit;
         }
-
-        // ✅ RESPUESTA
-        echo json_encode([
-            'ok' => true,
-            'estado' => $nuevoEstado,
-            'estado_texto' => $estadoTexto($nuevoEstado)
-        ]);
-        exit;
-
-    } catch (Exception $e) {
-
-        echo json_encode([
-            'ok' => false,
-            'error' => $e->getMessage()
-        ]);
-        exit;
     }
-}
 
-
-
-
-    
-
+    // =========================================================
     // VALIDAR USERNAME (AJAX)
+    // =========================================================
+    
     public function checkUsername()
     {
         global $db;
@@ -490,6 +622,81 @@ public function toggle()
             'exists' => $exists
         ]);
     }
+
+
+    // =========================================================
+    // RESTAURAR USUARIO
+    // =========================================================
+    
+    public function restore()
+{
+    if (ob_get_length()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $db = conectarDB();
+
+        if (!isset($_SESSION['user'])) {
+            echo json_encode(['ok' => false, 'error' => 'No autenticado']);
+            exit;
+        }
+
+        // 🔒 SOLO SUPER
+        if ($_SESSION['user']['rol'] != 1) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            exit;
+        }
+
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+            exit;
+        }
+
+        // 🔍 usuario
+        $stmt = $db->prepare("SELECT username, estado FROM usuarios WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $user = $stmt->get_result()->fetch_assoc();
+
+        if (!$user) {
+            echo json_encode(['ok' => false, 'error' => 'Usuario no existe']);
+            exit;
+        }
+
+        if ($user['estado'] != 0) {
+            echo json_encode(['ok' => false, 'error' => 'No está eliminado']);
+            exit;
+        }
+
+        // 🔥 restaurar
+        $stmt = $db->prepare("UPDATE usuarios SET estado = 2 WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        // 🔥 auditoría
+        $admin = $_SESSION['user']['username'] ?? 'Sistema';
+
+        $detalle = "Usuario: {$user['username']} | Eliminado → Inactivo | Por: {$admin}";
+
+        auditoria("RESTORE", "usuarios", $id, $detalle, "users");
+
+        echo json_encode([
+            'ok' => true
+        ]);
+        exit;
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'ok' => false,
+            'error' => $e->getMessage()
+        ]);
+        exit;
+    }
+}
 }
 
 
