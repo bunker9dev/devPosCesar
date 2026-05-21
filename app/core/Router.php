@@ -23,7 +23,7 @@ class Router
     public function dispatch()
     {
 
-    
+
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
         // 🔥 quitar BASE_URL correctamente
@@ -72,32 +72,36 @@ class Router
     }
 
     // 🔥 Renderizar errores
-    private function renderError($code = 404)
-{
-    http_response_code($code);
+    private function renderError($code = 404, $message = null)
+    {
+        http_response_code($code);
 
-    $view = __DIR__ . "/../Views/errors/{$code}.php";
+        // 🔥 DEBUG (MOSTRAR ERROR REAL)
+        if ($message) {
+            echo "<h2>Error {$code}</h2>";
+            echo "<pre>{$message}</pre>";
+            exit;
+        }
 
-    // 🔴 Si NO existe la vista
-    if (!file_exists($view)) {
-        echo "<h1>Error {$code}</h1>";
+        $view = __DIR__ . "/../Views/errors/{$code}.php";
+
+        if (!file_exists($view)) {
+            echo "<h1>Error {$code}</h1>";
+            exit;
+        }
+
+        ob_start();
+        require $view;
+        $content = ob_get_clean();
+
+        $layout = __DIR__ . '/../Views/layouts/error.php';
+
+        if (file_exists($layout)) {
+            require $layout;
+        } else {
+            echo $content;
+        }
+
         exit;
     }
-
-    // 🔥 Capturar contenido
-    ob_start();
-    require $view;
-    $content = ob_get_clean();
-
-    // 🔥 Cargar layout
-    $layout = __DIR__ . '/../Views/layouts/error.php';
-
-    if (file_exists($layout)) {
-        require $layout;
-    } else {
-        echo $content;
-    }
-
-    exit;
-}
 }

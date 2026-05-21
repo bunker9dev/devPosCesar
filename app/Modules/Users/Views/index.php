@@ -1,11 +1,11 @@
 <!-- <h2 class="page-title">Usuarios</h2> -->
 
-<div class="users-header">
+<div class="module-header">
     <a href="<?= BASE_URL ?>/users/create" class="btn-primary">+ Crear usuario</a>
 </div>
 
 <div class="table-container">
-    <table id="tablaUsuarios" class="table-users display ">
+    <table id="tablaUsuarios" class="table-main display ">
         <thead>
             <tr>
                 <th></th>

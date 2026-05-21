@@ -62,3 +62,4 @@ $router->get('/suppliers/create', 'Suppliers\\Controllers\\SupplierController@cr
 
 $router->post('/suppliers/store', 'Suppliers\\Controllers\\SupplierController@store');
 $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle');
+$router->get('/suppliers/check-nit', 'Suppliers\Controllers\SupplierController@checkNit');
