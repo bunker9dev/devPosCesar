@@ -11,7 +11,7 @@
             <tr>
                 <th></th>
                 <th>ID</th>
-                <th>Nombre</th>
+                <th>Proveedor</th>
                 <th>NIT</th>
                 <th>Ciudad</th>
                 <th>Estado</th>
@@ -25,14 +25,18 @@
 
                     <th></th>
 
-                    <td><?= $s['id'] ?></td>
-                    <td><?= $s['nombre'] ?></td>
-                    <td><?= $s['nit'] ?></td>
-                    <td><?= $s['ciudad'] ?></td>
+                    <td data-label="ID"><?= $s['id'] ?></td>
 
-                    <!-- ESTADO  -->
-                    <td>
+                    <!-- 🔥 NOMBRE COMPLETO -->
+                    <td data-label="Proveedor">
+                        <?= $s['nombre_completo'] ?? ($s['nombre'] . ' ' . $s['apellidos']) ?>
+                    </td>
 
+                    <td data-label="NIT"><?= $s['nit'] ?></td>
+                    <td data-label="Ciudad"><?= $s['ciudad'] ?></td>
+
+                    <!-- ESTADO -->
+                    <td data-label="Estado">
                         <span
                             class="badge estado-toggle 
                             <?= $s['estado'] == 1 ? 'active' : ($s['estado'] == 2 ? 'inactive' : 'deleted') ?>"
@@ -49,14 +53,13 @@
                             <?php endif; ?>
 
                         </span>
-
                     </td>
 
                     <!-- ACCIONES -->
-                    <td>
+                    <td data-label="Acciones">
                         <div class="actions">
 
-                            <a href="<?= BASE_URL ?>/suppliers/edit/<?= $s['id'] ?>" class="btn-action edit">
+                            <a href="<?= BASE_URL ?>/suppliers/edit?id=<?= $s['id'] ?>" class="btn-action edit">
                                 Editar
                             </a>
 

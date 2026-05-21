@@ -19,6 +19,7 @@ class SupplierController extends Controller
         $this->service = new SupplierService($this->model, $db);
     }
 
+    // 🔍 LISTAR
     public function index()
     {
         $this->auth();
@@ -34,6 +35,7 @@ class SupplierController extends Controller
         ]);
     }
 
+    // ➕ FORM CREATE
     public function create()
     {
         $this->auth();
@@ -46,23 +48,34 @@ class SupplierController extends Controller
         ]);
     }
 
+    // 💾 GUARDAR
     public function store()
     {
         $this->auth();
         $this->onlyAdmin();
 
         try {
-            $_POST['user_id'] = $_SESSION['user']['id'];
+
             $this->service->create($_POST);
 
             $_SESSION['success'] = "Proveedor creado";
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-        }
+            return $this->redirect(BASE_URL . "/suppliers");
 
-        return $this->redirect(BASE_URL . "/suppliers");
+        } catch (\Exception $e) {
+
+            // 🔥 ERRORES POR CAMPO (tipo Laravel)
+            $errors = json_decode($e->getMessage(), true);
+
+            $_SESSION['errors'] = $errors ?: ['general' => $e->getMessage()];
+
+            // 🔥 MANTENER INPUTS
+            $_SESSION['old'] = $_POST;
+
+            return $this->redirect(BASE_URL . "/suppliers/create");
+        }
     }
 
+    // ✏️ FORM EDIT
     public function edit($id)
     {
         $this->auth();
@@ -70,7 +83,9 @@ class SupplierController extends Controller
 
         $supplier = $this->model->find($id);
 
-        if (!$supplier) return $this->redirect(BASE_URL . "/suppliers");
+        if (!$supplier) {
+            return $this->redirect(BASE_URL . "/suppliers");
+        }
 
         $isSuper = ($_SESSION['user']['rol'] == 1);
 
@@ -80,90 +95,109 @@ class SupplierController extends Controller
         ]);
     }
 
+    // 💾 ACTUALIZAR
     public function update($id)
     {
         $this->auth();
         $this->onlyAdmin();
 
         try {
+
             $_POST['user_id'] = $_SESSION['user']['id'];
+
             $this->service->update($id, $_POST);
 
             $_SESSION['success'] = "Proveedor actualizado";
-        } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-        }
+            return $this->redirect(BASE_URL . "/suppliers");
 
-        return $this->redirect(BASE_URL . "/suppliers");
+        } catch (\Exception $e) {
+
+            $errors = json_decode($e->getMessage(), true);
+
+            $_SESSION['errors'] = $errors ?: ['general' => $e->getMessage()];
+            $_SESSION['old'] = $_POST;
+
+            return $this->redirect(BASE_URL . "/suppliers/edit?id=" . $id);
+        }
     }
 
+    // 🔄 CAMBIAR ESTADO (AJAX)
     public function toggle()
     {
         header('Content-Type: application/json');
 
         try {
+
             $estado = $this->service->toggle(
                 $_POST['id'],
                 $_SESSION['user']['id']
             );
 
-            echo json_encode(['ok' => true, 'estado' => $estado]);
+            echo json_encode([
+                'ok' => true,
+                'estado' => $estado
+            ]);
+
         } catch (\Exception $e) {
-            echo json_encode(['ok' => false]);
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
+    // 🗑️ ELIMINAR (AJAX)
     public function delete()
     {
         header('Content-Type: application/json');
 
         try {
+
             $this->service->delete($_POST['id'], $_SESSION['user']['id']);
+
             echo json_encode(['ok' => true]);
+
         } catch (\Exception $e) {
-            echo json_encode(['ok' => false]);
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
+    // ♻️ RESTAURAR (AJAX)
     public function restore()
     {
         header('Content-Type: application/json');
 
         try {
+
             $this->service->restore($_POST['id'], $_SESSION['user']['id']);
+
             echo json_encode(['ok' => true]);
+
         } catch (\Exception $e) {
-            echo json_encode(['ok' => false]);
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
-    // public function checkNit()
-    // {
-    //     header('Content-Type: application/json');
-
-    //     $nit = $_GET['nit'] ?? '';
-
-    //     if (!$nit) {
-    //         echo json_encode(['exists' => false]);
-    //         return;
-    //     }
-
-    //     $exists = $this->model->existsByNit($nit);
-
-    //     echo json_encode(['exists' => $exists]);
-    // }
-
+    // 🔍 VALIDAR NIT (AJAX)
     public function checkNit()
     {
         header('Content-Type: application/json');
 
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-
         $nit = $_GET['nit'] ?? '';
 
-        $exists = $this->model->existsByNit($nit);
+        $exists = $this->service->existsByNit($nit);
 
-        echo json_encode(['exists' => $exists]);
+        echo json_encode([
+            'exists' => $exists
+        ]);
     }
 }

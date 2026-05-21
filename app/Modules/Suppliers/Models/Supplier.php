@@ -13,9 +13,21 @@ class Supplier
         $this->db = $db;
     }
 
+    // 🔍 LISTAR
     public function getAll($isSuper)
     {
-        $query = "SELECT * FROM proveedores";
+        $query = "
+            SELECT 
+                id,
+                nombre,
+                apellidos,
+                CONCAT(nombre, ' ', IFNULL(apellidos, '')) AS nombre_completo,
+                nit,
+                ciudad,
+                estado,
+                created_at
+            FROM proveedores
+        ";
 
         if (!$isSuper) {
             $query .= " WHERE estado IN (1,2)";
@@ -26,22 +38,39 @@ class Supplier
         return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
 
+    // 🔍 BUSCAR
     public function find($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM proveedores WHERE id=?");
+        $stmt = $this->db->prepare("
+            SELECT * FROM proveedores WHERE id=?
+        ");
+
         $stmt->bind_param("i", $id);
-        $stmt->execute();
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al obtener proveedor");
+        }
+
         return $stmt->get_result()->fetch_assoc();
     }
 
+    // 🔍 VALIDAR NIT
     public function existsByNit($nit)
     {
-        $stmt = $this->db->prepare("SELECT id FROM proveedores WHERE nit=?");
+        $stmt = $this->db->prepare("
+            SELECT id FROM proveedores WHERE nit=?
+        ");
+
         $stmt->bind_param("s", $nit);
-        $stmt->execute();
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error validando NIT");
+        }
+
         return $stmt->get_result()->num_rows > 0;
     }
 
+    // 💾 CREAR
     public function create($data)
     {
         $stmt = $this->db->prepare("
@@ -50,7 +79,8 @@ class Supplier
             VALUES (?, ?, ?, ?, 1, ?)
         ");
 
-        $stmt->bind_param("ssssi",
+        $stmt->bind_param(
+            "ssssi",
             $data['nombre'],
             $data['apellidos'],
             $data['nit'],
@@ -58,10 +88,14 @@ class Supplier
             $data['user_id']
         );
 
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            throw new Exception("Error al crear proveedor");
+        }
+
         return $stmt->insert_id;
     }
 
+    // ✏️ ACTUALIZAR
     public function update($id, $data)
     {
         $stmt = $this->db->prepare("
@@ -70,7 +104,8 @@ class Supplier
             WHERE id=?
         ");
 
-        $stmt->bind_param("ssssii",
+        $stmt->bind_param(
+            "ssssii",
             $data['nombre'],
             $data['apellidos'],
             $data['nit'],
@@ -79,21 +114,36 @@ class Supplier
             $id
         );
 
-        return $stmt->execute();
+        if (!$stmt->execute()) {
+            throw new Exception("Error al actualizar proveedor");
+        }
+
+        return true;
     }
 
+    // 🔄 CAMBIAR ESTADO
     public function updateEstado($id, $estado)
     {
-        $stmt = $this->db->prepare("UPDATE proveedores SET estado=? WHERE id=?");
+        $stmt = $this->db->prepare("
+            UPDATE proveedores SET estado=? WHERE id=?
+        ");
+
         $stmt->bind_param("ii", $estado, $id);
-        return $stmt->execute();
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al cambiar estado");
+        }
+
+        return true;
     }
 
+    // 🗑️ ELIMINAR (SOFT)
     public function delete($id)
     {
         return $this->updateEstado($id, 0);
     }
 
+    // ♻️ RESTAURAR
     public function restore($id)
     {
         return $this->updateEstado($id, 1);
