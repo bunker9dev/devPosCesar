@@ -11,6 +11,7 @@ import '../modules/sidebar.js';
 import "../pages/dashboard.js";
 import "../pages/login.js";
 import "../modules/tablaVentas.js";
+import "../modules/suppliers.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initNavbar();
@@ -45,6 +46,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Previsualizar imagen
   if (document.querySelector('input[name="imagen"]')) {
     Events.emit("users:edit");
+}
+
+// ##########################
+// Proveedores - suppliers
+// ##########################
+if (document.getElementById("tablaSuppliers")) {
+    Events.emit("suppliers:index");
+}
+
+// suppliers create
+if (document.getElementById("nombre")) {
+    Events.emit("suppliers:create");
 }
 
 

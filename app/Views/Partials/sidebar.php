@@ -24,17 +24,24 @@
         </li>
 
         <li>
-            <a href="<?= BASE_URL ?>/users" data-tooltip="Usuarios"> 
+            <a href="<?= BASE_URL ?>/users" data-tooltip="Usuarios">
                 <i data-lucide="users"></i>
                 <span>Usuarios</span>
             </a>
         </li>
+
         <li>
-            <a href="<?= BASE_URL ?>/proveedores" data-tooltip="Proveedores">
+            <a href="<?= BASE_URL ?>/suppliers" data-tooltip="Proveedores">
                 <i data-lucide="truck"></i>
                 <span>Proveedores</span>
             </a>
         </li>
+        <!-- <li>
+            <a href="<?= BASE_URL ?>/proveedores" data-tooltip="Proveedores">
+                <i data-lucide="truck"></i>
+                <span>Proveedores</span>
+            </a>
+        </li> -->
 
         <li>
             <a href="<?= BASE_URL ?>/productos" data-tooltip="Productos">

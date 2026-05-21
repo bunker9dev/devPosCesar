@@ -49,6 +49,16 @@ $router->post('/users/restore', 'Users\\Controllers\\UsersController@restore');
 // USER
 // ==============================
 
-
 use App\Modules\Users\Controllers\UserController;
 $router->post('/users/toggle', 'Users\\Controllers\\UsersController@toggle'); 
+
+
+// ==============================
+// PROVEEDORES
+// ==============================
+
+$router->get('/suppliers', 'Suppliers\\Controllers\\SupplierController@index');
+$router->get('/suppliers/create', 'Suppliers\\Controllers\\SupplierController@create');
+
+$router->post('/suppliers/store', 'Suppliers\\Controllers\\SupplierController@store');
+$router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle');

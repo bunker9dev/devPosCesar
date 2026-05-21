@@ -78,6 +78,14 @@
   margin-top: 5px;
 }
 
+.input-msg.error {
+  color: var(--danger);
+}
+
+.input-msg.success {
+  color: var(--success);
+}
+
 .loading {
   animation: blink 1s infinite;
 }

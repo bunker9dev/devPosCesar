@@ -25,66 +25,7 @@ class AuthController extends Controller
         );
     }
 
-    // 🔐 PROCESAR LOGIN REAL + AUDITORÍA
-    // public function login()
-    // {
-    //     global $db;
-
-    //     // ✔️ Evitar login si ya está autenticado
-    //     if (!empty($_SESSION['user'])) {
-    //         $this->redirect(BASE_URL . "/dashboard");
-    //     }
-
-    //     $username = strtolower($_POST['user'] ?? '');
-    //     $pass = $_POST['pass'] ?? '';
-
-    //     // 🔎 Buscar usuario
-    //     $stmt = $db->prepare("SELECT * FROM usuarios WHERE username = ? LIMIT 1");
-    //     $stmt->bind_param("s", $username);
-    //     $stmt->execute();
-
-    //     $result = $stmt->get_result();
-    //     $usuario = $result->fetch_assoc();
-
-    //     // Usuario no existe
-    //     if (!$usuario) {
-    //         auditoria("LOGIN_FAIL", "usuarios", null, "Usuario no encontrado: $username");
-
-    //         $_SESSION['error'] = "Usuario o contraseña incorrectos";
-    //         header("Location: " . BASE_URL . "/login");
-    //         exit;
-    //     }
-
-    //     // Password incorrecto
-    //     if (!password_verify($pass, $usuario['password'])) {
-    //         auditoria("LOGIN_FAIL", "usuarios", $usuario['id'], "Password incorrecto");
-
-    //         $_SESSION['error'] = "Usuario o contraseña incorrectos";
-    //         header("Location: " . BASE_URL . "/login");
-    //         exit;
-    //     }
-
-    //     // Usuario inactivo
-    //     if ($usuario['estado'] == 0) {
-    //         auditoria("LOGIN_BLOCKED", "usuarios", $usuario['id'], "Usuario inactivo");
-
-    //         $_SESSION['error'] = "Usuario inactivo";
-    //         header("Location: " . BASE_URL . "/login");
-    //         exit;
-    //     }
-
-    //     // LOGIN EXITOSO
-    //     $_SESSION['user'] = [
-    //         'id' => $usuario['id'],
-    //         'username' => $usuario['username'],
-    //         'rol' => $usuario['rol_id']
-    //     ];
-
-    //     auditoria("LOGIN", "usuarios", $usuario['id'], "Inicio de sesión exitoso");
-
-    //     header("Location: " . BASE_URL . "/dashboard");
-    //     exit;
-    // }
+    
 
     public function login()
     {
@@ -140,6 +81,9 @@ class AuthController extends Controller
             header("Location: " . BASE_URL . "/login");
             exit;
         }
+        // =============================
+        // LOGIN EXITOSO
+        // =============================
 
         $_SESSION['user'] = [
             'id' => $usuario['id'],
@@ -149,6 +93,18 @@ class AuthController extends Controller
             'rol' => $usuario['rol_id'],
             'rol_nombre' => $usuario['rol_nombre']
         ];
+
+        // 🔥 ACTUALIZAR ÚLTIMO LOGIN
+        $stmt = $db->prepare("
+            UPDATE usuarios 
+            SET ultimo_login = NOW() 
+            WHERE id = ?
+        ");
+
+        if ($stmt) {
+            $stmt->bind_param("i", $usuario['id']);
+            $stmt->execute();
+        }
 
         // PRUEBA 
         // auditoria("TEST", "usuarios", 1, "PRUEBA DIRECTA", "auth");

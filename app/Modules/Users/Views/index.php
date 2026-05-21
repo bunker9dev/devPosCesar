@@ -16,6 +16,7 @@
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Acciones</th>
+                <!-- <th>Último acceso</th> -->  <!-- PENDIENTE ACTIVAR -->
             </tr>
         </thead>
 
@@ -66,6 +67,13 @@
 
                         </div>
                     </td>
+
+                    <!-- PENDIENTE ACTIVAR -->
+                    <!-- <td>
+                        <?= $u['ultimo_login']
+                            ? date('d/m/Y H:i', strtotime($u['ultimo_login']))
+                            : 'Nunca' ?>
+                    </td> -->
 
                 </tr>
             <?php endforeach; ?>
