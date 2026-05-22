@@ -53,11 +53,11 @@ $router->post('/api/users/check-username', 'Users\\Controllers\\UsersController@
 // CRUD
 $router->get('/suppliers', 'Suppliers\\Controllers\\SupplierController@index');
 $router->get('/suppliers/create', 'Suppliers\\Controllers\\SupplierController@create');
-$router->get('/suppliers/edit', 'Suppliers\\Controllers\\SupplierController@edit'); // ?id=1
+$router->get('/suppliers/edit', 'Suppliers\\Controllers\\SupplierController@edit'); 
 
 $router->post('/suppliers/store', 'Suppliers\\Controllers\\SupplierController@store');
 
-// 🔥 ACCIONES (IMPORTANTE AGREGAR ESTO)
+// 🔥 ACCIONES 
 $router->post('/suppliers/delete', 'Suppliers\\Controllers\\SupplierController@delete');
 $router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@restore');
 $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle');

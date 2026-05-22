@@ -155,21 +155,73 @@ class SupplierController extends Controller
     }
 
     // 🗑️ ELIMINAR (AJAX)
+
     public function delete()
     {
+        // ⚠️ NO usar ob_clean por ahora
         header('Content-Type: application/json');
 
         try {
 
-            $this->service->delete($_POST['id'], $_SESSION['user']['id']);
+            $db = conectarDB();
 
+            if (!isset($_SESSION['user'])) {
+                echo json_encode(['ok' => false, 'error' => 'No autenticado']);
+                return;
+            }
+
+            $rol = $_SESSION['user']['rol_nombre'] ?? '';
+
+            if (!in_array($rol, ['super', 'administrador'])) {
+                echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+                return;
+            }
+
+            $id = $_POST['id'] ?? null;
+
+            if (!$id) {
+                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+                return;
+            }
+
+            // 🔥 OJO CON ESTE CAMPO (nombre)
+            $stmt = $db->prepare("SELECT nombre, estado FROM proveedores WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+
+            $supplier = $stmt->get_result()->fetch_assoc();
+
+            if (!$supplier) {
+                echo json_encode(['ok' => false, 'error' => 'Proveedor no existe']);
+                return;
+            }
+
+            // 🔥 SOFT DELETE
+            $stmt = $db->prepare("UPDATE proveedores SET estado = 0 WHERE id = ?");
+            $stmt->bind_param("i", $id);
+
+            if (!$stmt->execute()) {
+                echo json_encode(['ok' => false, 'error' => $stmt->error]);
+                return;
+            }
+
+            // 🧠 AUDITORÍA
+            $admin = $_SESSION['user']['username'] ?? 'Sistema';
+
+            $detalle = "Proveedor: {$supplier['nombre']} | Estado: {$supplier['estado']} → 0 | Por: {$admin}";
+
+            auditoria("DELETE", "proveedores", $id, $detalle, "suppliers");
+
+            // 🔥 ESTA LÍNEA ES LA MÁS IMPORTANTE
             echo json_encode(['ok' => true]);
-        } catch (\Exception $e) {
+            return;
+        } catch (Exception $e) {
 
             echo json_encode([
                 'ok' => false,
                 'error' => $e->getMessage()
             ]);
+            return;
         }
     }
 
