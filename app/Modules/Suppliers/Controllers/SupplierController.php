@@ -226,35 +226,74 @@ class SupplierController extends Controller
     }
 
     // ♻️ RESTAURAR (AJAX)
-    public function restore()
-    {
-        header('Content-Type: application/json');
+   public function restore()
+{
+    if (ob_get_length()) ob_clean();
 
-        try {
+    header('Content-Type: application/json');
 
-            $this->service->restore($_POST['id'], $_SESSION['user']['id']);
+    try {
 
-            echo json_encode(['ok' => true]);
-        } catch (\Exception $e) {
+        $db = conectarDB();
 
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
+        // 🔐 autenticación
+        if (!isset($_SESSION['user'])) {
+            echo json_encode(['ok' => false, 'error' => 'No autenticado']);
+            return;
         }
-    }
 
-    // 🔍 VALIDAR NIT (AJAX)
-    public function checkNit()
-    {
-        header('Content-Type: application/json');
+        // 🔐 SOLO SUPER
+        $rol = $_SESSION['user']['rol_nombre'] ?? '';
 
-        $nit = $_GET['nit'] ?? '';
+        if ($rol !== 'super') {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
+        }
 
-        $exists = $this->service->existsByNit($nit);
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+            return;
+        }
+
+        // 🔍 obtener datos antes
+        $stmt = $db->prepare("SELECT nombre, estado FROM proveedores WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $supplier = $stmt->get_result()->fetch_assoc();
+
+        if (!$supplier) {
+            echo json_encode(['ok' => false, 'error' => 'Proveedor no existe']);
+            return;
+        }
+
+        // 🔥 RESTORE
+        $stmt = $db->prepare("UPDATE proveedores SET estado = 1 WHERE id = ?");
+        $stmt->bind_param("i", $id);
+
+        if (!$stmt->execute()) {
+            echo json_encode(['ok' => false, 'error' => $stmt->error]);
+            return;
+        }
+
+        // 🧠 AUDITORÍA
+        $admin = $_SESSION['user']['username'] ?? 'Sistema';
+
+        $detalle = "Proveedor: {$supplier['nombre']} | Estado: {$supplier['estado']} → 1 (Restaurado) | Por: {$admin}";
+
+        auditoria("RESTORE", "proveedores", $id, $detalle, "suppliers");
+
+        echo json_encode(['ok' => true]);
+        return;
+
+    } catch (Exception $e) {
 
         echo json_encode([
-            'exists' => $exists
+            'ok' => false,
+            'error' => $e->getMessage()
         ]);
+        return;
     }
+}
 }

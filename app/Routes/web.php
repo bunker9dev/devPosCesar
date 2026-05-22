@@ -61,6 +61,7 @@ $router->post('/suppliers/store', 'Suppliers\\Controllers\\SupplierController@st
 $router->post('/suppliers/delete', 'Suppliers\\Controllers\\SupplierController@delete');
 $router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@restore');
 $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle');
+$router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@restore');
 
 
 // ==============================

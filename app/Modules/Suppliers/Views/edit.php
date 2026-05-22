@@ -70,7 +70,7 @@ function oldValue($field, $old, $supplier) {
     </div>
 
     <!-- CAMPOS SOLO SUPER -->
-    <?php if ($isSuper): ?>
+    <?php if ($canRestore): ?>
 
         <div class="form-group">
             <label>Email (opcional)</label>

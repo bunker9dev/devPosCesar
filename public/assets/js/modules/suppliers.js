@@ -72,6 +72,54 @@ function initSupplierDelete() {
   });
 }
 
+
+// =========================================================
+// RESTORE
+// =========================================================
+function initSupplierRestore() {
+  document.addEventListener("click", async (e) => {
+
+    const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+
+    try {
+
+      const res = await post("/suppliers/restore", { id });
+
+      if (!res.ok) throw new Error(res.error);
+
+      const row = btn.closest("tr");
+      const badge = row.querySelector(".estado-toggle");
+
+      // 🔥 actualizar UI
+      badge.dataset.estado = 1;
+      badge.textContent = "Activo";
+
+      badge.classList.remove("deleted");
+      badge.classList.add("active");
+
+      btn.remove();
+
+      Events.emit("suppliers:updated", {
+        id,
+        estado: 1,
+      });
+
+    } catch (err) {
+      console.error(err);
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al restaurar",
+      });
+    }
+
+  });
+}
+
+
 // =========================================================
 // INIT MODULE
 // =========================================================
@@ -79,5 +127,6 @@ Events.on("suppliers:index", () => {
     console.log("INIT SUPPLIERS"); // 👈
 
   initSupplierToggle();
-  initSupplierDelete(); // 🔥 NUEVO
+  initSupplierDelete();
+  initSupplierRestore();// 
 });
