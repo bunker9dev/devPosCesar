@@ -8,7 +8,6 @@ import { Events } from "../core/events.js";
 // Helper para peticiones HTTP (POST)
 import { post } from "../core/api.js";
 
-
 export function initTablaUsuarios() {
   const tabla = document.getElementById("tablaUsuarios");
   if (!tabla) return;
@@ -198,41 +197,36 @@ export function initUserValidation() {
 // =========================================================
 
 export function initPasswordValidation() {
-    const input = document.getElementById("password");
-    if (!input) return;
+  const input = document.getElementById("password");
+  if (!input) return;
 
-    // 🔥 buscar el mensaje RELATIVO al input
-    const msg = input.parentElement.querySelector(".input-msg");
+  // 🔥 buscar el mensaje RELATIVO al input
+  const msg = input.parentElement.querySelector(".input-msg");
 
-    input.addEventListener("input", () => {
+  input.addEventListener("input", () => {
+    const value = input.value;
 
-        const value = input.value;
+    // 👉 en EDIT: si está vacío → no validar
+    if (value.length === 0) {
+      msg.textContent = "";
+      input.dataset.valid = "true";
+      input.classList.remove("input-error");
+      return;
+    }
 
-        // 👉 en EDIT: si está vacío → no validar
-        if (value.length === 0) {
-            msg.textContent = "";
-            input.dataset.valid = "true";
-            input.classList.remove("input-error");
-            return;
-        }
-
-        if (value.length < 6) {
-            msg.textContent = "Mínimo 6 caracteres";
-            msg.style.color = "red";
-            input.dataset.valid = "false";
-            input.classList.add("input-error");
-        } else {
-            msg.textContent = "✔ Password válido";
-            msg.style.color = "lime";
-            input.dataset.valid = "true";
-            input.classList.remove("input-error");
-        }
-
-    });
-
+    if (value.length < 6) {
+      msg.textContent = "Mínimo 6 caracteres";
+      msg.style.color = "red";
+      input.dataset.valid = "false";
+      input.classList.add("input-error");
+    } else {
+      msg.textContent = "✔ Password válido";
+      msg.style.color = "lime";
+      input.dataset.valid = "true";
+      input.classList.remove("input-error");
+    }
+  });
 }
-
-
 
 // =========================================================
 // BLOQUEAR ENVÍO SI HAY ERRORES
@@ -266,7 +260,6 @@ export function initUserFormValidation() {
 // =========================================================
 function initUserToggle() {
   document.addEventListener("click", async (e) => {
-
     const el = e.target.closest(".estado-toggle");
     if (!el) return;
 
@@ -306,7 +299,6 @@ function initUserToggle() {
         id,
         estado: res.estado,
       });
-
     } catch (error) {
       console.error(error);
 
@@ -314,14 +306,11 @@ function initUserToggle() {
         type: "error",
         message: error.message || "Error al cambiar estado",
       });
-
     } finally {
       el.classList.remove("loading");
     }
   });
 }
-
-
 
 // =========================================================
 //  HELPER PARA MENSAJES
@@ -345,8 +334,6 @@ function showMsg(el, text, type) {
     el.classList.add("loading");
   }
 }
-
-
 
 // =========================================================
 //  PREVIEW IMAGENES
@@ -372,12 +359,90 @@ export function initImagePreview() {
 }
 
 // =========================================================
+//  ELIMINAR USUARIOS
+// =========================================================
+
+// function initUserDelete() {
+//   document.addEventListener("click", async (e) => {
+
+//     const btn = e.target.closest(".delete");
+//     if (!btn) return;
+
+//     const id = btn.dataset.id;
+
+//     if (!confirm("¿Eliminar usuario?")) return;
+
+//     try {
+//       const res = await post("/users/delete", { id });
+
+//       if (!res.ok) throw new Error(res.error);
+
+//       const row = btn.closest("tr");
+//       const badge = row.querySelector(".estado-toggle");
+
+//       // 🔥 actualizar UI (igual que restore pero inverso)
+//       badge.dataset.estado = 0;
+//       badge.textContent = "Eliminado";
+
+//       badge.classList.remove("active", "inactive");
+//       badge.classList.add("deleted");
+
+//       btn.remove(); // quitar botón eliminar
+
+//       // 🔥 opcional: evento global
+//       Events.emit("users:updated", {
+//         id,
+//         estado: 0,
+//       });
+
+//     } catch (err) {
+//       console.error(err);
+
+//       Events.emit("alerts:show", {
+//         type: "error",
+//         message: err.message || "Error al eliminar",
+//       });
+//     }
+
+//   });
+// }
+function initUserDelete() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".delete");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+
+    // 🔍 DEBUG AQUÍ
+    console.log("DELETE ID:", id);
+
+    if (!confirm("¿Eliminar usuario?")) return;
+
+    try {
+      // 🔍 DEBUG ANTES DEL POST
+      console.log("Enviando petición...");
+
+      const res = await post("/users/delete", { id });
+
+      // 🔍 DEBUG RESPUESTA
+      console.log("RESPUESTA:", res);
+
+      if (!res.ok) throw new Error(res.error);
+
+      const row = btn.closest("tr");
+      row.remove();
+    } catch (err) {
+      console.error("ERROR:", err);
+    }
+  });
+}
+
+// =========================================================
 //  RESTAURAR USUARIOS ELIMIDANDOS
 // =========================================================
 
 export function initUserRestore() {
   document.addEventListener("click", async (e) => {
-
     const btn = e.target.closest(".btn-restore");
     if (!btn) return;
 
@@ -404,13 +469,11 @@ export function initUserRestore() {
       badge.classList.add("inactive");
 
       btn.remove();
-
     } catch (err) {
       console.error(err);
     }
   });
 }
-
 
 // =========================================================
 //  INTEGRACIÓN CON EVENTS (ARQUITECTURA)
@@ -421,16 +484,16 @@ Events.on("users:create", () => {
   initUserValidation();
   initPasswordValidation();
   initUserFormValidation();
-  
 });
 
 // Página: listado usuarios
 Events.on("users:index", () => {
   console.log("INIT USERS MODULE");
 
-  initTablaUsuarios(); 
+  initTablaUsuarios();
   initUserToggle();
   initUserRestore();
+  initUserDelete();
 });
 
 //  visualizar imagen

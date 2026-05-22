@@ -59,15 +59,22 @@
                     <td data-label="Acciones">
                         <div class="actions">
 
-                            <a href="<?= BASE_URL ?>/suppliers/edit?id=<?= $s['id'] ?>" class="btn-action edit">
-                                Editar
-                            </a>
+                            <!-- ✏️ EDITAR -->
+                            <?php if ($canEdit): ?>
+                                <a href="<?= BASE_URL ?>/suppliers/edit?id=<?= $s['id'] ?>" class="btn-action edit">
+                                    Editar
+                                </a>
+                            <?php endif; ?>
 
-                            <?php if ($s['estado'] != 0): ?>
+                            <!-- 🗑️ ELIMINAR -->
+                            <?php if ($s['estado'] != 0 && $canDelete): ?>
                                 <button class="btn-action delete" data-id="<?= $s['id'] ?>">
                                     Eliminar
                                 </button>
-                            <?php elseif ($isSuper): ?>
+                            <?php endif; ?>
+
+                            <!-- ♻️ RESTAURAR -->
+                            <?php if ($s['estado'] == 0 && $rol === 'super'): ?>
                                 <button class="btn-restore" data-id="<?= $s['id'] ?>">
                                     Restaurar
                                 </button>

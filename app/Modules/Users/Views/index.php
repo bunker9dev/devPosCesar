@@ -16,7 +16,7 @@
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Acciones</th>
-                <!-- <th>Último acceso</th> -->  <!-- PENDIENTE ACTIVAR -->
+                <!-- <th>Último acceso</th> --> <!-- PENDIENTE ACTIVAR -->
             </tr>
         </thead>
 
@@ -55,12 +55,24 @@
                     </td>
                     <td data-label="Acciones">
                         <div class="actions">
-                            <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">Editar</a>
-                            <a href="<?= BASE_URL ?>/users/delete?id=<?= $u['id'] ?>" class="btn-action delete">Eliminar</a>
-                            <?php if ($_SESSION['user']['rol'] == 1 && $u['estado'] == 0): ?>
-                                <button
-                                    class="btn-restore"
-                                    data-id="<?= $u['id'] ?>">
+
+                            <!-- ✏️ EDITAR -->
+                            <?php if ($canEdit): ?>
+                                <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
+                                    Editar
+                                </a>
+                            <?php endif; ?>
+
+                            <!-- 🗑️ ELIMINAR -->
+                            <?php if ($u['estado'] != 0 && $canDelete): ?>
+                                <button class="btn-action delete" data-id="<?= $u['id'] ?>">
+                                    Eliminar
+                                </button>
+                            <?php endif; ?>
+
+                            <!-- ♻️ RESTAURAR -->
+                            <?php if ($u['estado'] == 0 && $rol === 'super'): ?>
+                                <button class="btn-restore" data-id="<?= $u['id'] ?>">
                                     Restaurar
                                 </button>
                             <?php endif; ?>

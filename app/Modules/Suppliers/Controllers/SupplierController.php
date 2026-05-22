@@ -25,7 +25,7 @@ class SupplierController extends Controller
         $this->auth();
         $this->onlyAdmin();
 
-        $isSuper = ($_SESSION['user']['rol'] == 1);
+        $isSuper = $_SESSION['user']['rol_nombre'] === 'super';
 
         $suppliers = $this->service->getAll($isSuper);
 
@@ -60,7 +60,6 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor creado";
             return $this->redirect(BASE_URL . "/suppliers");
-
         } catch (\Exception $e) {
 
             // 🔥 ERRORES POR CAMPO (tipo Laravel)
@@ -76,22 +75,32 @@ class SupplierController extends Controller
     }
 
     // ✏️ FORM EDIT
-    public function edit($id)
+    public function edit()
     {
         $this->auth();
         $this->onlyAdmin();
 
-        $supplier = $this->model->find($id);
+        global $db;
 
-        if (!$supplier) {
-            return $this->redirect(BASE_URL . "/suppliers");
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            die('ID no proporcionado');
         }
 
-        $isSuper = ($_SESSION['user']['rol'] == 1);
+        $stmt = $db->prepare("SELECT * FROM proveedores WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $supplier = $stmt->get_result()->fetch_assoc();
+
+        if (!$supplier) {
+            die('Proveedor no encontrado');
+        }
 
         $this->render('Modules/Suppliers/Views/edit', [
-            'supplier' => $supplier,
-            'isSuper' => $isSuper
+            'title' => 'Editar proveedor',
+            'supplier' => $supplier
         ]);
     }
 
@@ -109,7 +118,6 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor actualizado";
             return $this->redirect(BASE_URL . "/suppliers");
-
         } catch (\Exception $e) {
 
             $errors = json_decode($e->getMessage(), true);
@@ -137,7 +145,6 @@ class SupplierController extends Controller
                 'ok' => true,
                 'estado' => $estado
             ]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -157,7 +164,6 @@ class SupplierController extends Controller
             $this->service->delete($_POST['id'], $_SESSION['user']['id']);
 
             echo json_encode(['ok' => true]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -177,7 +183,6 @@ class SupplierController extends Controller
             $this->service->restore($_POST['id'], $_SESSION['user']['id']);
 
             echo json_encode(['ok' => true]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
