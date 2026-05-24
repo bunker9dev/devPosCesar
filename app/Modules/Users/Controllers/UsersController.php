@@ -6,6 +6,11 @@ use App\Core\Controller;
 
 class UsersController extends Controller
 {
+    private function userImagesPath()
+    {
+        return realpath(__DIR__ . '/../../../../public/assets/img/users') ?: __DIR__ . '/../../../../public/assets/img/users';
+    }
+
     // 📋 LISTAR
     public function index()
     {
@@ -89,8 +94,8 @@ class UsersController extends Controller
 
         if (!$passwordRaw) {
             $errors['password'] = "Password obligatorio";
-        } elseif (strlen($passwordRaw) < 4) {
-            $errors['password'] = "Password mínimo 4 caracteres";
+        } elseif (strlen($passwordRaw) < 6) {
+            $errors['password'] = "Password mínimo 6 caracteres";
         }
 
         if (!$rol) {
@@ -121,7 +126,7 @@ class UsersController extends Controller
 
         if (!empty($_FILES['imagen']['name'])) {
 
-            $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
+            $carpeta = $this->userImagesPath() . "/";
 
             if (!is_dir($carpeta)) {
                 mkdir($carpeta, 0755, true);
@@ -267,7 +272,7 @@ class UsersController extends Controller
             return $this->redirect(BASE_URL . "/users");
         }
 
-        if ($id == $_SESSION['user']['id']) {
+        if ($id == $_SESSION['user']['id'] && $rol !== (int) $_SESSION['user']['rol']) {
             $_SESSION['error'] = "No puedes cambiar tu propio rol";
             return $this->redirect(BASE_URL . "/users");
         }
@@ -284,7 +289,7 @@ class UsersController extends Controller
         // 🖼️ nueva imagen
         if (!empty($_FILES['imagen']['name']) && $_FILES['imagen']['error'] === 0) {
 
-            $carpeta = $_SERVER['DOCUMENT_ROOT'] . "/assets/img/users/";
+            $carpeta = $this->userImagesPath() . "/";
 
             if (!is_dir($carpeta)) {
                 mkdir($carpeta, 0755, true);
@@ -295,14 +300,21 @@ class UsersController extends Controller
 
             if (in_array($ext, $permitidas)) {
 
-                // borrar anterior
-                if (!empty($userDB['imagen']) && $userDB['imagen'] !== 'default.png') {
-                    $old = $carpeta . $userDB['imagen'];
-                    if (file_exists($old)) unlink($old);
-                }
+                $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+                $permitidosMime = ['image/jpeg', 'image/png', 'image/webp'];
 
-                $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
-                move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta . $imagenNombre);
+                if (in_array($mime, $permitidosMime)) {
+                    $nuevoNombre = md5(uniqid(rand(), true)) . "." . $ext;
+
+                    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta . $nuevoNombre)) {
+                        if (!empty($userDB['imagen']) && $userDB['imagen'] !== 'default.png') {
+                            $old = $carpeta . $userDB['imagen'];
+                            if (file_exists($old)) unlink($old);
+                        }
+
+                        $imagenNombre = $nuevoNombre;
+                    }
+                }
             }
         }
 
@@ -374,6 +386,14 @@ class UsersController extends Controller
                 echo json_encode([
                     'ok' => false,
                     'error' => 'ID inválido'
+                ]);
+                exit;
+            }
+
+            if ((int) $id === (int) $_SESSION['user']['id']) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'No puedes cambiar tu propio estado'
                 ]);
                 exit;
             }
@@ -457,7 +477,7 @@ class UsersController extends Controller
                 'estado_texto' => $estadoTexto($nuevoEstado)
             ]);
             exit;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             echo json_encode([
                 'ok' => false,
@@ -499,6 +519,11 @@ class UsersController extends Controller
                 return;
             }
 
+            if ((int) $id === (int) $_SESSION['user']['id']) {
+                echo json_encode(['ok' => false, 'error' => 'No puedes eliminar tu propio usuario']);
+                return;
+            }
+
             // 🔍 1. OBTENER DATOS ANTES DE ELIMINAR
             $stmt = $db->prepare("SELECT username, estado FROM usuarios WHERE id = ?");
             $stmt->bind_param("i", $id);
@@ -522,8 +547,6 @@ class UsersController extends Controller
             // 🧠 3. AUDITORÍA 
             $admin = $_SESSION['user']['username'] ?? 'Sistema';
 
-            $detalle = "Usuario: {$user['username']} | Estado: {$user['estado']} → 0 (Eliminado) | Por: {$admin}";
-
             $detalle = json_encode([
                 'usuario' => $user['username'],
                 'estado_anterior' => $user['estado'],
@@ -531,9 +554,11 @@ class UsersController extends Controller
                 'accion_por' => $admin
             ]);
 
+            auditoria("DELETE", "usuarios", $id, $detalle, "users");
+
             echo json_encode(['ok' => true]);
             return;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             echo json_encode([
                 'ok' => false,
@@ -645,7 +670,7 @@ class UsersController extends Controller
                 'ok' => true
             ]);
             exit;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             echo json_encode([
                 'ok' => false,
                 'error' => $e->getMessage()

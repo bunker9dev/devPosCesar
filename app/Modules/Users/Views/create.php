@@ -24,7 +24,7 @@
     <div class="form-group">
         <label>Avatar actual</label>
         <img
-            src="<?= BASE_URL ?>/assets/img/users/<?= $user['imagen'] ?>"
+            src="<?= BASE_URL ?>/assets/img/users/default.png"
             class="avatar-preview"
             id="preview">
     </div>

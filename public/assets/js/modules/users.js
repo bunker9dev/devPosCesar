@@ -148,8 +148,8 @@ export function initUserValidation() {
       return;
     }
 
-    if (username.length > 10) {
-      showMsg(msg, "Máximo 10 caracteres", "error");
+    if (username.length > 20) {
+      showMsg(msg, "Máximo 20 caracteres", "error");
       input.dataset.exists = "true";
       return;
     }
@@ -430,7 +430,15 @@ function initUserDelete() {
       if (!res.ok) throw new Error(res.error);
 
       const row = btn.closest("tr");
-      row.remove();
+      const badge = row.querySelector(".estado-toggle");
+
+      badge.dataset.estado = 0;
+      badge.textContent = "Eliminado";
+
+      badge.classList.remove("active", "inactive");
+      badge.classList.add("deleted");
+
+      btn.remove();
     } catch (err) {
       console.error("ERROR:", err);
     }

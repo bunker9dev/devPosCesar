@@ -88,6 +88,10 @@ class SupplierService
             $errors['nit'] = "El NIT es obligatorio";
         }
 
+        if (!empty($nitRaw) && !ctype_digit(preg_replace('/\D/', '', $nitRaw))) {
+            $errors['nit'] = "El NIT debe ser numérico";
+        }
+
         if (!empty($errors)) {
             throw new Exception(json_encode($errors));
         }
@@ -103,7 +107,7 @@ class SupplierService
             throw new Exception("Proveedor no existe");
         }
 
-        if ($prov['nit'] !== $nit && $this->model->existsByNit($nit)) {
+        if ($prov['nit'] !== $nit && $this->model->existsByNit($nit, $id)) {
             throw new Exception(json_encode([
                 'nit' => "Ya existe otro proveedor con ese NIT"
             ]));
@@ -195,10 +199,10 @@ class SupplierService
     }
 
     // 🔍 VALIDAR NIT (AJAX)
-    public function existsByNit($nit)
+    public function existsByNit($nit, $excludeId = null)
     {
         $nit = $this->normalizarNit($nit);
-        return $this->model->existsByNit($nit);
+        return $this->model->existsByNit($nit, $excludeId);
     }
 
     // =========================
@@ -211,6 +215,8 @@ class SupplierService
         $data['apellidos'] = $this->normalizarTexto($data['apellidos'] ?? '');
         $data['ciudad']    = $this->normalizarCiudad($data['ciudad'] ?? '');
         $data['nit']       = $this->normalizarNit($data['nit'] ?? '');
+        $data['email']     = trim($data['email'] ?? '');
+        $data['telefono']  = $this->normalizarNit($data['telefono'] ?? '');
 
         return $data;
     }

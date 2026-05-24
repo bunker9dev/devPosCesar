@@ -55,13 +55,21 @@ class Supplier
     }
 
     // 🔍 VALIDAR NIT
-    public function existsByNit($nit)
+    public function existsByNit($nit, $excludeId = null)
     {
-        $stmt = $this->db->prepare("
-            SELECT id FROM proveedores WHERE nit=?
-        ");
+        if ($excludeId) {
+            $stmt = $this->db->prepare("
+                SELECT id FROM proveedores WHERE nit=? AND id<>?
+            ");
 
-        $stmt->bind_param("s", $nit);
+            $stmt->bind_param("si", $nit, $excludeId);
+        } else {
+            $stmt = $this->db->prepare("
+                SELECT id FROM proveedores WHERE nit=?
+            ");
+
+            $stmt->bind_param("s", $nit);
+        }
 
         if (!$stmt->execute()) {
             throw new Exception("Error validando NIT");
@@ -75,15 +83,17 @@ class Supplier
     {
         $stmt = $this->db->prepare("
             INSERT INTO proveedores 
-            (nombre, apellidos, nit, ciudad, estado, created_by)
-            VALUES (?, ?, ?, ?, 1, ?)
+            (nombre, apellidos, nit, email, telefono, ciudad, estado, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, 1, ?)
         ");
 
         $stmt->bind_param(
-            "ssssi",
+            "ssssssi",
             $data['nombre'],
             $data['apellidos'],
             $data['nit'],
+            $data['email'],
+            $data['telefono'],
             $data['ciudad'],
             $data['user_id']
         );
@@ -100,15 +110,17 @@ class Supplier
     {
         $stmt = $this->db->prepare("
             UPDATE proveedores 
-            SET nombre=?, apellidos=?, nit=?, ciudad=?, updated_by=?, updated_at=NOW()
+            SET nombre=?, apellidos=?, nit=?, email=?, telefono=?, ciudad=?, updated_by=?, updated_at=NOW()
             WHERE id=?
         ");
 
         $stmt->bind_param(
-            "ssssii",
+            "ssssssii",
             $data['nombre'],
             $data['apellidos'],
             $data['nit'],
+            $data['email'],
+            $data['telefono'],
             $data['ciudad'],
             $data['user_id'],
             $id

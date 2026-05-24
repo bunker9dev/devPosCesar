@@ -56,6 +56,8 @@ class SupplierController extends Controller
 
         try {
 
+            $_POST['user_id'] = $_SESSION['user']['id'];
+
             $this->service->create($_POST);
 
             $_SESSION['success'] = "Proveedor creado";
@@ -105,10 +107,17 @@ class SupplierController extends Controller
     }
 
     // 💾 ACTUALIZAR
-    public function update($id)
+    public function update()
     {
         $this->auth();
         $this->onlyAdmin();
+
+        $id = $_POST['id'] ?? $_GET['id'] ?? null;
+
+        if (!$id) {
+            $_SESSION['errors'] = ['general' => 'ID no proporcionado'];
+            return $this->redirect(BASE_URL . "/suppliers");
+        }
 
         try {
 
@@ -149,6 +158,31 @@ class SupplierController extends Controller
 
             echo json_encode([
                 'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    // 🔍 VALIDAR NIT (AJAX)
+    public function checkNit()
+    {
+        $this->auth();
+        $this->onlyAdmin();
+
+        header('Content-Type: application/json');
+
+        try {
+            $nit = $_GET['nit'] ?? '';
+            $id = $_GET['id'] ?? null;
+
+            echo json_encode([
+                'ok' => true,
+                'exists' => $this->service->existsByNit($nit, $id)
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'ok' => false,
+                'exists' => false,
                 'error' => $e->getMessage()
             ]);
         }
@@ -215,7 +249,7 @@ class SupplierController extends Controller
             // 🔥 ESTA LÍNEA ES LA MÁS IMPORTANTE
             echo json_encode(['ok' => true]);
             return;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             echo json_encode([
                 'ok' => false,
@@ -287,7 +321,7 @@ class SupplierController extends Controller
         echo json_encode(['ok' => true]);
         return;
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
 
         echo json_encode([
             'ok' => false,

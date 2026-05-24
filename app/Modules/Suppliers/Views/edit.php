@@ -12,6 +12,7 @@ function oldValue($field, $old, $supplier) {
 ?>
 
 <form method="POST" action="<?= BASE_URL ?>/suppliers/update?id=<?= $supplier['id'] ?>" class="form-users">
+    <input type="hidden" name="id" value="<?= $supplier['id'] ?>">
 
     <!-- NOMBRE -->
     <div class="form-group">

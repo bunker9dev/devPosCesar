@@ -72,7 +72,10 @@ function initSupplierCreate() {
 
       nitTimeout = setTimeout(() => {
 
-        fetch(`${BASE_URL}/suppliers/check-nit?nit=${encodeURIComponent(val)}`)
+        const id = form?.querySelector('input[name="id"]')?.value || "";
+        const idParam = id ? `&id=${encodeURIComponent(id)}` : "";
+
+        fetch(`${BASE_URL}/suppliers/check-nit?nit=${encodeURIComponent(val)}${idParam}`)
           .then(res => {
             if (!res.ok) throw new Error("HTTP error");
             return res.json();

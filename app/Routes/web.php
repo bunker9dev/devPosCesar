@@ -56,12 +56,12 @@ $router->get('/suppliers/create', 'Suppliers\\Controllers\\SupplierController@cr
 $router->get('/suppliers/edit', 'Suppliers\\Controllers\\SupplierController@edit'); 
 
 $router->post('/suppliers/store', 'Suppliers\\Controllers\\SupplierController@store');
+$router->post('/suppliers/update', 'Suppliers\\Controllers\\SupplierController@update');
 
 // 🔥 ACCIONES 
 $router->post('/suppliers/delete', 'Suppliers\\Controllers\\SupplierController@delete');
 $router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@restore');
 $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle');
-$router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@restore');
 
 
 // ==============================
