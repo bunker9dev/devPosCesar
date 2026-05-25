@@ -69,3 +69,13 @@ $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@t
 // ==============================
 
 $router->get('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController@checkNit');
+
+require __DIR__ . '/../Modules/Products/Routes.php';
+
+// ==============================
+// 👤PRODUCTS
+// ==============================
+$router->get('/products/types', 'Products\\Controllers\\FabricTypeController@index');
+$router->post('/products/types/store', 'Products\\Controllers\\FabricTypeController@store');
+$router->get('/products/types/delete/{id}', 'Products\\Controllers\\FabricTypeController@delete');
+$router->get('/products/types/restore/{id}', 'Products\\Controllers\\FabricTypeController@restore');

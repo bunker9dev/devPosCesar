@@ -12,6 +12,7 @@ import "../pages/dashboard.js";
 import "../pages/login.js";
 import "../modules/tablaVentas.js";
 import "../modules/suppliers.js";
+import "../modules/inventory.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initNavbar();
@@ -58,6 +59,30 @@ if (document.getElementById("tablaSuppliers")) {
 // suppliers create
 if (document.getElementById("nombre")) {
     Events.emit("suppliers:create");
+}
+
+if (document.getElementById("tablaRolls")) {
+  Events.emit("inventory:rolls");
+}
+
+if (document.getElementById("tablaProducts")) {
+  Events.emit("inventory:products");
+}
+
+if (document.getElementById("tablaFabricTypes")) {
+  Events.emit("inventory:types");
+}
+
+if (document.getElementById("tablaFabricColors")) {
+  Events.emit("inventory:colors");
+}
+
+if (document.getElementById("tablaMovements")) {
+  Events.emit("inventory:movements");
+}
+
+if (document.getElementById("tablaPurchases")) {
+  Events.emit("inventory:purchases");
 }
 
 

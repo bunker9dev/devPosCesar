@@ -2,6 +2,6 @@
 
 namespace App\Modules\Products\Controllers;
 
-class ColorTelaController
+class TipoTelaController
 {
 }

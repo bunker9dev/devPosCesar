@@ -200,3 +200,105 @@
   background: var(--bg-button-hover);
 }
 
+.sidebar-group-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-sidebar);
+  font: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-group-toggle:hover {
+  background: var(--right);
+  color: var(--primary);
+  transform: translateX(3px);
+}
+
+.sidebar-group-toggle i {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-group.open .sidebar-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-submenu {
+  display: none;
+  padding: 4px 0 4px 18px !important;
+}
+
+.sidebar-group.open .sidebar-submenu {
+  display: block;
+}
+
+.sidebar-submenu li {
+  margin: 4px 0;
+}
+
+.sidebar-submenu a {
+  padding: 8px 10px;
+  font-size: 0.95rem;
+}
+
+.sidebar.collapsed .sidebar-group-toggle span,
+.sidebar.collapsed .sidebar-chevron,
+.sidebar.collapsed .sidebar-submenu {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-group-toggle {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.sidebar.collapsed .sidebar-group-toggle:hover::after,
+.sidebar.collapsed .sidebar-group-toggle:hover::before {
+  opacity: 1;
+}
+
+.sidebar-group-toggle::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-main);
+  color: var(--text-white);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 18px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 0 10px var(--border-glow);
+  transition: 0.2s;
+}
+
+.sidebar-group-toggle::before {
+  content: "";
+  position: absolute;
+  left: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent var(--bg-main) transparent transparent;
+  opacity: 0;
+  transition: 0.2s;
+}
+
