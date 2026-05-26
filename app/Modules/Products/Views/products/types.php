@@ -1,3 +1,31 @@
+<?php if (!empty($_SESSION['success'])): ?>
+    <div class="alert success"><?= $_SESSION['success'] ?></div>
+<?php unset($_SESSION['success']); endif; ?>
+
+<?php if (!empty($_SESSION['error'])): ?>
+    <div class="alert error"><?= $_SESSION['error'] ?></div>
+<?php unset($_SESSION['error']); endif; ?>
+
+
+<form id="formCreateType" method="POST" action="<?= BASE_URL ?>/products/types/store" class="catalog-inline-form">
+
+    <div class="inline-create">
+        <input 
+            id="inputTypeName"
+            type="text" 
+            name="nombre" 
+            placeholder="Escribir tipo de tela..." 
+            required
+            autocomplete="off"
+        >
+
+        <button type="submit" class="btn-primary">
+            + Crear
+        </button>
+    </div>
+
+</form>
+
 <table id="tablaFabricTypes" class="table-main display">
     <thead>
         <tr>
