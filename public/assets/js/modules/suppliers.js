@@ -1,4 +1,4 @@
-console.log("SUPPLIERS MODULE LOADED");
+// console.log("SUPPLIERS MODULE LOADED");
 
 import { Events } from "../core/events.js";
 import { post } from "../core/api.js";

@@ -55,4 +55,53 @@ class FabricTypeController extends Controller
 
         header('Location: ' . BASE_URL . '/products/types');
     }
+
+    public function edit()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            $this->redirect(BASE_URL . '/products/types');
+        }
+
+        $type = $this->service->find($this->table, $id);
+
+        $this->render('Modules/Products/Views/products/edit-type', [
+            'type' => $type,
+            'title' => 'Editar tipo de tela'
+        ]);
+    }
+
+
+
+public function update()
+{
+    header('Content-Type: application/json'); // 🔥 CLAVE
+
+    try {
+
+        $id = $_POST['id'] ?? null;
+        $nombre = $_POST['nombre'] ?? '';
+
+        if (!$id) {
+            throw new \Exception("ID inválido");
+        }
+
+        $this->service->update($this->table, $id, $nombre);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Tipo actualizado correctamente'
+        ]);
+
+    } catch (\Throwable $e) { // 🔥 mejor que Exception
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit; // 🔥 OBLIGATORIO
+}
 }

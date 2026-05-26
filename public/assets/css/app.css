@@ -1,5 +1,6 @@
 
 /* =====  BASE =====  */
+@import url('./base/variables.css');
 @import url('./base/global.css');
 @import url('./base/error.css');
 
@@ -17,6 +18,7 @@
 @import url('./layout/header.css');
 @import url('./layout/navbar.css');
 @import url('./layout/sidebar.css');
+@import url('./layout/modal.css');
 
 
 

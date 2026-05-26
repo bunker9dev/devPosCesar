@@ -21,7 +21,7 @@
 .form-actions {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .btn-primary {
@@ -56,3 +56,60 @@
   background: var(--bg-sider);
 }
 
+
+.input-msg {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.input-msg.error {
+  color: var(--danger);
+}
+
+.input-msg.success {
+  color: var(--success);
+}
+
+.loading {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+@media (max-width: 600px) {
+  .form-users {
+    padding: 15px;
+  }
+}
+
+
+/* boton restaurar */
+.btn-restore {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+
+  color: var(--success);
+  border: 1px solid var(--success);
+
+  background: transparent;
+
+  transition: all 0.25s ease;
+}
+
+/* 🔥 HOVER PRO */
+.btn-restore:hover {
+  background: var(--success-bg);
+  color: var(--text-white);
+  box-shadow: 0 0 8px var(--success);
+}
+
+/* 🔥 CLICK EFECTO */
+.btn-restore:active {
+  transform: scale(0.95);
+}

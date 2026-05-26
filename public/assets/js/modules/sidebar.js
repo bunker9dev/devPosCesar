@@ -10,40 +10,7 @@ export function initSidebar() {
     return;
   }
 
-  console.log("Sidebar INIT OK");
-
-  //   document.querySelectorAll(".sidebar-group-toggle").forEach((toggle) => {
-  //     toggle.addEventListener("click", () => {
-  //       const group = toggle.closest(".sidebar-group");
-  //       if (!group) return;
-
-  //       group.classList.toggle("open");
-  //       toggle.setAttribute("aria-expanded", group.classList.contains("open") ? "true" : "false");
-  //     });
-  //   });
-
-  //   btn.addEventListener("click", () => {
-  //     if (window.innerWidth <= 768) {
-  //       sidebar.classList.toggle("active");
-
-  //       if (overlay) {
-  //         overlay.classList.toggle("active");
-  //       }
-  //     } else {
-  //       sidebar.classList.toggle("collapsed");
-  //     }
-  //   });
-
-  //   if (overlay) {
-  //     overlay.addEventListener("click", (e) => {
-  //       e.stopPropagation();
-  //       sidebar.classList.remove("active");
-  //       overlay.classList.remove("active");
-  //     });
-  //   }
-
-  // }
-
+  
   document.querySelectorAll(".sidebar-group-toggle").forEach((toggle) => {
     toggle.addEventListener("click", () => {
       const group = toggle.closest(".sidebar-group");

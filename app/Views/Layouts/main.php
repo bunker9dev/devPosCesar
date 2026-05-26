@@ -41,9 +41,11 @@
 
     <?php unset($_SESSION['success'], $_SESSION['error']); ?>
 
-      <!-- iconos-->
+    <!-- iconos-->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+    </script>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -65,10 +67,51 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <!-- 🔥 BASE URL PARA JS -->
-    <script> const BASE_URL = "<?= BASE_URL ?>";</script>
+    <script>
+        const BASE_URL = "<?= BASE_URL ?>";
+    </script>
 
     <!-- APP -->
     <script type="module" src="<?= BASE_URL ?>/assets/js/core/app.js"></script>
+
+
+
+<!-- ================================
+   EDIT MODAL
+================================  -->
+
+    <div id="modalEditType" class="modal hidden">
+
+        <div class="modal-overlay"></div>
+
+        <div class="modal-content">
+
+            <h2 class="modal-title">Editar tipo de tela</h2>
+
+            <form id="formEditType">
+
+                <input type="hidden" id="editTypeId">
+
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="editTypeName" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="btnCancelEdit" class="btn-secondary">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn-primary">
+                        Actualizar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
 
 
 </body>

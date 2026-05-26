@@ -13,6 +13,7 @@ import "../pages/login.js";
 import "../modules/tablaVentas.js";
 import "../modules/suppliers.js";
 import "../modules/inventory.js";
+import "../modules/products.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initNavbar();

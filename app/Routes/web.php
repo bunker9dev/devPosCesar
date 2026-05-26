@@ -76,6 +76,12 @@ require __DIR__ . '/../Modules/Products/Routes.php';
 // 👤PRODUCTS
 // ==============================
 $router->get('/products/types', 'Products\\Controllers\\FabricTypeController@index');
+
 $router->post('/products/types/store', 'Products\\Controllers\\FabricTypeController@store');
+
+$router->get('/products/types/edit', 'Products\\Controllers\\FabricTypeController@edit');
+
+$router->post('/products/types/update', 'Products\\Controllers\\FabricTypeController@update');
+
 $router->get('/products/types/delete/{id}', 'Products\\Controllers\\FabricTypeController@delete');
 $router->get('/products/types/restore/{id}', 'Products\\Controllers\\FabricTypeController@restore');

@@ -2,7 +2,7 @@ import { Events } from "../core/events.js";
 import { post } from "../core/api.js";
 
 
-function initDataTable(selector, entityName) {
+export function initDataTable(selector, entityName) {
   if (!window.DataTable || !document.querySelector(selector)) return;
 
   if ($.fn.DataTable.isDataTable(selector)) {

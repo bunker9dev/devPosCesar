@@ -1,0 +1,51 @@
+/* ===== VARIABLES ===== */
+:root {
+  /* BASE */
+  --bg: #050b12;
+  --bg-sider: #081520;
+  --bg-soft: #0a1622;
+  --bg-main: #0b1220;
+  --bg-button:#054054;
+  --bg-button-hover:#0b90bc;
+
+  /* EFECTOS */
+  --right: #00ffff1a; 
+  --border-glow: #00ffff33; 
+
+  /* COLORES PRINCIPALES */
+  --primary: #00ffff;
+  --primary-hover: #00e6e6;
+  --primary-rgb: 0, 255, 200;
+
+  /* TEXTO */
+  --text-prim: #e6f1ff;
+  --text-sidebar: #00f7ff;
+  --text-white: #ffffff;
+  --text-muted: #8aa0b5;
+
+  /* ESTADOS */
+ --danger: #ff4d4d;             
+--danger-strong: #ff6666; 
+--danger-bg: rgba(255, 77, 77, 0.15);
+--danger-border: rgba(255, 77, 77, 0.4);
+;
+  /* UI */
+  --radius: 8px;
+  /* BOTONES */
+  --btn-text-dark: #000000;
+
+  /* BADGES */
+  --success: #00ffcc;
+  --success-bg: #00ff9633;
+
+/* ESTADO ELIMINADO (NEUTRO) */
+--deleted: #5c6b7a;
+--deleted-bg: rgba(92, 107, 122, 0.12);
+--deleted-border: rgba(92, 107, 122, 0.25);
+
+
+   /* TABLAS */
+  --table-header-th: #0d4061;
+  --table-header-bg: #071a26;
+  --table-header-border: #00ffff33;
+}

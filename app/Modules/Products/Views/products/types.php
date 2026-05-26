@@ -3,14 +3,16 @@
         <i data-lucide="check-circle"></i>
         <?= $_SESSION['success'] ?>
     </div>
-<?php unset($_SESSION['success']); endif; ?>
+<?php unset($_SESSION['success']);
+endif; ?>
 
 <?php if (!empty($_SESSION['error'])): ?>
     <div class="alert alert-error" id="alertMessage">
         <i data-lucide="alert-circle"></i>
         <?= $_SESSION['error'] ?>
     </div>
-<?php unset($_SESSION['error']); endif; ?>
+<?php unset($_SESSION['error']);
+endif; ?>
 
 
 <!-- 🔥 CREAR TIPO DE TELA -->
@@ -57,9 +59,11 @@
 
         <tbody>
             <?php foreach ($types as $type): ?>
-                <tr class="<?= !empty($type['deleted_at']) ? 'deleted' : '' ?>">
+                <tr
+                    data-id="<?= $type['id'] ?>"
+                    class="<?= !empty($type['deleted_at']) ? 'deleted' : '' ?>">
 
-                    <th></th>
+                    <td></td>
 
                     <td data-label="ID"><?= $type['id'] ?></td>
 
@@ -71,7 +75,6 @@
                         <?= htmlspecialchars($type['nombre']) ?>
                     </td>
 
-                    <!-- 🔥 ESTADO SIMPLIFICADO -->
                     <td data-label="Estado">
                         <?php if (!empty($type['deleted_at'])): ?>
                             <span class="badge deleted">Eliminado</span>
@@ -80,26 +83,25 @@
                         <?php endif; ?>
                     </td>
 
-                    <!-- 🔥 ACCIONES ESTÁNDAR -->
                     <td data-label="Acciones">
                         <div class="actions">
 
-                            <!-- EDITAR -->
                             <?php if ($canEdit && empty($type['deleted_at'])): ?>
-                                <a href="<?= BASE_URL ?>/products/types/edit/<?= $type['id'] ?>"
-                                   class="btn-action edit">
+                                <button
+                                    type="button"
+                                    class="btn-action edit btn-edit-type"
+                                    data-id="<?= $type['id'] ?>"
+                                    data-name="<?= htmlspecialchars($type['nombre']) ?>">
                                     Editar
-                                </a>
+                                </button>
                             <?php endif; ?>
 
-                            <!-- ELIMINAR -->
                             <?php if (empty($type['deleted_at']) && $canDelete): ?>
                                 <button class="btn-action delete" data-id="<?= $type['id'] ?>">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
 
-                            <!-- RESTAURAR -->
                             <?php if (!empty($type['deleted_at']) && $rol === 'super'): ?>
                                 <button class="btn-action restore" data-id="<?= $type['id'] ?>">
                                     Restaurar

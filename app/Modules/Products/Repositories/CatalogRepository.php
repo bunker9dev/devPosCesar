@@ -80,4 +80,40 @@ class CatalogRepository
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+
+
+    public function find($table, $id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    public function update($table, $id, $nombre)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE $table 
+        SET nombre = ?
+        WHERE id = ?
+    ");
+
+        $stmt->bind_param("si", $nombre, $id);
+        return $stmt->execute();
+    }
+
+    public function existsExceptId($table, $nombre, $id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT id 
+        FROM $table 
+        WHERE nombre = ? AND id != ?
+    ");
+
+        $stmt->bind_param("si", $nombre, $id);
+        $stmt->execute();
+
+        return $stmt->get_result()->num_rows > 0;
+    }
 }
