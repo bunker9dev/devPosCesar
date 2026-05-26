@@ -15,6 +15,7 @@
   /* COLORES PRINCIPALES */
   --primary: #00ffff;
   --primary-hover: #00e6e6;
+  --primary-rgb: 0, 255, 200;
 
   /* TEXTO */
   --text-prim: #e6f1ff;

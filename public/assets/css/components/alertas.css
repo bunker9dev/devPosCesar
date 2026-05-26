@@ -1,3 +1,51 @@
+/* MENSAJE CREADO  */
+
+#toast-container {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Toast */
+.toast {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* 🔥 centra horizontal */
+
+    text-align: center; /* 🔥 centra texto */
+
+    padding: 12px 25px;
+    border-radius: 10px;
+    min-width: 220px;  
+    max-width: 400px;   
+
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-white);
+
+    opacity: 0;
+    transform: translateY(-10px);
+
+    transition: all 0.3s ease;
+}
+
+/* Tipos */
+.toast.success {
+  background: #00c896;
+}
+
+.toast.error {
+  background: #ff4d4d;
+}
+
+
+
+
 /* ===== ALERTAS BASE ===== */
 .alerta {
   position: relative;

@@ -5,9 +5,9 @@
 .table-container {
   background: var(--bg-soft);
   border-radius: var(--radius);
-  overflow: hidden;
   border: 1px solid var(--border-glow);
   padding: 20px;
+  overflow: hidden;
   overflow-x: auto;
   max-width: 100%;
 }
@@ -43,6 +43,7 @@
   background: var(--right);
 }
 
+
 /* =========================================================
    🔹 BADGES
 ========================================================= */
@@ -77,10 +78,35 @@
   opacity: 0.7;
   filter: grayscale(60%);
 }
+
+
+/* =========================================================
+   🔹 BADGE INTERACTIVO
+========================================================= */
+
+.badge.estado-toggle {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.badge.estado-toggle:hover {
+  transform: scale(1.08);
+  opacity: 0.85;
+}
+
+.badge.estado-toggle:active {
+  transform: scale(0.95);
+}
+
+.badge.estado-toggle.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+
 /* =========================================================
    🔹 ACCIONES
 ========================================================= */
-
 
 .actions {
   display: flex;
@@ -94,13 +120,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-
   padding: 6px 10px;
   border-radius: var(--radius);
-
   font-size: 13px;
   text-decoration: none;
-
   transition: 0.2s;
 }
 
@@ -128,45 +151,24 @@
   background: var(--danger);
   color: #fff;
   box-shadow: 0 0 8px var(--danger);
-
 }
 
-@media (max-width: 990px) {
 
+/* =========================================================
+   🔹 RESPONSIVE ACCIONES
+========================================================= */
+
+@media (max-width: 990px) {
   .actions {
-    flex-direction: row; /* horizontal */
+    flex-direction: row;
   }
 
   .actions a {
     padding: 4px 8px;
     font-size: 12px;
   }
-
-}
 }
 
-/* =========================================================
-   🔹 BADGE INTERACTIVO
-========================================================= */
-
-.badge.estado-toggle {
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.badge.estado-toggle:hover {
-  transform: scale(1.08);
-  opacity: 0.85;
-}
-
-.badge.estado-toggle:active {
-  transform: scale(0.95);
-}
-
-.badge.estado-toggle.loading {
-  opacity: 0.5;
-  pointer-events: none;
-}
 
 /* =========================================================
    🔹 DATATABLE STRUCTURE
@@ -193,16 +195,19 @@
 }
 
 tr.deleted {
-    opacity: 0.5;
-    text-decoration: line-through;
+  opacity: 0.5;
+  text-decoration: line-through;
 }
+
 
 /* =========================================================
    🔹 DATATABLE CONTROLS
 ========================================================= */
+
 .dataTables_filter {
   margin-block: 15px;
 }
+
 .dataTables_filter input {
   border-radius: var(--radius);
   padding: 6px;
@@ -229,8 +234,9 @@ tr.deleted {
   color: var(--text-white);
 }
 
+
 /* =========================================================
-   🔹 BUTTONS
+   🔹 DATATABLE BUTTONS
 ========================================================= */
 
 .dt-buttons {
@@ -250,6 +256,7 @@ tr.deleted {
 .dt-button:hover {
   background: var(--bg-button-hover) !important;
 }
+
 
 /* =========================================================
    🔹 AVATAR
@@ -272,8 +279,9 @@ tr.deleted {
   box-shadow: 0 0 10px var(--border-glow);
 }
 
+
 /* =========================================================
-   🔹 CONTROL RESPONSIVE (DATA TABLE FIX)
+   🔹 DATATABLE RESPONSIVE CONTROL
 ========================================================= */
 
 table.dataTable.dtr-column > tbody > tr > td.dtr-control:before,
@@ -283,55 +291,36 @@ table.dataTable.dtr-column > tbody > tr > th.control:before {
   content: "+" !important;
   color: var(--primary) !important;
   background: var(--bg-button);
-  white-space: nowrap !important;
-
   border-radius: 50%;
   width: 22px;
   height: 22px;
-
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-
   font-weight: bold;
   font-size: 14px;
-
   box-shadow: 0 0 6px var(--border-glow);
 }
 
 table.dataTable.dtr-column > tbody > tr.parent > td.dtr-control:before,
-table.dataTable.dtr-column > tbody > tr.parent > th.dtr-control:before,
-table.dataTable.dtr-column > tbody > tr.parent > td.control:before,
-table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
+table.dataTable.dtr-column > tbody > tr.parent > th.dtr-control:before {
   content: "−" !important;
   color: var(--danger) !important;
   background: var(--danger-bg);
 }
 
+
 /* =========================================================
-   🔹 RESPONSIVE USERS
+   🔹 RESPONSIVE TABLE (MOBILE)
 ========================================================= */
 
-@media (max-width: 992px) {
-  .table-main th,
-  .table-main td {
-    padding: 10px;
-    font-size: 14px;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-}
-
 @media (max-width: 460px) {
-  /* 🔥 contenedor limpio */
+
   .table-container {
     border: none;
     background: transparent;
   }
 
-  /* 🔥 eliminar estructura tabla */
   .table-main,
   .table-main tbody,
   .table-main tr,
@@ -339,12 +328,10 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
     display: block;
   }
 
-  /* 🔥 ocultar header */
   .table-main thead {
     display: none;
   }
 
-  /* 🔥 card */
   .table-main tr {
     background: var(--bg-soft);
     border: 1px solid var(--border-glow);
@@ -354,7 +341,6 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
     box-shadow: 0 0 10px var(--border-glow);
   }
 
-  /* 🔥 filas internas */
   .table-main td {
     display: flex;
     justify-content: space-between;
@@ -367,7 +353,6 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
     border-bottom: none;
   }
 
-  /* 🔥 label (izquierda) */
   .table-main td::before {
     content: attr(data-label);
     font-weight: 600;
@@ -375,30 +360,32 @@ table.dataTable.dtr-column > tbody > tr.parent > th.control:before {
     font-size: 12px;
   }
 
-  /* 🔥 valor (derecha) */
-  .table-main td span,
-  .table-main td a {
-    text-align: right;
-  }
-
-  /* 🔥 avatar más limpio */
-  .avatar {
-    width: 45px;
-    height: 45px;
-    border: 2px solid var(--primary);
-  }
-
-  /* 🔥 acciones en columna */
   .actions {
     flex-direction: column;
     align-items: flex-end;
     gap: 6px;
   }
+
+  .avatar {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--primary);
+  }
 }
 
-@media (max-width: 480px) {
-  .avatar {
-    width: 52px;
-    height: 52px;
-  }
+
+/* =========================================================
+   🔹 TABLE FIX + LINES
+========================================================= */
+
+table.dataTable tbody tr {
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.15) !important;
+}
+
+.table-main tbody td {
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.15);
+}
+
+.table-main tbody tr:hover {
+  background: rgba(var(--primary-rgb), 0.05);
 }
