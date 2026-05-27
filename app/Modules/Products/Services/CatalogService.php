@@ -49,17 +49,21 @@ class CatalogService
     }
 
     public function delete($table, $id)
-    {
-        $this->repo->softDelete($table, $id);
-
-        auditoria(
-            'delete',
-            $table,
-            $id,
-            "Eliminó ID $id",
-            'products'
-        );
+{
+    if ($this->repo->isUsed($table, $id)) {
+        throw new \Exception("No puedes eliminar este registro porque está en uso");
     }
+
+    $this->repo->softDelete($table, $id);
+
+    auditoria(
+        'delete',
+        $table,
+        $id,
+        "Eliminó ID $id",
+        'products'
+    );
+}
 
     public function restore($table, $id)
     {

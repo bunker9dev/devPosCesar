@@ -116,4 +116,36 @@ class CatalogRepository
 
         return $stmt->get_result()->num_rows > 0;
     }
+
+
+
+
+    public function isUsed($table, $id)
+    {
+        // 🔥 MAPEO DE USO POR TABLA
+        $relations = [
+            'fabric_types' => ['table' => 'products', 'field' => 'fabric_type_id'],
+            'colors'       => ['table' => 'products', 'field' => 'color_id'],
+            // agrega más aquí
+        ];
+
+        if (!isset($relations[$table])) {
+            return false;
+        }
+
+        $rel = $relations[$table];
+
+        $stmt = $this->db->prepare("
+        SELECT COUNT(*) as total
+        FROM {$rel['table']}
+        WHERE {$rel['field']} = ?
+    ");
+
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $result = $stmt->get_result()->fetch_assoc();
+
+        return $result['total'] > 0;
+    }
 }

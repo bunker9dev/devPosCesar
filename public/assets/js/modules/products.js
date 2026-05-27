@@ -1,3 +1,4 @@
+console.log("PRODUCTS JS CARGADO");
 import { Events } from "../core/events.js";
 
 /* ================================
