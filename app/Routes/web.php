@@ -73,18 +73,24 @@ $router->get('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController
 require __DIR__ . '/../Modules/Products/Routes.php';
 
 // ==============================
-// 👤PRODUCTS
+// TYPES
 // ==============================
 $router->get('/products/types', 'Products\\Controllers\\FabricTypeController@index');
-
 $router->post('/products/types/store', 'Products\\Controllers\\FabricTypeController@store');
-
 $router->get('/products/types/edit', 'Products\\Controllers\\FabricTypeController@edit');
-
 $router->post('/products/types/update', 'Products\\Controllers\\FabricTypeController@update');
-
 $router->post('/products/types/delete', 'Products\\Controllers\\FabricTypeController@delete');
-
 $router->get('/products/types/restore/{id}', 'Products\\Controllers\\FabricTypeController@restore');
 $router->post('/products/types/restore', 'Products\\Controllers\\FabricTypeController@restore');
 
+
+
+// ==============================
+//  COLORS
+// ==============================
+
+$router->get('/products/colors', 'Products\\Controllers\\ColorController@index');
+$router->post('/products/colors/store', 'Products\\Controllers\\ColorController@store');
+$router->post('/products/colors/update', 'Products\\Controllers\\ColorController@update');
+$router->post('/products/colors/delete', 'Products\\Controllers\\ColorController@delete');
+$router->post('/products/colors/restore', 'Products\\Controllers\\ColorController@restore');

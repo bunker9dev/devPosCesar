@@ -130,7 +130,7 @@ class CatalogRepository
         // 🔥 MAPEO DE USO POR TABLA
         $relations = [
             'fabric_types' => ['table' => 'products', 'field' => 'fabric_type_id'],
-            'colors'       => ['table' => 'products', 'field' => 'color_id'],
+            // 'fabric_colors'       => ['table' => 'products', 'field' => 'color_id'],
             // agrega más aquí
         ];
 

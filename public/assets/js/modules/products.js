@@ -2,57 +2,11 @@
 // IMPORTS
 // ================================
 import { Events } from "../core/events.js";
-import { initDataTable } from "./inventory.js";
 import { post } from "../core/api.js";
-
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".btn-restore");
-  if (btn) {
-    console.log("RESTORE CLICK", btn.dataset.id);
-  }
-});
+import { initDataTable } from "./inventory.js";
 
 // ================================
-// INLINE CREATE
-// ================================
-function initInlineCreateType() {
-  const input = document.getElementById("inputTypeName");
-  const form = document.getElementById("formCreateType");
-
-  if (!input || !form) return;
-
-  input.focus();
-
-  input.addEventListener("focus", () => input.select());
-
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      form.submit();
-    }
-  });
-
-  form.addEventListener("submit", () => {
-    setTimeout(() => (input.value = ""), 100);
-  });
-}
-
-// ================================
-// ALERTS
-// ================================
-function initAlerts() {
-  const alert = document.getElementById("alertMessage");
-  if (!alert) return;
-
-  setTimeout(() => {
-    alert.style.opacity = "0";
-    alert.style.transform = "translateY(-10px)";
-    setTimeout(() => alert.remove(), 300);
-  }, 2500);
-}
-
-// ================================
-// EDIT MODAL
+// EDIT MODAL (DINÁMICO)
 // ================================
 function initEditModal() {
   const modal = document.getElementById("modalEditType");
@@ -63,32 +17,38 @@ function initEditModal() {
 
   if (!modal) return;
 
+  // ABRIR MODAL
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".btn-edit-type");
+    const btn = e.target.closest(".btn-edit");
+    if (!btn) return;
 
-    if (btn) {
-      idInput.value = btn.dataset.id;
-      input.value = btn.dataset.name;
+    idInput.value = btn.dataset.id;
+    input.value = btn.dataset.name;
 
-      modal.classList.remove("hidden");
-      input.focus();
-    }
+    // 🔥 guardar URL dinámica
+    form.dataset.url = btn.dataset.url;
+
+    modal.classList.remove("hidden");
+    input.focus();
   });
 
+  // CERRAR
   cancel?.addEventListener("click", () => {
     modal.classList.add("hidden");
   });
 
+  // SUBMIT
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const id = idInput.value;
     const nombre = input.value.trim();
+    const url = form.dataset.url;
 
-    if (!nombre) return;
+    if (!nombre || !url) return;
 
     try {
-      const res = await fetch("/products/types/update", {
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ id, nombre }),
@@ -104,6 +64,7 @@ function initEditModal() {
 
         modal.classList.add("hidden");
 
+        // actualizar UI
         const row = document.querySelector(`tr[data-id="${id}"]`);
         if (row) {
           const cell = row.querySelector('td[data-label="Nombre"]');
@@ -122,34 +83,38 @@ function initEditModal() {
 }
 
 // ================================
-// DELETE (IGUAL A SUPPLIERS)
+// DELETE (DINÁMICO)
 // ================================
-function initTypeDelete() {
+function initDelete() {
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".btn-delete");
     if (!btn) return;
 
     const id = btn.dataset.id;
+    const url = btn.dataset.url;
 
-    if (!confirm("¿Eliminar tipo de tela?")) return;
+    if (!confirm("¿Eliminar registro?")) return;
 
     try {
-      const res = await post("/products/types/delete", { id });
+      const res = await post(url, { id });
 
       if (!res.ok) throw new Error(res.error);
 
       const row = btn.closest("tr");
 
+      // animación
       row.style.opacity = "0";
-      setTimeout(() => row.remove(), 300);
+
+      setTimeout(() => {
+        row.remove();
+      }, 300);
 
       Events.emit("alerts:show", {
         type: "success",
-        message: "Tipo eliminado correctamente",
+        message: "Registro eliminado",
       });
-    } catch (err) {
-      console.error(err);
 
+    } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
         message: err.message || "Error al eliminar",
@@ -159,19 +124,18 @@ function initTypeDelete() {
 }
 
 // ================================
-// RESTORE TYPES
+// RESTORE (DINÁMICO)
 // ================================
-function initTypeRestore() {
+function initRestore() {
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".btn-restore");
     if (!btn) return;
 
     const id = btn.dataset.id;
-
-    console.log("RESTORE:", id); // ✅ correcto
+    const url = btn.dataset.url;
 
     try {
-      const res = await post("/products/types/restore", { id });
+      const res = await post(url, { id });
 
       if (!res.ok) throw new Error(res.error);
 
@@ -185,7 +149,6 @@ function initTypeRestore() {
       }
 
       row.classList.remove("deleted");
-
       btn.remove();
 
       Events.emit("alerts:show", {
@@ -194,8 +157,6 @@ function initTypeRestore() {
       });
 
     } catch (err) {
-      console.error(err);
-
       Events.emit("alerts:show", {
         type: "error",
         message: err.message || "Error al restaurar",
@@ -210,10 +171,10 @@ function initTypeRestore() {
 document.addEventListener("DOMContentLoaded", () => {
   console.log("INIT PRODUCTS OK");
 
-  initDataTable("#tablaFabricTypes", "tipos de tela");
-  initInlineCreateType();
-  initAlerts();
+  initDataTable("#tablaFabricTypes", "tipos");
+  initDataTable("#tablaColors", "colores");
+
   initEditModal();
-  initTypeDelete();
-  initTypeRestore();
+  initDelete();
+  initRestore();
 });

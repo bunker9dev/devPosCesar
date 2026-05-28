@@ -90,10 +90,10 @@ endif; ?>
 
                             <?php if ($canEdit && empty($type['deleted_at'])): ?>
                                 <button
-                                    type="button"
-                                    class="btn-action edit btn-edit-type"
+                                    class="btn-action edit btn-edit"
                                     data-id="<?= $type['id'] ?>"
-                                    data-name="<?= htmlspecialchars($type['nombre']) ?>">
+                                    data-name="<?= htmlspecialchars($type['nombre']) ?>"
+                                    data-url="<?= BASE_URL ?>/products/types/update">
                                     Editar
                                 </button>
                             <?php endif; ?>
@@ -101,7 +101,8 @@ endif; ?>
                             <?php if (empty($type['deleted_at']) && $canDelete): ?>
                                 <button
                                     class="btn-action delete btn-delete"
-                                    data-id="<?= $type['id'] ?>">
+                                    data-id="<?= $type['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/products/types/delete">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
@@ -109,7 +110,8 @@ endif; ?>
                             <?php if (!empty($type['deleted_at']) && $rol === 'super'): ?>
                                 <button
                                     class="btn-action restore btn-restore"
-                                    data-id="<?= $type['id'] ?>">
+                                    data-id="<?= $type['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/products/types/restore">
                                     Restaurar
                                 </button>
                             <?php endif; ?>
