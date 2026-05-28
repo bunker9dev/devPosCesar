@@ -41,107 +41,118 @@ class FabricTypeController extends Controller
     }
 
     public function delete()
-{
-    header('Content-Type: application/json');
+    {
+        header('Content-Type: application/json');
 
-    try {
+        try {
 
-        $db = conectarDB();
+            $db = conectarDB();
 
-        // 🔐 autenticación
-        if (!isset($_SESSION['user'])) {
-            echo json_encode(['ok' => false, 'error' => 'No autenticado']);
-            return;
-        }
+            $id = $_POST['id'] ?? null;
 
-        // 🔐 rol
-        $rol = $_SESSION['user']['rol_nombre'] ?? '';
+            if (!$id) {
+                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+                exit;
+            }
 
-        if (!in_array($rol, ['super', 'administrador'])) {
-            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-            return;
-        }
+            // 🔍 obtener tipo
+            $stmt = $db->prepare("SELECT nombre, estado FROM fabric_types WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
 
-        $id = $_POST['id'] ?? null;
+            $type = $stmt->get_result()->fetch_assoc();
 
-        if (!$id) {
-            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-            return;
-        }
+            if (!$type) {
+                echo json_encode(['ok' => false, 'error' => 'Tipo no existe']);
+                exit;
+            }
 
-        // 🔍 obtener tipo
-        $stmt = $db->prepare("SELECT nombre, estado FROM fabric_types WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $type = $stmt->get_result()->fetch_assoc();
-
-        if (!$type) {
-            echo json_encode(['ok' => false, 'error' => 'Tipo no existe']);
-            return;
-        }
-
-        // 🔥 VALIDAR USO (CLAVE)
-        $stmt = $db->prepare("
+            // 🔥 validar uso
+            $stmt = $db->prepare("
             SELECT COUNT(*) as total
             FROM products
             WHERE fabric_type_id = ?
         ");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
 
-        $result = $stmt->get_result()->fetch_assoc();
+            $result = $stmt->get_result()->fetch_assoc();
 
-        if ($result['total'] > 0) {
-            echo json_encode([
-                'ok' => false,
-                'error' => 'Este tipo de tela está en uso'
-            ]);
-            return;
-        }
+            if ($result['total'] > 0) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'Este tipo de tela está en uso'
+                ]);
+                exit;
+            }
 
-        // 🔥 SOFT DELETE
-        $stmt = $db->prepare("
+            // 🔥 soft delete
+            $stmt = $db->prepare("
             UPDATE fabric_types 
             SET estado = 0, deleted_at = NOW()
             WHERE id = ?
         ");
-        $stmt->bind_param("i", $id);
+            $stmt->bind_param("i", $id);
 
-        if (!$stmt->execute()) {
-            echo json_encode(['ok' => false, 'error' => $stmt->error]);
-            return;
+            if (!$stmt->execute()) {
+                echo json_encode(['ok' => false, 'error' => $stmt->error]);
+                exit;
+            }
+
+            // 🧠 auditoría
+            $admin = $_SESSION['user']['username'] ?? 'Sistema';
+
+            $detalle = "Tipo: {$type['nombre']} | Estado: {$type['estado']} → 0 | Por: {$admin}";
+
+            auditoria("DELETE", "fabric_types", $id, $detalle, "products");
+
+            echo json_encode([
+                'ok' => true,
+                'message' => 'Tipo eliminado correctamente'
+            ]);
+
+            exit;
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+
+            exit;
         }
-
-        // 🧠 auditoría
-        $admin = $_SESSION['user']['username'] ?? 'Sistema';
-
-        $detalle = "Tipo: {$type['nombre']} | Estado: {$type['estado']} → 0 | Por: {$admin}";
-
-        auditoria("DELETE", "fabric_types", $id, $detalle, "products");
-
-        echo json_encode(['ok' => true]);
-
-        return;
-
-    } catch (\Exception $e) {
-
-        echo json_encode([
-            'ok' => false,
-            'error' => $e->getMessage()
-        ]);
-
-        return;
     }
-}
 
-    public function restore($id)
+    public function restore()
     {
-        $this->onlySuper();
+        header('Content-Type: application/json');
 
-        $this->service->restore($this->table, $id);
+        try {
 
-        header('Location: ' . BASE_URL . '/products/types');
+            $id = $_POST['id'] ?? null;
+
+            if (!$id) {
+                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+                exit;
+            }
+
+            $this->service->restore($this->table, $id);
+
+            echo json_encode([
+                'ok' => true,
+                'message' => 'Registro restaurado correctamente'
+            ]);
+
+            exit;
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+
+            exit;
+        }
     }
 
     public function edit()

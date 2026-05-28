@@ -13,32 +13,33 @@ class CatalogService
         $this->repo = new CatalogRepository();
     }
 
+    // ================================
+    // GET ALL
+    // ================================
     public function getAll($table)
     {
         return $this->repo->getAll($table);
     }
 
+    // ================================
+    // CREATE
+    // ================================
     public function create($table, $nombre)
     {
         if (empty($nombre)) {
             throw new \Exception("El nombre es obligatorio");
         }
-        // sanitizar
+
         $nombre = ucfirst(trim(strtolower($nombre)));
 
-        // validar duplicado
         if ($this->repo->exists($table, $nombre)) {
-            throw new \Exception("Este tipo de tela ya existe");
+            throw new \Exception("El registro ya existe");
         }
-        // generar código
+
         $codigo = $this->repo->nextCode($table);
 
-        // guardar
         $this->repo->create($table, $codigo, $nombre);
 
-
-
-        // auditoría
         auditoria(
             'create',
             $table,
@@ -48,23 +49,33 @@ class CatalogService
         );
     }
 
+    // ================================
+    // DELETE (SOFT)
+    // ================================
     public function delete($table, $id)
-{
-    if ($this->repo->isUsed($table, $id)) {
-        throw new \Exception("No puedes eliminar este registro porque está en uso");
+    {
+        if (!$id) {
+            throw new \Exception("ID inválido");
+        }
+
+        if ($this->repo->isUsed($table, $id)) {
+            throw new \Exception("No puedes eliminar este registro porque está en uso");
+        }
+
+        $this->repo->softDelete($table, $id);
+
+        auditoria(
+            'delete',
+            $table,
+            $id,
+            "Eliminó registro ID $id",
+            'products'
+        );
     }
 
-    $this->repo->softDelete($table, $id);
-
-    auditoria(
-        'delete',
-        $table,
-        $id,
-        "Eliminó ID $id",
-        'products'
-    );
-}
-
+    // ================================
+    // RESTORE
+    // ================================
     public function restore($table, $id)
     {
         $this->repo->restore($table, $id);
@@ -78,14 +89,17 @@ class CatalogService
         );
     }
 
-
+    // ================================
+    // FIND
+    // ================================
     public function find($table, $id)
     {
         return $this->repo->find($table, $id);
     }
 
- 
-
+    // ================================
+    // UPDATE
+    // ================================
     public function update($table, $id, $nombre)
     {
         if (empty($nombre)) {
@@ -94,9 +108,8 @@ class CatalogService
 
         $nombre = ucfirst(trim(strtolower($nombre)));
 
-        // 🔥 VALIDAR DUPLICADO (EXCLUYENDO EL MISMO ID)
         if ($this->repo->existsExceptId($table, $nombre, $id)) {
-            throw new \Exception("Este tipo de tela ya existe");
+            throw new \Exception("El registro ya existe");
         }
 
         $this->repo->update($table, $id, $nombre);
@@ -105,7 +118,7 @@ class CatalogService
             'update',
             $table,
             $id,
-            "Actualizó tipo: $nombre",
+            "Actualizó: $nombre",
             'products'
         );
     }

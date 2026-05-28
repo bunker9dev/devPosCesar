@@ -107,7 +107,9 @@ endif; ?>
                             <?php endif; ?>
 
                             <?php if (!empty($type['deleted_at']) && $rol === 'super'): ?>
-                                <button class="btn-action restore" data-id="<?= $type['id'] ?>">
+                                <button
+                                    class="btn-action restore btn-restore"
+                                    data-id="<?= $type['id'] ?>">
                                     Restaurar
                                 </button>
                             <?php endif; ?>

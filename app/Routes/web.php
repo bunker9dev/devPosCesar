@@ -86,4 +86,5 @@ $router->post('/products/types/update', 'Products\\Controllers\\FabricTypeContro
 $router->post('/products/types/delete', 'Products\\Controllers\\FabricTypeController@delete');
 
 $router->get('/products/types/restore/{id}', 'Products\\Controllers\\FabricTypeController@restore');
+$router->post('/products/types/restore', 'Products\\Controllers\\FabricTypeController@restore');
 

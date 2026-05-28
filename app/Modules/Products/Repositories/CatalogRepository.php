@@ -14,10 +14,15 @@ class CatalogRepository
 
     public function getAll($table)
     {
-        $result = $this->db->query("
-            SELECT * FROM $table
-            ORDER BY id DESC
-        ");
+        $rol = $_SESSION['user']['rol_nombre'] ?? '';
+
+        if ($rol === 'super') {
+            $sql = "SELECT * FROM $table ORDER BY id DESC";
+        } else {
+            $sql = "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY id DESC";
+        }
+
+        $result = $this->db->query($sql);
 
         return $result->fetch_all(MYSQLI_ASSOC);
     }
@@ -108,7 +113,7 @@ class CatalogRepository
         $stmt = $this->db->prepare("
         SELECT id 
         FROM $table 
-        WHERE nombre = ? AND id != ?
+        WHERE LOWER(nombre) = LOWER(?) AND id != ?
     ");
 
         $stmt->bind_param("si", $nombre, $id);

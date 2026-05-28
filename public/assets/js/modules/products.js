@@ -5,6 +5,13 @@ import { Events } from "../core/events.js";
 import { initDataTable } from "./inventory.js";
 import { post } from "../core/api.js";
 
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn-restore");
+  if (btn) {
+    console.log("RESTORE CLICK", btn.dataset.id);
+  }
+});
+
 // ================================
 // INLINE CREATE
 // ================================
@@ -119,7 +126,6 @@ function initEditModal() {
 // ================================
 function initTypeDelete() {
   document.addEventListener("click", async (e) => {
-
     const btn = e.target.closest(".btn-delete");
     if (!btn) return;
 
@@ -128,7 +134,6 @@ function initTypeDelete() {
     if (!confirm("¿Eliminar tipo de tela?")) return;
 
     try {
-
       const res = await post("/products/types/delete", { id });
 
       if (!res.ok) throw new Error(res.error);
@@ -142,18 +147,60 @@ function initTypeDelete() {
         type: "success",
         message: "Tipo eliminado correctamente",
       });
-
     } catch (err) {
-
       console.error(err);
 
       Events.emit("alerts:show", {
         type: "error",
         message: err.message || "Error al eliminar",
       });
-
     }
+  });
+}
 
+// ================================
+// RESTORE TYPES
+// ================================
+function initTypeRestore() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+
+    console.log("RESTORE:", id); // ✅ correcto
+
+    try {
+      const res = await post("/products/types/restore", { id });
+
+      if (!res.ok) throw new Error(res.error);
+
+      const row = btn.closest("tr");
+      const badge = row.querySelector(".badge");
+
+      if (badge) {
+        badge.textContent = "Disponible";
+        badge.classList.remove("deleted");
+        badge.classList.add("active");
+      }
+
+      row.classList.remove("deleted");
+
+      btn.remove();
+
+      Events.emit("alerts:show", {
+        type: "success",
+        message: "Registro restaurado",
+      });
+
+    } catch (err) {
+      console.error(err);
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al restaurar",
+      });
+    }
   });
 }
 
@@ -168,4 +215,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initAlerts();
   initEditModal();
   initTypeDelete();
+  initTypeRestore();
 });
