@@ -102,14 +102,54 @@
   transition: all 0.25s ease;
 }
 
-/* 🔥 HOVER PRO */
+/* HOVER PRO */
 .btn-restore:hover {
   background: var(--success-bg);
   color: var(--text-white);
   box-shadow: 0 0 8px var(--success);
 }
 
-/* 🔥 CLICK EFECTO */
+/* CLICK EFECTO */
 .btn-restore:active {
   transform: scale(0.95);
+}
+
+
+.btn-action.disabled,
+.btn-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+/* ================================
+   BOTÓN PELIGRO (DELETE)
+================================ */
+.btn-danger {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+
+    color: var(--danger);
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* HOVER PRO */
+.btn-danger:hover {
+    background: var(--danger);
+    color: #fff;
+
+    box-shadow: 0 0 12px var(--danger);
+    transform: translateY(-1px);
+}
+
+/* CLICK */
+.btn-danger:active {
+    transform: scale(0.97);
 }

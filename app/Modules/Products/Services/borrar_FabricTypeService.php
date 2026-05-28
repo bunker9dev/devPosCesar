@@ -14,9 +14,9 @@ class FabricTypeService
         $this->repo = new FabricTypeRepository();
     }
 
-    public function getAll()
+    public function getAll($table)
     {
-        return $this->repo->getAll();
+        return $this->repo->getAllWithUsage($table);
     }
 
     public function create($nombre)

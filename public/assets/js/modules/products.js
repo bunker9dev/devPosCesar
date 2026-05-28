@@ -1,54 +1,14 @@
-console.log("PRODUCTS JS CARGADO");
+// ================================
+// IMPORTS
+// ================================
 import { Events } from "../core/events.js";
+import { initDataTable } from "./inventory.js";
+import { post } from "../core/api.js";
 
-/* ================================
-   🔥 CLICK GLOBAL (DELETE / RESTORE)
-================================ */
-document.addEventListener("click", (e) => {
-
-  if (e.target.classList.contains("btn-delete")) {
-    const id = e.target.dataset.id;
-
-    if (!confirm("¿Eliminar tipo de tela?")) return;
-
-    window.location.href = `/products/types/delete/${id}`;
-  }
-
-  if (e.target.classList.contains("btn-restore")) {
-    const id = e.target.dataset.id;
-
-    if (!confirm("¿Restaurar tipo de tela?")) return;
-
-    window.location.href = `/products/types/restore/${id}`;
-  }
-
-});
-
-
-/* ================================
-   🔥 DATATABLE SEGURO
-================================ */
-function safeInitTable() {
-
-  const table = $("#tablaFabricTypes");
-
-  if (!table.length) return;
-
-  // 🔥 evitar doble inicialización
-  if ($.fn.DataTable.isDataTable(table)) return;
-
-  table.DataTable({
-    responsive: true
-  });
-
-}
-
-
-/* ================================
-   🔥 INLINE CREATE
-================================ */
+// ================================
+// INLINE CREATE
+// ================================
 function initInlineCreateType() {
-
   const input = document.getElementById("inputTypeName");
   const form = document.getElementById("formCreateType");
 
@@ -56,9 +16,7 @@ function initInlineCreateType() {
 
   input.focus();
 
-  input.addEventListener("focus", () => {
-    input.select();
-  });
+  input.addEventListener("focus", () => input.select());
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -68,38 +26,28 @@ function initInlineCreateType() {
   });
 
   form.addEventListener("submit", () => {
-    setTimeout(() => {
-      input.value = "";
-    }, 100);
+    setTimeout(() => (input.value = ""), 100);
   });
-
 }
 
-
-/* ================================
-   🔥 ALERTS (LEGACY)
-================================ */
+// ================================
+// ALERTS
+// ================================
 function initAlerts() {
-
   const alert = document.getElementById("alertMessage");
-
   if (!alert) return;
 
   setTimeout(() => {
     alert.style.opacity = "0";
     alert.style.transform = "translateY(-10px)";
-
     setTimeout(() => alert.remove(), 300);
   }, 2500);
-
 }
 
-
-/* ================================
-   🔥 EDIT MODAL
-================================ */
+// ================================
+// EDIT MODAL
+// ================================
 function initEditModal() {
-
   const modal = document.getElementById("modalEditType");
   const input = document.getElementById("editTypeName");
   const idInput = document.getElementById("editTypeId");
@@ -108,32 +56,23 @@ function initEditModal() {
 
   if (!modal) return;
 
-  // 🔥 abrir modal
   document.addEventListener("click", (e) => {
-
     const btn = e.target.closest(".btn-edit-type");
 
     if (btn) {
-      const id = btn.dataset.id;
-      const name = btn.dataset.name;
-
-      idInput.value = id;
-      input.value = name;
+      idInput.value = btn.dataset.id;
+      input.value = btn.dataset.name;
 
       modal.classList.remove("hidden");
       input.focus();
     }
-
   });
 
-  // 🔥 cerrar modal
-  cancel.addEventListener("click", () => {
+  cancel?.addEventListener("click", () => {
     modal.classList.add("hidden");
   });
 
-  // 🔥 submit AJAX
-  form.addEventListener("submit", async (e) => {
-
+  form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const id = idInput.value;
@@ -142,20 +81,15 @@ function initEditModal() {
     if (!nombre) return;
 
     try {
-
       const res = await fetch("/products/types/update", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ id, nombre }),
       });
 
       const data = await res.json();
 
       if (data.success) {
-
-        // 🔥 toast
         Events.emit("alerts:show", {
           type: "success",
           message: data.message,
@@ -163,65 +97,75 @@ function initEditModal() {
 
         modal.classList.add("hidden");
 
-        // 🔥 actualizar fila SIN DataTable
         const row = document.querySelector(`tr[data-id="${id}"]`);
-
         if (row) {
-
           const cell = row.querySelector('td[data-label="Nombre"]');
-
-          if (cell) {
-            cell.textContent = nombre;
-          }
-
-          // 🔥 highlight
-          row.style.background = "rgba(var(--primary-rgb), 0.2)";
-
-          setTimeout(() => {
-            row.style.background = "";
-          }, 1500);
+          if (cell) cell.textContent = nombre;
         }
-
       } else {
         throw new Error(data.message);
       }
-
     } catch (err) {
-
       Events.emit("alerts:show", {
         type: "error",
         message: err.message,
+      });
+    }
+  });
+}
+
+// ================================
+// DELETE (IGUAL A SUPPLIERS)
+// ================================
+function initTypeDelete() {
+  document.addEventListener("click", async (e) => {
+
+    const btn = e.target.closest(".btn-delete");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+
+    if (!confirm("¿Eliminar tipo de tela?")) return;
+
+    try {
+
+      const res = await post("/products/types/delete", { id });
+
+      if (!res.ok) throw new Error(res.error);
+
+      const row = btn.closest("tr");
+
+      row.style.opacity = "0";
+      setTimeout(() => row.remove(), 300);
+
+      Events.emit("alerts:show", {
+        type: "success",
+        message: "Tipo eliminado correctamente",
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al eliminar",
       });
 
     }
 
   });
-
 }
 
+// ================================
+// INIT
+// ================================
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("INIT PRODUCTS OK");
 
-/* ================================
-   🔥 INIT GLOBAL
-================================ */
-Events.on("inventory:types", () => {
-
-  safeInitTable();        // 🔥 FIX CLAVE
+  initDataTable("#tablaFabricTypes", "tipos de tela");
   initInlineCreateType();
   initAlerts();
   initEditModal();
-
-});
-
-
-/* ================================
-   🔥 DEBUG (opcional)
-================================ */
-document.addEventListener("click", (e) => {
-
-  const btn = e.target.closest(".btn-edit-type");
-
-  if (btn) {
-    console.log("EDIT CLICK OK", btn.dataset.id);
-  }
-
+  initTypeDelete();
 });

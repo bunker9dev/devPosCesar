@@ -84,6 +84,8 @@ class CatalogService
         return $this->repo->find($table, $id);
     }
 
+ 
+
     public function update($table, $id, $nombre)
     {
         if (empty($nombre)) {

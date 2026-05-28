@@ -86,6 +86,8 @@ endif; ?>
                     <td data-label="Acciones">
                         <div class="actions">
 
+                            <?php $isUsed = false; ?>
+
                             <?php if ($canEdit && empty($type['deleted_at'])): ?>
                                 <button
                                     type="button"
@@ -97,7 +99,9 @@ endif; ?>
                             <?php endif; ?>
 
                             <?php if (empty($type['deleted_at']) && $canDelete): ?>
-                                <button class="btn-action delete" data-id="<?= $type['id'] ?>">
+                                <button
+                                    class="btn-action delete btn-delete"
+                                    data-id="<?= $type['id'] ?>">
                                     Eliminar
                                 </button>
                             <?php endif; ?>

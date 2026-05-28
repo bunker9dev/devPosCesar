@@ -40,12 +40,100 @@ class FabricTypeController extends Controller
         header('Location: ' . BASE_URL . '/products/types');
     }
 
-    public function delete($id)
-    {
-        $this->service->delete($this->table, $id);
+    public function delete()
+{
+    header('Content-Type: application/json');
 
-        header('Location: ' . BASE_URL . '/products/types');
+    try {
+
+        $db = conectarDB();
+
+        // 🔐 autenticación
+        if (!isset($_SESSION['user'])) {
+            echo json_encode(['ok' => false, 'error' => 'No autenticado']);
+            return;
+        }
+
+        // 🔐 rol
+        $rol = $_SESSION['user']['rol_nombre'] ?? '';
+
+        if (!in_array($rol, ['super', 'administrador'])) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
+        }
+
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+            return;
+        }
+
+        // 🔍 obtener tipo
+        $stmt = $db->prepare("SELECT nombre, estado FROM fabric_types WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $type = $stmt->get_result()->fetch_assoc();
+
+        if (!$type) {
+            echo json_encode(['ok' => false, 'error' => 'Tipo no existe']);
+            return;
+        }
+
+        // 🔥 VALIDAR USO (CLAVE)
+        $stmt = $db->prepare("
+            SELECT COUNT(*) as total
+            FROM products
+            WHERE fabric_type_id = ?
+        ");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $result = $stmt->get_result()->fetch_assoc();
+
+        if ($result['total'] > 0) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'Este tipo de tela está en uso'
+            ]);
+            return;
+        }
+
+        // 🔥 SOFT DELETE
+        $stmt = $db->prepare("
+            UPDATE fabric_types 
+            SET estado = 0, deleted_at = NOW()
+            WHERE id = ?
+        ");
+        $stmt->bind_param("i", $id);
+
+        if (!$stmt->execute()) {
+            echo json_encode(['ok' => false, 'error' => $stmt->error]);
+            return;
+        }
+
+        // 🧠 auditoría
+        $admin = $_SESSION['user']['username'] ?? 'Sistema';
+
+        $detalle = "Tipo: {$type['nombre']} | Estado: {$type['estado']} → 0 | Por: {$admin}";
+
+        auditoria("DELETE", "fabric_types", $id, $detalle, "products");
+
+        echo json_encode(['ok' => true]);
+
+        return;
+
+    } catch (\Exception $e) {
+
+        echo json_encode([
+            'ok' => false,
+            'error' => $e->getMessage()
+        ]);
+
+        return;
     }
+}
 
     public function restore($id)
     {
@@ -74,34 +162,33 @@ class FabricTypeController extends Controller
 
 
 
-public function update()
-{
-    header('Content-Type: application/json'); // 🔥 CLAVE
+    public function update()
+    {
+        header('Content-Type: application/json'); // 🔥 CLAVE
 
-    try {
+        try {
 
-        $id = $_POST['id'] ?? null;
-        $nombre = $_POST['nombre'] ?? '';
+            $id = $_POST['id'] ?? null;
+            $nombre = $_POST['nombre'] ?? '';
 
-        if (!$id) {
-            throw new \Exception("ID inválido");
+            if (!$id) {
+                throw new \Exception("ID inválido");
+            }
+
+            $this->service->update($this->table, $id, $nombre);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Tipo actualizado correctamente'
+            ]);
+        } catch (\Throwable $e) { // 🔥 mejor que Exception
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
         }
 
-        $this->service->update($this->table, $id, $nombre);
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Tipo actualizado correctamente'
-        ]);
-
-    } catch (\Throwable $e) { // 🔥 mejor que Exception
-
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
+        exit; // 🔥 OBLIGATORIO
     }
-
-    exit; // 🔥 OBLIGATORIO
-}
 }

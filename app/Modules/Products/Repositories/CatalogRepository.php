@@ -148,4 +148,15 @@ class CatalogRepository
 
         return $result['total'] > 0;
     }
+
+    public function getAllWithUsage($table)
+    {
+        $data = $this->getAll($table);
+
+        foreach ($data as &$row) {
+            $row['is_used'] = $this->isUsed($table, $row['id']);
+        }
+
+        return $data;
+    }
 }
