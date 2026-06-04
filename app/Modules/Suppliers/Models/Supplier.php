@@ -3,6 +3,7 @@
 namespace App\Modules\Suppliers\Models;
 
 use Exception;
+use App\Core\Status;
 
 class Supplier
 {
@@ -13,7 +14,9 @@ class Supplier
         $this->db = $db;
     }
 
-    // 🔍 LISTAR
+    // ======================================================
+    // LISTAR
+    // ======================================================
     public function getAll($isSuper)
     {
         $query = "
@@ -30,7 +33,7 @@ class Supplier
         ";
 
         if (!$isSuper) {
-            $query .= " WHERE estado IN (1,2)";
+            $query .= " WHERE estado IN (" . Status::ACTIVO . "," . Status::INACTIVO . ")";
         }
 
         $query .= " ORDER BY estado ASC, created_at DESC";
@@ -38,7 +41,9 @@ class Supplier
         return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
 
-    // 🔍 BUSCAR
+    // ======================================================
+    // BUSCAR
+    // ======================================================
     public function find($id)
     {
         $stmt = $this->db->prepare("
@@ -54,20 +59,20 @@ class Supplier
         return $stmt->get_result()->fetch_assoc();
     }
 
-    // 🔍 VALIDAR NIT
+    // ======================================================
+    // VALIDAR NIT
+    // ======================================================
     public function existsByNit($nit, $excludeId = null)
     {
         if ($excludeId) {
             $stmt = $this->db->prepare("
                 SELECT id FROM proveedores WHERE nit=? AND id<>?
             ");
-
             $stmt->bind_param("si", $nit, $excludeId);
         } else {
             $stmt = $this->db->prepare("
                 SELECT id FROM proveedores WHERE nit=?
             ");
-
             $stmt->bind_param("s", $nit);
         }
 
@@ -78,23 +83,48 @@ class Supplier
         return $stmt->get_result()->num_rows > 0;
     }
 
-    // 💾 CREAR
+    // ======================================================
+    // CREAR
+    // ======================================================
     public function create($data)
     {
+        // 🔒 VALIDACIÓN
+        if (empty($data['nombre']) || empty($data['nit'])) {
+            throw new Exception(json_encode([
+                'general' => 'Nombre y NIT son obligatorios'
+            ]));
+        }
+
+        //  NIT ÚNICO
+        if ($this->existsByNit($data['nit'])) {
+            throw new Exception(json_encode([
+                'nit' => 'El NIT ya está registrado'
+            ]));
+        }
+
+        //  CAMPOS OPCIONALES
+        $apellidos = $data['apellidos'] ?? null;
+        $email     = $data['email'] ?? null;
+        $telefono  = $data['telefono'] ?? null;
+        $ciudad    = $data['ciudad'] ?? null;
+
+        $estado = Status::ACTIVO;
+
         $stmt = $this->db->prepare("
             INSERT INTO proveedores 
             (nombre, apellidos, nit, email, telefono, ciudad, estado, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $stmt->bind_param(
-            "ssssssi",
+            "ssssssii",
             $data['nombre'],
-            $data['apellidos'],
+            $apellidos,
             $data['nit'],
-            $data['email'],
-            $data['telefono'],
-            $data['ciudad'],
+            $email,
+            $telefono,
+            $ciudad,
+            $estado,
             $data['user_id']
         );
 
@@ -105,9 +135,29 @@ class Supplier
         return $stmt->insert_id;
     }
 
-    // ✏️ ACTUALIZAR
+    // ======================================================
+    // ACTUALIZAR
+    // ======================================================
     public function update($id, $data)
     {
+        if (empty($data['nombre']) || empty($data['nit'])) {
+            throw new Exception(json_encode([
+                'general' => 'Nombre y NIT son obligatorios'
+            ]));
+        }
+
+        // VALIDAR NIT ÚNICO (EXCLUYENDO EL MISMO)
+        if ($this->existsByNit($data['nit'], $id)) {
+            throw new Exception(json_encode([
+                'nit' => 'El NIT ya está registrado'
+            ]));
+        }
+
+        $apellidos = $data['apellidos'] ?? null;
+        $email     = $data['email'] ?? null;
+        $telefono  = $data['telefono'] ?? null;
+        $ciudad    = $data['ciudad'] ?? null;
+
         $stmt = $this->db->prepare("
             UPDATE proveedores 
             SET nombre=?, apellidos=?, nit=?, email=?, telefono=?, ciudad=?, updated_by=?, updated_at=NOW()
@@ -117,11 +167,11 @@ class Supplier
         $stmt->bind_param(
             "ssssssii",
             $data['nombre'],
-            $data['apellidos'],
+            $apellidos,
             $data['nit'],
-            $data['email'],
-            $data['telefono'],
-            $data['ciudad'],
+            $email,
+            $telefono,
+            $ciudad,
             $data['user_id'],
             $id
         );
@@ -133,7 +183,9 @@ class Supplier
         return true;
     }
 
-    // 🔄 CAMBIAR ESTADO
+    // ======================================================
+    // CAMBIAR ESTADO
+    // ======================================================
     public function updateEstado($id, $estado)
     {
         $stmt = $this->db->prepare("
@@ -149,15 +201,19 @@ class Supplier
         return true;
     }
 
-    // 🗑️ ELIMINAR (SOFT)
+    // ======================================================
+    // DELETE (SOFT)
+    // ======================================================
     public function delete($id)
     {
-        return $this->updateEstado($id, 0);
+        return $this->updateEstado($id, Status::ELIMINADO);
     }
 
-    // ♻️ RESTAURAR
+    // ======================================================
+    // RESTORE
+    // ======================================================
     public function restore($id)
     {
-        return $this->updateEstado($id, 1);
+        return $this->updateEstado($id, Status::ACTIVO);
     }
 }

@@ -2,252 +2,214 @@
 
 namespace App\Modules\Suppliers\Services;
 
+use App\Core\Status;
 use Exception;
 
 class SupplierService
 {
     private $model;
+    private $db;
 
     public function __construct($model, $db)
     {
         $this->model = $model;
+        $this->db = $db;
     }
 
-    // 🔍 LISTAR
-    public function getAll($isSuper)
+    // ======================================================
+    // LISTAR
+    // ======================================================
+    public function getAll($isSuper = false)
     {
         return $this->model->getAll($isSuper);
     }
 
-    // 💾 CREAR
+    // ======================================================
+    // BUSCAR
+    // ======================================================
+    public function find($id)
+    {
+        return $this->model->find($id);
+    }
+
+    // ======================================================
+    // CREAR
+    // ======================================================
     public function create($data)
     {
-        $errors = [];
-
-        $nombreRaw    = trim($data['nombre'] ?? '');
-        $apellidosRaw = trim($data['apellidos'] ?? '');
-        $nitRaw       = trim($data['nit'] ?? '');
-        $ciudadRaw    = trim($data['ciudad'] ?? '');
-
-        // 🔥 VALIDACIONES
-        if (!$nombreRaw) {
-            $errors['nombre'] = "El nombre es obligatorio";
-        }
-
-        if (!$nitRaw) {
-            $errors['nit'] = "El NIT es obligatorio";
-        }
-
-        if (!empty($nitRaw) && !ctype_digit(preg_replace('/\D/', '', $nitRaw))) {
-            $errors['nit'] = "El NIT debe ser numérico";
-        }
-
-        if (!empty($errors)) {
-            throw new Exception(json_encode($errors));
-        }
-
-        // 🔥 NORMALIZAR
-        $data = $this->normalizarProveedor($data);
-
-        $nombre = $data['nombre'];
-        $nit    = $data['nit'];
-
-        if ($this->model->existsByNit($nit)) {
-            throw new Exception(json_encode([
-                'nit' => "Ya existe un proveedor con ese NIT"
-            ]));
-        }
+        $this->validate($data);
 
         $id = $this->model->create($data);
 
-        auditoria(
-            'CREAR',
-            'proveedores',
+        // 🧠 AUDITORÍA
+        $this->audit(
+            "CREATE",
             $id,
-            "Creó proveedor {$nombre}",
-            'suppliers'
+            "Proveedor creado: {$data['nombre']}"
         );
 
         return $id;
     }
 
-    // ✏️ ACTUALIZAR
+    // ======================================================
+    // ACTUALIZAR
+    // ======================================================
     public function update($id, $data)
+    {
+        $this->validate($data, $id);
+
+        $this->model->update($id, $data);
+
+        $this->audit(
+            "UPDATE",
+            $id,
+            "Proveedor actualizado: {$data['nombre']}"
+        );
+
+        return true;
+    }
+
+    // ======================================================
+    // TOGGLE ESTADO
+    // ======================================================
+    public function toggle($id, $userId)
+    {
+        $supplier = $this->model->find($id);
+
+        if (!$supplier) {
+            throw new Exception("Proveedor no existe");
+        }
+
+        if ($supplier['estado'] == Status::ELIMINADO) {
+            throw new Exception("No se puede modificar un eliminado");
+        }
+
+        $nuevoEstado = $supplier['estado'] == Status::ACTIVO
+            ? Status::INACTIVO
+            : Status::ACTIVO;
+
+        $this->model->updateEstado($id, $nuevoEstado);
+
+        $this->audit(
+            "TOGGLE",
+            $id,
+            "Estado {$supplier['estado']} → {$nuevoEstado}",
+            $userId
+        );
+
+        return $nuevoEstado;
+    }
+
+    // ======================================================
+    // DELETE (SOFT)
+    // ======================================================
+    public function delete($id, $userId)
+    {
+        $supplier = $this->model->find($id);
+
+        if (!$supplier) {
+            throw new Exception("Proveedor no existe");
+        }
+
+        if ($supplier['estado'] == Status::ELIMINADO) {
+            throw new Exception("Ya está eliminado");
+        }
+
+        $this->model->delete($id);
+
+        $this->audit(
+            "DELETE",
+            $id,
+            "Proveedor eliminado: {$supplier['nombre']}",
+            $userId
+        );
+
+        return true;
+    }
+
+    // ======================================================
+    // RESTORE
+    // ======================================================
+    public function restore($id, $userId)
+    {
+        $supplier = $this->model->find($id);
+
+        if (!$supplier) {
+            throw new Exception("Proveedor no existe");
+        }
+
+        if ($supplier['estado'] != Status::ELIMINADO) {
+            throw new Exception("El proveedor no está eliminado");
+        }
+
+        $this->model->restore($id);
+
+        $this->audit(
+            "RESTORE",
+            $id,
+            "Proveedor restaurado: {$supplier['nombre']}",
+            $userId
+        );
+
+        return true;
+    }
+
+    // ======================================================
+    // VALIDAR NIT
+    // ======================================================
+    public function existsByNit($nit, $excludeId = null)
+    {
+        return $this->model->existsByNit($nit, $excludeId);
+    }
+
+    // ======================================================
+    // VALIDACIONES CENTRALIZADAS
+    // ======================================================
+    private function validate($data, $id = null)
     {
         $errors = [];
 
-        $nombreRaw    = trim($data['nombre'] ?? '');
-        $apellidosRaw = trim($data['apellidos'] ?? '');
-        $nitRaw       = trim($data['nit'] ?? '');
-
-        if (!$nombreRaw) {
+        if (empty($data['nombre'])) {
             $errors['nombre'] = "El nombre es obligatorio";
         }
 
-        if (!$nitRaw) {
+        if (empty($data['nit'])) {
             $errors['nit'] = "El NIT es obligatorio";
         }
 
-        if (!empty($nitRaw) && !ctype_digit(preg_replace('/\D/', '', $nitRaw))) {
-            $errors['nit'] = "El NIT debe ser numérico";
+        // 🔥 NIT ÚNICO
+        if (!empty($data['nit']) && $this->model->existsByNit($data['nit'], $id)) {
+            $errors['nit'] = "El NIT ya está registrado";
+        }
+
+        if (!empty($data['telefono']) && strlen($data['telefono']) < 7) {
+            $errors['telefono'] = "Teléfono inválido";
+        }
+
+        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = "Email inválido";
         }
 
         if (!empty($errors)) {
             throw new Exception(json_encode($errors));
         }
+    }
 
-        $data = $this->normalizarProveedor($data);
+    // ======================================================
+    // AUDITORÍA CENTRALIZADA
+    // ======================================================
+    private function audit($accion, $id, $detalle, $userId = null)
+    {
+        $userId = $userId ?? ($_SESSION['user']['id'] ?? null);
 
-        $nombre = $data['nombre'];
-        $nit    = $data['nit'];
-
-        $prov = $this->model->find($id);
-
-        if (!$prov) {
-            throw new Exception("Proveedor no existe");
-        }
-
-        if ($prov['nit'] !== $nit && $this->model->existsByNit($nit, $id)) {
-            throw new Exception(json_encode([
-                'nit' => "Ya existe otro proveedor con ese NIT"
-            ]));
-        }
-
-        $this->model->update($id, $data);
+        if (!$userId) return;
 
         auditoria(
-            'EDITAR',
-            'proveedores',
+            $accion,
+            "proveedores",
             $id,
-            "Actualizó proveedor {$nombre}",
-            'suppliers'
+            $detalle,
+            "suppliers"
         );
-
-        return true;
-    }
-
-    // 🔄 CAMBIAR ESTADO
-    public function toggle($id, $userId)
-    {
-        $prov = $this->model->find($id);
-
-        if (!$prov) {
-            throw new Exception("Proveedor no existe");
-        }
-
-        if ($prov['estado'] == 0) {
-            throw new Exception("No se puede modificar un proveedor eliminado");
-        }
-
-        $nuevo = ($prov['estado'] == 1) ? 2 : 1;
-
-        $this->model->updateEstado($id, $nuevo);
-
-        auditoria(
-            'ESTADO',
-            'proveedores',
-            $id,
-            "Cambio estado a {$nuevo}",
-            'suppliers'
-        );
-
-        return $nuevo;
-    }
-
-    // 🗑️ ELIMINAR
-    public function delete($id, $userId)
-    {
-        $prov = $this->model->find($id);
-
-        if (!$prov) {
-            throw new Exception("Proveedor no existe");
-        }
-
-        $this->model->delete($id);
-
-        auditoria(
-            'ELIMINAR',
-            'proveedores',
-            $id,
-            "Eliminó proveedor {$prov['nombre']}",
-            'suppliers'
-        );
-
-        return true;
-    }
-
-    // ♻️ RESTAURAR
-    public function restore($id, $userId)
-    {
-        $prov = $this->model->find($id);
-
-        if (!$prov) {
-            throw new Exception("Proveedor no existe");
-        }
-
-        $this->model->restore($id);
-
-        auditoria(
-            'RESTAURAR',
-            'proveedores',
-            $id,
-            "Restauró proveedor {$prov['nombre']}",
-            'suppliers'
-        );
-
-        return true;
-    }
-
-    // 🔍 VALIDAR NIT (AJAX)
-    public function existsByNit($nit, $excludeId = null)
-    {
-        $nit = $this->normalizarNit($nit);
-        return $this->model->existsByNit($nit, $excludeId);
-    }
-
-    // =========================
-    // 🔥 NORMALIZACIÓN
-    // =========================
-
-    private function normalizarProveedor($data)
-    {
-        $data['nombre']    = $this->normalizarTexto($data['nombre'] ?? '');
-        $data['apellidos'] = $this->normalizarTexto($data['apellidos'] ?? '');
-        $data['ciudad']    = $this->normalizarCiudad($data['ciudad'] ?? '');
-        $data['nit']       = $this->normalizarNit($data['nit'] ?? '');
-        $data['email']     = trim($data['email'] ?? '');
-        $data['telefono']  = $this->normalizarNit($data['telefono'] ?? '');
-
-        return $data;
-    }
-
-    private function normalizarTexto($texto)
-    {
-        $texto = trim($texto);
-
-        $texto = preg_replace('/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\.\-&]/', '', $texto);
-
-        $texto = mb_strtolower($texto, 'UTF-8');
-
-        return mb_convert_case($texto, MB_CASE_TITLE, "UTF-8");
-    }
-
-    private function normalizarCiudad($ciudad)
-    {
-        $ciudad = trim($ciudad);
-        $ciudad = mb_strtolower($ciudad, 'UTF-8');
-
-        $map = [
-            'medellin' => 'Medellín',
-            'bogota' => 'Bogotá',
-            'cali' => 'Cali'
-        ];
-
-        return $map[$ciudad] ?? ucfirst($ciudad);
-    }
-
-    private function normalizarNit($nit)
-    {
-        return preg_replace('/[^0-9]/', '', $nit);
     }
 }

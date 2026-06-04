@@ -2,124 +2,250 @@
 
 namespace App\Modules\Products\Services;
 
-use App\Modules\Products\Repositories\CatalogRepository;
+use App\Core\Status;
+use Exception;
 
 class CatalogService
 {
-    private $repo;
+    private $db;
 
     public function __construct()
     {
-        $this->repo = new CatalogRepository();
+        global $db;
+        $this->db = $db;
     }
 
-    // ================================
-    // GET ALL
-    // ================================
+    // ======================================================
+    // LISTAR
+    // ======================================================
     public function getAll($table)
     {
-        return $this->repo->getAll($table);
+        $query = "
+            SELECT *
+            FROM {$table}
+            ORDER BY estado ASC, id DESC
+        ";
+
+        return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
 
-    // ================================
-    // CREATE
-    // ================================
+    // =========================================
+    // CREAR
+    // ========================================
     public function create($table, $nombre)
     {
-        if (empty($nombre)) {
-            throw new \Exception("El nombre es obligatorio");
+        $nombre = trim($nombre);
+
+        if (!$nombre) {
+            throw new Exception("El nombre es obligatorio");
         }
 
-        $nombre = ucfirst(trim(strtolower($nombre)));
-
-        if ($this->repo->exists($table, $nombre)) {
-            throw new \Exception("El registro ya existe");
+        // 🔒 evitar duplicados
+        if ($this->existsByName($table, $nombre)) {
+            throw new Exception("El nombre ya existe");
         }
 
-        $codigo = $this->repo->nextCode($table);
+        $stmt = $this->db->prepare("
+            INSERT INTO {$table} (nombre, estado)
+            VALUES (?, ?)
+        ");
 
-        $this->repo->create($table, $codigo, $nombre);
+        $estado = Status::ACTIVO;
 
-        auditoria(
-            'create',
-            $table,
-            null,
-            "Creó: $nombre ($codigo)",
-            'products'
-        );
-    }
+        $stmt->bind_param("si", $nombre, $estado);
 
-    // ================================
-    // DELETE (SOFT)
-    // ================================
-    public function delete($table, $id)
-    {
-        if (!$id) {
-            throw new \Exception("ID inválido");
+        if (!$stmt->execute()) {
+            throw new Exception("Error al crear registro");
         }
 
-        if ($this->repo->isUsed($table, $id)) {
-            throw new \Exception("No puedes eliminar este registro porque está en uso");
-        }
+        $id = $stmt->insert_id;
 
-        $this->repo->softDelete($table, $id);
+        $this->audit("CREATE", $table, $id, "Creó: {$nombre}");
 
-        auditoria(
-            'delete',
-            $table,
-            $id,
-            "Eliminó registro ID $id",
-            'products'
-        );
+        return $id;
     }
 
-    // ================================
-    // RESTORE
-    // ================================
-    public function restore($table, $id)
-    {
-        $this->repo->restore($table, $id);
-
-        auditoria(
-            'restore',
-            $table,
-            $id,
-            "Restauró ID $id",
-            'products'
-        );
-    }
-
-    // ================================
-    // FIND
-    // ================================
-    public function find($table, $id)
-    {
-        return $this->repo->find($table, $id);
-    }
-
-    // ================================
-    // UPDATE
-    // ================================
+    // ======================================================
+    // ACTUALIZAR
+    // ======================================================
     public function update($table, $id, $nombre)
     {
-        if (empty($nombre)) {
-            throw new \Exception("El nombre es obligatorio");
+        $nombre = trim($nombre);
+
+        if (!$id) {
+            throw new Exception("ID inválido");
         }
 
-        $nombre = ucfirst(trim(strtolower($nombre)));
-
-        if ($this->repo->existsExceptId($table, $nombre, $id)) {
-            throw new \Exception("El registro ya existe");
+        if (!$nombre) {
+            throw new Exception("El nombre es obligatorio");
         }
 
-        $this->repo->update($table, $id, $nombre);
+        if ($this->existsByName($table, $nombre, $id)) {
+            throw new Exception("El nombre ya existe");
+        }
 
-        auditoria(
-            'update',
+        $stmt = $this->db->prepare("
+            UPDATE {$table}
+            SET nombre=?
+            WHERE id=?
+        ");
+
+        $stmt->bind_param("si", $nombre, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al actualizar");
+        }
+
+        $this->audit("UPDATE", $table, $id, "Actualizó a: {$nombre}");
+
+        return true;
+    }
+
+    // ======================================================
+    // TOGGLE
+    // ======================================================
+    public function toggle($table, $id)
+    {
+        $stmt = $this->db->prepare("
+            SELECT estado, nombre FROM {$table} WHERE id=?
+        ");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $row = $stmt->get_result()->fetch_assoc();
+
+        if (!$row) {
+            throw new Exception("Registro no existe");
+        }
+
+        if ($row['estado'] == Status::ELIMINADO) {
+            throw new Exception("No se puede modificar eliminado");
+        }
+
+        $nuevoEstado = $row['estado'] == Status::ACTIVO
+            ? Status::INACTIVO
+            : Status::ACTIVO;
+
+        $stmt = $this->db->prepare("
+            UPDATE {$table} SET estado=? WHERE id=?
+        ");
+        $stmt->bind_param("ii", $nuevoEstado, $id);
+        $stmt->execute();
+
+        $this->audit(
+            "TOGGLE",
             $table,
             $id,
-            "Actualizó: $nombre",
-            'products'
+            "Estado {$row['estado']} → {$nuevoEstado}"
+        );
+
+        return $nuevoEstado;
+    }
+
+    // ======================================================
+    // DELETE (SOFT)
+    // ======================================================
+    public function delete($table, $id)
+    {
+        $stmt = $this->db->prepare("
+            UPDATE {$table}
+            SET estado=?, deleted_at=NOW()
+            WHERE id=?
+        ");
+
+        $estado = Status::ELIMINADO;
+
+        $stmt->bind_param("ii", $estado, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al eliminar");
+        }
+
+        $this->audit("DELETE", $table, $id, "Eliminado");
+
+        return true;
+    }
+
+    // ======================================================
+    // RESTORE
+    // ======================================================
+    public function restore($table, $id)
+    {
+        $stmt = $this->db->prepare("
+            UPDATE {$table}
+            SET estado=?, deleted_at=NULL
+            WHERE id=?
+        ");
+
+        $estado = Status::ACTIVO;
+
+        $stmt->bind_param("ii", $estado, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al restaurar");
+        }
+
+        $this->audit("RESTORE", $table, $id, "Restaurado");
+
+        return true;
+    }
+
+    // ======================================================
+    // VALIDAR USO (FK)
+    // ======================================================
+    public function isUsed($table, $id, $relatedTable, $fk)
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) as total
+            FROM {$relatedTable}
+            WHERE {$fk} = ?
+        ");
+
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $result = $stmt->get_result()->fetch_assoc();
+
+        return $result['total'] > 0;
+    }
+
+    // ======================================================
+    // VALIDAR NOMBRE DUPLICADO
+    // ======================================================
+    private function existsByName($table, $nombre, $excludeId = null)
+    {
+        if ($excludeId) {
+            $stmt = $this->db->prepare("
+                SELECT id FROM {$table}
+                WHERE nombre=? AND id<>?
+            ");
+            $stmt->bind_param("si", $nombre, $excludeId);
+        } else {
+            $stmt = $this->db->prepare("
+                SELECT id FROM {$table}
+                WHERE nombre=?
+            ");
+            $stmt->bind_param("s", $nombre);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->num_rows > 0;
+    }
+
+    // ======================================================
+    // AUDITORÍA
+    // ======================================================
+    private function audit($accion, $tabla, $id, $detalle)
+    {
+        $user = $_SESSION['user']['username'] ?? 'Sistema';
+
+        auditoria(
+            $accion,
+            $tabla,
+            $id,
+            "{$detalle} | Por: {$user}",
+            "products"
         );
     }
 }
