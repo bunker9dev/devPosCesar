@@ -3,26 +3,22 @@
         <i data-lucide="check-circle"></i>
         <?= $_SESSION['success'] ?>
     </div>
-<?php unset($_SESSION['success']);
-endif; ?>
+<?php unset($_SESSION['success']); endif; ?>
 
 <?php if (!empty($_SESSION['error'])): ?>
     <div class="alert alert-error" id="alertMessage">
         <i data-lucide="alert-circle"></i>
         <?= $_SESSION['error'] ?>
     </div>
-<?php unset($_SESSION['error']);
-endif; ?>
+<?php unset($_SESSION['error']); endif; ?>
 
 
-<!-- 🔥 CREAR TIPO DE TELA -->
+<!-- 🔥 CREAR -->
 <form method="POST" action="<?= BASE_URL ?>/products/types/store" id="formCreateType">
-
     <div class="inline-create-pro">
 
         <div class="input-group-pro">
             <i data-lucide="search"></i>
-
             <input
                 id="inputTypeName"
                 type="text"
@@ -37,11 +33,10 @@ endif; ?>
         </button>
 
     </div>
-
 </form>
 
 
-<!-- 🔥 TABLA UNIFICADA -->
+<!-- 🔥 TABLA -->
 <div class="table-container">
 
     <table id="tablaFabricTypes" class="table-main display">
@@ -59,9 +54,10 @@ endif; ?>
 
         <tbody>
             <?php foreach ($types as $type): ?>
-                <tr
-                    data-id="<?= $type['id'] ?>"
-                    class="<?= !empty($type['deleted_at']) ? 'deleted' : '' ?>">
+
+                <?php $estado = (int)$type['estado']; ?>
+
+                <tr data-id="<?= $type['id'] ?>">
 
                     <td></td>
 
@@ -75,20 +71,27 @@ endif; ?>
                         <?= htmlspecialchars($type['nombre']) ?>
                     </td>
 
+                    <!-- 🔥 ESTADO PRO -->
                     <td data-label="Estado">
-                        <?php if (!empty($type['deleted_at'])): ?>
-                            <span class="badge deleted">Eliminado</span>
-                        <?php else: ?>
-                            <span class="badge active btn-action-cursordf">Disponible</span>
-                        <?php endif; ?>
+                        <span
+                            class="badge estado-toggle toggle-type
+                            <?= $estado === $Status::ACTIVO ? 'active' : ($estado === $Status::INACTIVO ? 'inactive' : 'deleted') ?>"
+
+                            data-id="<?= $type['id'] ?>"
+                            data-url="<?= BASE_URL ?>/products/types/toggle"
+                            data-estado="<?= $estado ?>">
+
+                            <?= $estado === $Status::ACTIVO ? 'Activo' : ($estado === $Status::INACTIVO ? 'Inactivo' : 'Eliminado') ?>
+
+                        </span>
                     </td>
 
+                    <!-- 🔥 ACCIONES -->
                     <td data-label="Acciones">
                         <div class="actions">
 
-                            <?php $isUsed = false; ?>
-
-                            <?php if ($canEdit && empty($type['deleted_at'])): ?>
+                            <!-- EDIT -->
+                            <?php if ($canEdit): ?>
                                 <button
                                     class="btn-action edit btn-edit"
                                     data-id="<?= $type['id'] ?>"
@@ -98,7 +101,8 @@ endif; ?>
                                 </button>
                             <?php endif; ?>
 
-                            <?php if (empty($type['deleted_at']) && $canDelete): ?>
+                            <!-- DELETE -->
+                            <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
                                 <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $type['id'] ?>"
@@ -109,10 +113,12 @@ endif; ?>
                                 </button>
                             <?php endif; ?>
 
-                            <?php if (!empty($type['deleted_at']) && $rol === 'super'): ?>
+                            <!-- RESTORE -->
+                            <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
                                 <button
                                     class="btn-action restore btn-restore"
-                                    data-id="<?= $type['id'] ?>">
+                                    data-id="<?= $type['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/products/types/restore">
                                     Restaurar
                                 </button>
                             <?php endif; ?>
@@ -121,6 +127,7 @@ endif; ?>
                     </td>
 
                 </tr>
+
             <?php endforeach; ?>
         </tbody>
 
