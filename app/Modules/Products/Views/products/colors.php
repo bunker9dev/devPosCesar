@@ -15,13 +15,13 @@ endif; ?>
 endif; ?>
 
 
-<!-- 🔥 CREAR TIPO DE TELA -->
+<!-- 🔥 CREAR COLOR -->
 <form method="POST" action="<?= BASE_URL ?>/products/colors/store" id="formCreateColor">
 
     <div class="inline-create-pro">
 
         <div class="input-group-pro">
-            <i data-lucide="search"></i>
+            <i data-lucide="palette"></i>
 
             <input
                 id="inputColorName"
@@ -41,7 +41,7 @@ endif; ?>
 </form>
 
 
-<!-- TABLA UNIFICADA -->
+<!-- 🔥 TABLA -->
 <div class="table-container">
 
     <table id="tablaColors" class="table-main display">
@@ -51,7 +51,7 @@ endif; ?>
                 <th></th>
                 <th>ID</th>
                 <th>Código</th>
-                <th>Nombre</th>
+                <th>Color</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -59,6 +59,7 @@ endif; ?>
 
         <tbody>
             <?php foreach ($colors as $color): ?>
+
                 <tr
                     data-id="<?= $color['id'] ?>"
                     class="<?= !empty($color['deleted_at']) ? 'deleted' : '' ?>">
@@ -71,31 +72,41 @@ endif; ?>
                         <?= htmlspecialchars($color['codigo']) ?>
                     </td>
 
-                    <td data-label="Nombre">
+                    <!-- 🔥 COLOR VISUAL -->
+                    <td data-label="Color">
+                        <span
+                            class="color-chip"
+                            style="--swatch: <?= htmlspecialchars($color['hex'] ?? '#6b7280') ?>">
+                        </span>
+
                         <?= htmlspecialchars($color['nombre']) ?>
                     </td>
 
+                    <!-- 🔥 ESTADO -->
                     <td data-label="Estado">
                         <?php if (!empty($color['deleted_at'])): ?>
                             <span class="badge deleted">Eliminado</span>
                         <?php else: ?>
-                            <span class="badge active btn-action-cursordf">Disponible</span>
+                            <span class="badge active">Disponible</span>
                         <?php endif; ?>
                     </td>
 
+                    <!-- 🔥 ACCIONES -->
                     <td data-label="Acciones">
                         <div class="actions">
 
+                            <!-- EDIT -->
                             <?php if ($canEdit && empty($color['deleted_at'])): ?>
                                 <button
                                     class="btn-action edit btn-edit"
-                                    data-id="<?= $color['id'] ?>"
-                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/update">
+                                    data-id="<?= $type['id'] ?>"
+                                    data-name="<?= htmlspecialchars($type['nombre']) ?>"
+                                    data-url="<?= BASE_URL ?>/products/types/update">
                                     Editar
                                 </button>
                             <?php endif; ?>
 
+                            <!-- DELETE -->
                             <?php if (empty($color['deleted_at']) && $canDelete): ?>
                                 <button
                                     class="btn-action delete btn-delete"
@@ -107,7 +118,8 @@ endif; ?>
                                 </button>
                             <?php endif; ?>
 
-                            <?php if (!empty($color['deleted_at']) && $rol === 'super'): ?>
+                            <!-- RESTORE -->
+                            <?php if (!empty($color['deleted_at']) && $canRestore): ?>
                                 <button
                                     class="btn-action restore btn-restore"
                                     data-id="<?= $color['id'] ?>"
@@ -120,6 +132,7 @@ endif; ?>
                     </td>
 
                 </tr>
+
             <?php endforeach; ?>
         </tbody>
 

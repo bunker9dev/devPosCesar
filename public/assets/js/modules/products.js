@@ -29,6 +29,7 @@ function initEditModal() {
     currentRow = btn.closest("tr");
 
     idInput.value = btn.dataset.id;
+    input.value = btn.dataset.name;
 
     const nameCell = currentRow.querySelector('td[data-label="Nombre"]');
     input.value = nameCell ? nameCell.textContent.trim() : "";
