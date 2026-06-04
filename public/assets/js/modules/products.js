@@ -6,7 +6,7 @@ import { post } from "../core/api.js";
 import { initDataTable } from "./inventory.js";
 
 // ================================
-// EDIT MODAL (DINÁMICO)
+// EDIT MODAL (PRO)
 // ================================
 function initEditModal() {
   const modal = document.getElementById("modalEditType");
@@ -17,27 +17,39 @@ function initEditModal() {
 
   if (!modal) return;
 
+  let currentRow = null; // 🔥 referencia REAL
+
+  // ================================
   // ABRIR MODAL
+  // ================================
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".btn-edit");
     if (!btn) return;
 
-    idInput.value = btn.dataset.id;
-    input.value = btn.dataset.name;
+    currentRow = btn.closest("tr");
 
-    // 🔥 guardar URL dinámica
+    idInput.value = btn.dataset.id;
+
+    const nameCell = currentRow.querySelector('td[data-label="Nombre"]');
+    input.value = nameCell ? nameCell.textContent.trim() : "";
+
     form.dataset.url = btn.dataset.url;
 
     modal.classList.remove("hidden");
     input.focus();
   });
 
+  // ================================
   // CERRAR
+  // ================================
   cancel?.addEventListener("click", () => {
     modal.classList.add("hidden");
+    currentRow = null;
   });
 
+  // ================================
   // SUBMIT
+  // ================================
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -64,12 +76,13 @@ function initEditModal() {
 
         modal.classList.add("hidden");
 
-        // actualizar UI
-        const row = document.querySelector(`tr[data-id="${id}"]`);
-        if (row) {
-          const cell = row.querySelector('td[data-label="Nombre"]');
+        // 🔥 actualizar fila REAL
+        if (currentRow) {
+          const cell = currentRow.querySelector('td[data-label="Nombre"]');
           if (cell) cell.textContent = nombre;
         }
+
+        currentRow = null;
       } else {
         throw new Error(data.message);
       }
@@ -83,7 +96,7 @@ function initEditModal() {
 }
 
 // ================================
-// DELETE (DINÁMICO)
+// DELETE (PRO)
 // ================================
 function initDelete() {
   document.addEventListener("click", async (e) => {
@@ -93,27 +106,41 @@ function initDelete() {
     const id = btn.dataset.id;
     const url = btn.dataset.url;
 
-    if (!confirm("¿Eliminar registro?")) return;
+    const row = btn.closest("tr");
+
+    // 🔥 nombre REAL desde DOM
+    const nameCell = row.querySelector('td[data-label="Nombre"]');
+    const name = nameCell ? nameCell.textContent.trim() : "registro";
+
+    const entity = btn.dataset.entity || "elemento";
+
+    if (
+      !confirm(
+        `¿Eliminar ${entity} "${name}"?\nEsta acción no se puede deshacer.`,
+      )
+    )
+      return;
 
     try {
       const res = await post(url, { id });
 
       if (!res.ok) throw new Error(res.error);
 
-      const row = btn.closest("tr");
+      const badge = row.querySelector(".badge");
 
-      // animación
-      row.style.opacity = "0";
+      if (badge) {
+        badge.textContent = badge.dataset.labelDeleted || "Eliminado";
+        badge.classList.remove("active", "inactive");
+        badge.classList.add("deleted");
+      }
 
-      setTimeout(() => {
-        row.remove();
-      }, 300);
+      const actions = row.querySelector("td:last-child");
+      actions.innerHTML = ``;
 
       Events.emit("alerts:show", {
         type: "success",
         message: "Registro eliminado",
       });
-
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -124,11 +151,63 @@ function initDelete() {
 }
 
 // ================================
-// RESTORE (DINÁMICO)
+// RESTORE (PRO)
 // ================================
 function initRestore() {
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
+
+    const row = btn.closest("tr");
+
+    try {
+      const res = await post(url, { id });
+
+      if (!res.ok) throw new Error(res.error);
+
+      const badge = row.querySelector(".badge");
+
+      if (badge) {
+        badge.textContent = badge.dataset.labelActive || "Activo";
+        badge.classList.remove("deleted", "inactive");
+        badge.classList.add("active");
+      }
+
+      const actions = row.querySelector("td:last-child");
+
+      actions.innerHTML = `
+        <button
+          class="btn-delete"
+          data-id="${id}"
+          data-url="${url.replace("restore", "delete")}">
+          Eliminar
+        </button>
+      `;
+
+      row.classList.remove("deleted");
+
+      Events.emit("alerts:show", {
+        type: "success",
+        message: "Registro restaurado",
+      });
+    } catch (err) {
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al restaurar",
+      });
+    }
+  });
+}
+
+// ================================
+// TOGGLE WAREHOUSE
+// ================================
+function initWarehouseToggle() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".toggle-warehouse");
     if (!btn) return;
 
     const id = btn.dataset.id;
@@ -139,27 +218,11 @@ function initRestore() {
 
       if (!res.ok) throw new Error(res.error);
 
-      const row = btn.closest("tr");
-      const badge = row.querySelector(".badge");
-
-      if (badge) {
-        badge.textContent = "Disponible";
-        badge.classList.remove("deleted");
-        badge.classList.add("active");
-      }
-
-      row.classList.remove("deleted");
-      btn.remove();
-
-      Events.emit("alerts:show", {
-        type: "success",
-        message: "Registro restaurado",
-      });
-
+      location.reload();
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
-        message: err.message || "Error al restaurar",
+        message: err.message || "Error al cambiar estado",
       });
     }
   });
@@ -177,4 +240,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initEditModal();
   initDelete();
   initRestore();
+  initWarehouseToggle();
 });

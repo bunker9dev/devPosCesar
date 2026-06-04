@@ -69,6 +69,13 @@
     <!-- 🔥 BASE URL PARA JS -->
     <script>
         const BASE_URL = "<?= BASE_URL ?>";
+         // ROL DEL USUARIO DISPONIBLE EN TODO EL FRONT
+        window.APP = {
+        user: {
+            id: "<?= $_SESSION['user']['rol'] ?? '' ?>",
+            role: "<?= $_SESSION['user']['rol_nombre'] ?? '' ?>"
+        }
+    };
     </script>
 
     <!-- APP -->

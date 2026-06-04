@@ -5,13 +5,13 @@ $errors = $_SESSION['errors'] ?? [];
 
 unset($_SESSION['old'], $_SESSION['errors']);
 
-// 🔥 Prioridad: old → BD
 function oldValue($field, $old, $supplier) {
-    return $old[$field] ?? $supplier[$field] ?? '';
+    return htmlspecialchars($old[$field] ?? $supplier[$field] ?? '');
 }
 ?>
 
-<form method="POST" action="<?= BASE_URL ?>/suppliers/update?id=<?= $supplier['id'] ?>" class="form-users">
+<form method="POST" action="<?= BASE_URL ?>/suppliers/update" class="form-users">
+
     <input type="hidden" name="id" value="<?= $supplier['id'] ?>">
 
     <!-- NOMBRE -->
@@ -21,7 +21,6 @@ function oldValue($field, $old, $supplier) {
             id="nombre"
             name="nombre"
             value="<?= oldValue('nombre', $old, $supplier) ?>"
-            placeholder="Ej: Comercial XYZ SAS"
             required
         >
 
@@ -34,22 +33,20 @@ function oldValue($field, $old, $supplier) {
 
     <!-- APELLIDOS -->
     <div class="form-group">
-        <label>Apellidos (opcional)</label>
+        <label>Apellidos</label>
         <input 
             name="apellidos"
             value="<?= oldValue('apellidos', $old, $supplier) ?>"
-            placeholder="Solo si aplica"
         >
     </div>
 
     <!-- NIT -->
     <div class="form-group">
-        <label>Cédula / NIT</label>
+        <label>NIT</label>
         <input 
             id="nit"
             name="nit"
             value="<?= oldValue('nit', $old, $supplier) ?>"
-            placeholder="Número de identificación"
             required
         >
 
@@ -66,29 +63,26 @@ function oldValue($field, $old, $supplier) {
         <input 
             name="ciudad"
             value="<?= oldValue('ciudad', $old, $supplier) ?>"
-            placeholder="Medellín"
         >
     </div>
 
-    <!-- CAMPOS SOLO SUPER -->
-    <?php if ($canRestore): ?>
+    <!-- CAMPOS EDITABLES -->
+    <?php if ($canEdit): ?>
 
         <div class="form-group">
-            <label>Email (opcional)</label>
+            <label>Email</label>
             <input 
                 name="email"
                 value="<?= oldValue('email', $old, $supplier) ?>"
-                placeholder="correo@empresa.com"
             >
         </div>
 
         <div class="form-group">
-            <label>Teléfono (opcional)</label>
+            <label>Teléfono</label>
             <input 
                 id="telefono"
                 name="telefono"
                 value="<?= oldValue('telefono', $old, $supplier) ?>"
-                placeholder="3001234567"
             >
 
             <small id="telefono-msg" class="input-msg"></small>
@@ -108,5 +102,4 @@ function oldValue($field, $old, $supplier) {
     window.BASE_URL = "<?= BASE_URL ?>";
 </script>
 
-<!-- 🔥 REUTILIZAS EL MISMO JS -->
-<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-create.js"></script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-form.js"></script>

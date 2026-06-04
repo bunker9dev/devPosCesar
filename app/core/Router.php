@@ -8,22 +8,26 @@ class Router
     private $routes = [];
 
     // Registrar ruta GET
-    public function get($uri, $action)
+    public function get($uri, $action, $middlewares = [])
     {
-        $this->routes['GET'][$uri] = $action;
+        $this->routes['GET'][$uri] = [
+            'action' => $action,
+            'middlewares' => $middlewares
+        ];
     }
 
     // Registrar ruta POST
-    public function post($uri, $action)
+    public function post($uri, $action, $middlewares = [])
     {
-        $this->routes['POST'][$uri] = $action;
+        $this->routes['POST'][$uri] = [
+            'action' => $action,
+            'middlewares' => $middlewares
+        ];
     }
 
     // Ejecutar router
     public function dispatch()
     {
-
-
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
         // 🔥 quitar BASE_URL correctamente
@@ -39,7 +43,30 @@ class Router
             return $this->renderError(404);
         }
 
-        $action = $this->routes[$httpMethod][$uri];
+        $route = $this->routes[$httpMethod][$uri];
+
+        $action = $route['action'];
+        $middlewares = $route['middlewares'] ?? [];
+
+        // 🔥 MIDDLEWARES
+        foreach ($middlewares as $mw) {
+
+            switch ($mw) {
+
+                case 'auth':
+                    \App\Core\Middleware\AuthMiddleware::handle();
+                    break;
+
+                case 'admin':
+                case 'super':
+                case 'view':
+                case 'edit':
+                case 'delete':
+                case 'restore':
+                    \App\Core\Middleware\PermissionMiddleware::handle($mw);
+                    break;
+            }
+        }
 
         // 🔴 Validar formato Controller@method
         if (!str_contains($action, '@')) {
@@ -48,30 +75,29 @@ class Router
 
         list($controller, $method) = explode('@', $action);
 
-        // 🔥 Namespace automático
+        // Namespace automático
         $controller = "App\\Modules\\" . $controller;
 
-        // 🔴 Validar controlador
+        // Validar controlador
         if (!class_exists($controller)) {
             return $this->renderError(500, "Controlador no encontrado: {$controller}");
         }
 
         $controllerInstance = new $controller();
 
-        // 🔴 Validar método
+        // Validar método
         if (!method_exists($controllerInstance, $method)) {
             return $this->renderError(500, "Método no encontrado: {$method}");
         }
 
-        // 🚀 Ejecutar acción
+        // Ejecutar acción
         try {
             $controllerInstance->$method();
         } catch (\Throwable $e) {
             return $this->renderError(500, $e->getMessage());
         }
     }
-
-    // 🔥 Renderizar errores
+    // Renderizar errores
     private function renderError($code = 404, $message = null)
     {
         http_response_code($code);

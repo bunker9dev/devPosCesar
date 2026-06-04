@@ -79,7 +79,7 @@ endif; ?>
                         <?php if (!empty($color['deleted_at'])): ?>
                             <span class="badge deleted">Eliminado</span>
                         <?php else: ?>
-                            <span class="badge active">Disponible</span>
+                            <span class="badge active btn-action-cursordf">Disponible</span>
                         <?php endif; ?>
                     </td>
 
@@ -100,7 +100,9 @@ endif; ?>
                                 <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $color['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/delete">
+                                    data-url="<?= BASE_URL ?>/products/colors/delete"
+                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
+                                    data-entity="color">
                                     Eliminar
                                 </button>
                             <?php endif; ?>

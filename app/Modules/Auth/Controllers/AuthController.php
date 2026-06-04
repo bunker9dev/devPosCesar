@@ -76,7 +76,7 @@ class AuthController extends Controller
             exit;
         }
 
-        if ($usuario['estado'] == 0) {
+        if ($usuario['estado'] !=1) {
             $_SESSION['error'] = "Usuario inactivo";
             header("Location: " . BASE_URL . "/login");
             exit;
@@ -90,11 +90,12 @@ class AuthController extends Controller
             'username' => $usuario['username'],
             'nombre' => $usuario['nombre'],
             'apellido' => $usuario['apellido'],
-            'rol' => $usuario['rol_id'],
-            'rol_nombre' => $usuario['rol_nombre']
+            'rol_id' => $usuario['rol_id'],
+            'rol_nombre' => $usuario['rol_nombre'],
+            'estado' => $usuario['estado']
         ];
 
-        // 🔥 ACTUALIZAR ÚLTIMO LOGIN
+        // ACTUALIZAR ÚLTIMO LOGIN
         $stmt = $db->prepare("
             UPDATE usuarios 
             SET ultimo_login = NOW() 

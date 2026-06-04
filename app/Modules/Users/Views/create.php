@@ -1,60 +1,29 @@
-<form method="POST" action="<?= BASE_URL ?>/users/store" enctype="multipart/form-data" class="form-users">
+<div class="form-group">
+    <label>Rol</label>
 
-    <div class="form-group">
-        <label>Username</label>
-        <input id="username" name="username" placeholder="Username" required>
-        <small id="username-msg" class="input-msg"></small>
-    </div>
+    <?php if ($canEdit): ?>
 
-    <div class="form-group">
-        <label>Nombre</label>
-        <input name="nombre" placeholder="Nombre" required>
-    </div>
-
-    <div class="form-group">
-        <label>Apellido</label>
-        <input name="apellido" placeholder="Apellido">
-    </div>
-
-    <!-- Avatar -->
-    <div class="form-group">
-        <label>Agregar Avatar</label>
-        <input type="file" name="imagen" accept="image/*">
-    </div>
-    <div class="form-group">
-        <label>Avatar actual</label>
-        <img
-            src="<?= BASE_URL ?>/assets/img/users/default.png"
-            class="avatar-preview"
-            id="preview">
-    </div>
-
-    <div class="form-group">
-        <label>Password</label>
-        <input id="password" type="password" name="password" required>
-        <small id="password-msg" class="input-msg"></small>
-    </div>
-
-    <div class="form-group">
-        <label>Rol</label>
         <select name="rol_id">
+
             <?php foreach ($roles as $r): ?>
+
+                <?php
+                if ($r['id'] == \App\Core\Roles::SUPER && $rolId !== \App\Core\Roles::SUPER) continue;
+                ?>
+
                 <option value="<?= $r['id'] ?>">
-                    <?= ucfirst($r['nombre']) ?>
+                    <?= htmlspecialchars(ucfirst($r['nombre'])) ?>
                 </option>
+
             <?php endforeach; ?>
+
         </select>
-    </div>
 
-    <div class="form-actions">
-        <button class="btn-primary">Guardar</button>
-        <a href="<?= BASE_URL ?>/users" class="btn-secondary">Cancelar</a>
-    </div>
+    <?php else: ?>
 
-</form>
+        <input type="text" value="<?= htmlspecialchars($_SESSION['user']['rol_nombre']) ?>" disabled>
+        <input type="hidden" name="rol_id" value="<?= $rolId ?>">
 
-<!-- scritps para ajax -->
-<script>
-    window.BASE_URL = "<?= BASE_URL ?>";
-</script>
-<script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-create.js"></script>
+    <?php endif; ?>
+
+</div>

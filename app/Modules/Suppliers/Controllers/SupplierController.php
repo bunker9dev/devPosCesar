@@ -3,52 +3,53 @@
 namespace App\Modules\Suppliers\Controllers;
 
 use App\Core\Controller;
+use App\Core\Roles;
+use App\Core\Status;
 use App\Modules\Suppliers\Services\SupplierService;
 use App\Modules\Suppliers\Models\Supplier;
 
 class SupplierController extends Controller
 {
     private $service;
-    private $model;
 
     public function __construct()
     {
         global $db;
-
-        $this->model = new Supplier($db);
-        $this->service = new SupplierService($this->model, $db);
+        $model = new Supplier($db);
+        $this->service = new SupplierService($model, $db);
     }
 
-    // 🔍 LISTAR
+    // ======================================================
+    // LISTADO
+    // ======================================================
     public function index()
     {
         $this->auth();
         $this->onlyAdmin();
 
-        $isSuper = $_SESSION['user']['rol_nombre'] === 'super';
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        $isSuper = $rolId === Roles::SUPER;
 
         $suppliers = $this->service->getAll($isSuper);
 
-        $this->render('Modules/Suppliers/Views/index', [
-            'suppliers' => $suppliers,
-            'isSuper' => $isSuper
-        ]);
+        $this->render('Modules/Suppliers/Views/index', compact('suppliers'));
     }
 
-    // ➕ FORM CREATE
+    // ======================================================
+    // CREATE
+    // ======================================================
     public function create()
     {
         $this->auth();
         $this->onlyAdmin();
 
-        $isSuper = ($_SESSION['user']['rol'] == 1);
-
-        $this->render('Modules/Suppliers/Views/create', [
-            'isSuper' => $isSuper
-        ]);
+        $this->render('Modules/Suppliers/Views/create');
     }
 
-    // 💾 GUARDAR
+    // ======================================================
+    // STORE
+    // ======================================================
     public function store()
     {
         $this->auth();
@@ -62,57 +63,50 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor creado";
             return $this->redirect(BASE_URL . "/suppliers");
+
         } catch (\Exception $e) {
 
-            // 🔥 ERRORES POR CAMPO (tipo Laravel)
             $errors = json_decode($e->getMessage(), true);
 
             $_SESSION['errors'] = $errors ?: ['general' => $e->getMessage()];
-
-            // 🔥 MANTENER INPUTS
             $_SESSION['old'] = $_POST;
 
             return $this->redirect(BASE_URL . "/suppliers/create");
         }
     }
 
-    // ✏️ FORM EDIT
+    // ======================================================
+    // EDIT
+    // ======================================================
     public function edit()
     {
         $this->auth();
         $this->onlyAdmin();
 
-        global $db;
-
         $id = $_GET['id'] ?? null;
 
         if (!$id) {
-            die('ID no proporcionado');
+            return $this->redirect(BASE_URL . "/suppliers");
         }
 
-        $stmt = $db->prepare("SELECT * FROM proveedores WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $supplier = $stmt->get_result()->fetch_assoc();
+        $supplier = $this->service->find($id);
 
         if (!$supplier) {
-            die('Proveedor no encontrado');
+            return $this->redirect(BASE_URL . "/suppliers");
         }
 
-        $this->render('Modules/Suppliers/Views/edit', [
-            'title' => 'Editar proveedor',
-            'supplier' => $supplier
-        ]);
+        $this->render('Modules/Suppliers/Views/edit', compact('supplier'));
     }
 
-    // 💾 ACTUALIZAR
+    // ======================================================
+    // UPDATE
+    // ======================================================
     public function update()
     {
         $this->auth();
         $this->onlyAdmin();
 
-        $id = $_POST['id'] ?? $_GET['id'] ?? null;
+        $id = $_POST['id'] ?? null;
 
         if (!$id) {
             $_SESSION['errors'] = ['general' => 'ID no proporcionado'];
@@ -127,6 +121,7 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor actualizado";
             return $this->redirect(BASE_URL . "/suppliers");
+
         } catch (\Exception $e) {
 
             $errors = json_decode($e->getMessage(), true);
@@ -138,10 +133,18 @@ class SupplierController extends Controller
         }
     }
 
-    // 🔄 CAMBIAR ESTADO (AJAX)
+    // ======================================================
+    // TOGGLE
+    // ======================================================
     public function toggle()
     {
         header('Content-Type: application/json');
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!Roles::canEdit($rolId)) {
+            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        }
 
         try {
 
@@ -154,6 +157,7 @@ class SupplierController extends Controller
                 'ok' => true,
                 'estado' => $estado
             ]);
+
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -163,171 +167,65 @@ class SupplierController extends Controller
         }
     }
 
-    // 🔍 VALIDAR NIT (AJAX)
-    public function checkNit()
-    {
-        $this->auth();
-        $this->onlyAdmin();
-
-        header('Content-Type: application/json');
-
-        try {
-            $nit = $_GET['nit'] ?? '';
-            $id = $_GET['id'] ?? null;
-
-            echo json_encode([
-                'ok' => true,
-                'exists' => $this->service->existsByNit($nit, $id)
-            ]);
-        } catch (\Exception $e) {
-            echo json_encode([
-                'ok' => false,
-                'exists' => false,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    // 🗑️ ELIMINAR (AJAX)
-
+    // ======================================================
+    // DELETE (SOFT)
+    // ======================================================
     public function delete()
     {
-        // ⚠️ NO usar ob_clean por ahora
         header('Content-Type: application/json');
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!Roles::canDelete($rolId)) {
+            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        }
 
         try {
 
-            $db = conectarDB();
+            $this->service->delete(
+                $_POST['id'],
+                $_SESSION['user']['id']
+            );
 
-            if (!isset($_SESSION['user'])) {
-                echo json_encode(['ok' => false, 'error' => 'No autenticado']);
-                return;
-            }
-
-            $rol = $_SESSION['user']['rol_nombre'] ?? '';
-
-            if (!in_array($rol, ['super', 'administrador'])) {
-                echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-                return;
-            }
-
-            $id = $_POST['id'] ?? null;
-
-            if (!$id) {
-                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-                return;
-            }
-
-            // 🔥 OJO CON ESTE CAMPO (nombre)
-            $stmt = $db->prepare("SELECT nombre, estado FROM proveedores WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-
-            $supplier = $stmt->get_result()->fetch_assoc();
-
-            if (!$supplier) {
-                echo json_encode(['ok' => false, 'error' => 'Proveedor no existe']);
-                return;
-            }
-
-            // 🔥 SOFT DELETE
-            $stmt = $db->prepare("UPDATE proveedores SET estado = 0 WHERE id = ?");
-            $stmt->bind_param("i", $id);
-
-            if (!$stmt->execute()) {
-                echo json_encode(['ok' => false, 'error' => $stmt->error]);
-                return;
-            }
-
-            // 🧠 AUDITORÍA
-            $admin = $_SESSION['user']['username'] ?? 'Sistema';
-
-            $detalle = "Proveedor: {$supplier['nombre']} | Estado: {$supplier['estado']} → 0 | Por: {$admin}";
-
-            auditoria("DELETE", "proveedores", $id, $detalle, "suppliers");
-
-            // 🔥 ESTA LÍNEA ES LA MÁS IMPORTANTE
             echo json_encode(['ok' => true]);
-            return;
+
         } catch (\Exception $e) {
 
             echo json_encode([
                 'ok' => false,
                 'error' => $e->getMessage()
             ]);
-            return;
         }
     }
 
-    // ♻️ RESTAURAR (AJAX)
-   public function restore()
-{
-    if (ob_get_length()) ob_clean();
+    // ======================================================
+    // RESTORE
+    // ======================================================
+    public function restore()
+    {
+        header('Content-Type: application/json');
 
-    header('Content-Type: application/json');
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-    try {
-
-        $db = conectarDB();
-
-        // 🔐 autenticación
-        if (!isset($_SESSION['user'])) {
-            echo json_encode(['ok' => false, 'error' => 'No autenticado']);
-            return;
+        if (!Roles::canRestore($rolId)) {
+            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
-        // 🔐 SOLO SUPER
-        $rol = $_SESSION['user']['rol_nombre'] ?? '';
+        try {
 
-        if ($rol !== 'super') {
-            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-            return;
+            $this->service->restore(
+                $_POST['id'],
+                $_SESSION['user']['id']
+            );
+
+            echo json_encode(['ok' => true]);
+
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
         }
-
-        $id = $_POST['id'] ?? null;
-
-        if (!$id) {
-            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-            return;
-        }
-
-        // 🔍 obtener datos antes
-        $stmt = $db->prepare("SELECT nombre, estado FROM proveedores WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $supplier = $stmt->get_result()->fetch_assoc();
-
-        if (!$supplier) {
-            echo json_encode(['ok' => false, 'error' => 'Proveedor no existe']);
-            return;
-        }
-
-        // 🔥 RESTORE
-        $stmt = $db->prepare("UPDATE proveedores SET estado = 1 WHERE id = ?");
-        $stmt->bind_param("i", $id);
-
-        if (!$stmt->execute()) {
-            echo json_encode(['ok' => false, 'error' => $stmt->error]);
-            return;
-        }
-
-        // 🧠 AUDITORÍA
-        $admin = $_SESSION['user']['username'] ?? 'Sistema';
-
-        $detalle = "Proveedor: {$supplier['nombre']} | Estado: {$supplier['estado']} → 1 (Restaurado) | Por: {$admin}";
-
-        auditoria("RESTORE", "proveedores", $id, $detalle, "suppliers");
-
-        echo json_encode(['ok' => true]);
-        return;
-
-    } catch (\Exception $e) {
-
-        echo json_encode([
-            'ok' => false,
-            'error' => $e->getMessage()
-        ]);
-        return;
     }
-}
 }

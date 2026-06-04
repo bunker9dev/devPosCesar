@@ -21,36 +21,39 @@
 
         <tbody>
             <?php foreach ($suppliers as $s): ?>
-                <tr>
+
+                <?php $estado = (int)$s['estado']; ?>
+
+                <tr data-id="<?= $s['id'] ?>">
 
                     <th></th>
 
                     <td data-label="ID"><?= $s['id'] ?></td>
 
-                    <!-- 🔥 NOMBRE COMPLETO -->
+                    <!-- NOMBRE -->
                     <td data-label="Proveedor">
-                        <?= $s['nombre_completo'] ?? ($s['nombre'] . ' ' . $s['apellidos']) ?>
+                        <?= htmlspecialchars($s['nombre_completo'] ?? ($s['nombre'] . ' ' . $s['apellidos'])) ?>
                     </td>
 
-                    <td data-label="NIT"><?= $s['nit'] ?></td>
-                    <td data-label="Ciudad"><?= $s['ciudad'] ?></td>
+                    <td data-label="NIT">
+                        <?= htmlspecialchars($s['nit']) ?>
+                    </td>
 
-                    <!-- ESTADO -->
+                    <td data-label="Ciudad">
+                        <?= htmlspecialchars($s['ciudad']) ?>
+                    </td>
+
+                    <!-- ESTADO (TOGGLE READY) -->
                     <td data-label="Estado">
                         <span
-                            class="badge estado-toggle 
-                            <?= $s['estado'] == 1 ? 'active' : ($s['estado'] == 2 ? 'inactive' : 'deleted') ?>"
+                            class="badge estado-toggle toggle-supplier
+                            <?= $estado === $Status::ACTIVO ? 'active' : ($estado === $Status::INACTIVO ? 'inactive' : 'deleted') ?>"
 
                             data-id="<?= $s['id'] ?>"
-                            data-estado="<?= $s['estado'] ?>">
+                            data-url="<?= BASE_URL ?>/suppliers/toggle"
+                            data-estado="<?= $estado ?>">
 
-                            <?php if ($s['estado'] == 1): ?>
-                                Activo
-                            <?php elseif ($s['estado'] == 2): ?>
-                                Inactivo
-                            <?php else: ?>
-                                Eliminado
-                            <?php endif; ?>
+                            <?= $estado === $Status::ACTIVO ? 'Activo' : ($estado === $Status::INACTIVO ? 'Inactivo' : 'Eliminado') ?>
 
                         </span>
                     </td>
@@ -67,15 +70,22 @@
                             <?php endif; ?>
 
                             <!-- 🗑️ ELIMINAR -->
-                            <?php if ($s['estado'] != 0 && $canDelete): ?>
-                                <button class="btn-action delete" data-id="<?= $s['id'] ?>">
+                            <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
+                                <button 
+                                    class="btn-action delete"
+                                    data-id="<?= $s['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/suppliers/delete"
+                                    data-entity="proveedor">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
 
                             <!-- ♻️ RESTAURAR -->
-                            <?php if ($s['estado'] == 0 && $rol === 'super'): ?>
-                                <button class="btn-restore" data-id="<?= $s['id'] ?>">
+                            <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
+                                <button 
+                                    class="btn-restore"
+                                    data-id="<?= $s['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/suppliers/restore">
                                     Restaurar
                                 </button>
                             <?php endif; ?>
@@ -84,6 +94,7 @@
                     </td>
 
                 </tr>
+
             <?php endforeach; ?>
         </tbody>
 

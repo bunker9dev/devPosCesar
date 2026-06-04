@@ -79,7 +79,7 @@ endif; ?>
                         <?php if (!empty($type['deleted_at'])): ?>
                             <span class="badge deleted">Eliminado</span>
                         <?php else: ?>
-                            <span class="badge active">Disponible</span>
+                            <span class="badge active btn-action-cursordf">Disponible</span>
                         <?php endif; ?>
                     </td>
 
@@ -102,7 +102,9 @@ endif; ?>
                                 <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $type['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/types/delete">
+                                    data-url="<?= BASE_URL ?>/products/types/delete"
+                                    data-name="<?= htmlspecialchars($type['nombre']) ?>"
+                                    data-entity="tipo de tela">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
@@ -110,8 +112,7 @@ endif; ?>
                             <?php if (!empty($type['deleted_at']) && $rol === 'super'): ?>
                                 <button
                                     class="btn-action restore btn-restore"
-                                    data-id="<?= $type['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/types/restore">
+                                    data-id="<?= $type['id'] ?>">
                                     Restaurar
                                 </button>
                             <?php endif; ?>

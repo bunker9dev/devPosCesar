@@ -3,214 +3,115 @@
 namespace App\Modules\Users\Controllers;
 
 use App\Core\Controller;
+use App\Core\Roles;
+use App\Core\Status;
 
 class UsersController extends Controller
 {
-    private function userImagesPath()
-    {
-        return realpath(__DIR__ . '/../../../../public/assets/img/users') ?: __DIR__ . '/../../../../public/assets/img/users';
-    }
-
-    // 📋 LISTAR
     public function index()
     {
-        $this->auth();
-        $this->onlyAdmin();
-
         global $db;
 
-        // 🔥 SUPER → ve todo
-        if ($_SESSION['user']['rol'] == 1) {
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-            $query = "SELECT u.*, r.nombre as rol 
-                  FROM usuarios u
-                  JOIN roles r ON u.rol_id = r.id";
-        } else {
+        $query = "
+            SELECT u.*, r.nombre as rol 
+            FROM usuarios u
+            JOIN roles r ON u.rol_id = r.id
+        ";
 
-            // 🔥 ADMIN → NO ve eliminados
-            $query = "SELECT u.*, r.nombre as rol 
-                  FROM usuarios u
-                  JOIN roles r ON u.rol_id = r.id
-                  WHERE u.estado IN (1,2)";
+        // 🔒 no ver eliminados si no es super
+        if ($rolId !== Roles::SUPER) {
+            $query .= " WHERE u.estado IN (" . Status::ACTIVO . "," . Status::INACTIVO . ")";
         }
-
 
         $result = $db->query($query);
+        $users = $result->fetch_all(MYSQLI_ASSOC);
 
-        $this->render('Modules/Users/Views/index', [
-            'users' => $result->fetch_all(MYSQLI_ASSOC),
-            'title' => 'Usuarios'
-        ]);
+        $this->render('Modules/Users/Views/index', compact('users'));
     }
 
-    // FORM CREAR
+    // ======================================================
+    // CREATE
+    // ======================================================
     public function create()
     {
-        $this->auth();
-        $this->onlyAdmin();
-
         global $db;
 
-        $roles = $db->query("SELECT * FROM roles")->fetch_all(MYSQLI_ASSOC);
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        $this->render('Modules/Users/Views/create', [
-            'roles' => $roles,
-            'title' => 'Crear Usuario'
-        ]);
+        // 🔒 filtrar roles
+        if ($rolId === Roles::SUPER) {
+            $roles = $db->query("SELECT * FROM roles")->fetch_all(MYSQLI_ASSOC);
+        } else {
+            $stmt = $db->prepare("SELECT * FROM roles WHERE id != ?");
+            $stmt->bind_param("i", Roles::SUPER);
+            $stmt->execute();
+            $roles = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        $this->render('Modules/Users/Views/create', compact('roles'));
     }
 
-
+    // ======================================================
+    // STORE
+    // ======================================================
     public function store()
     {
-        $this->auth();
-        $this->onlyAdmin();
-
         global $db;
 
-        // 🔥 LIMPIAR
-        $username = strtolower(trim($_POST['username'] ?? ''));
-        $nombre = trim($_POST['nombre'] ?? '');
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        $username = trim($_POST['username'] ?? '');
+        $nombre   = trim($_POST['nombre'] ?? '');
         $apellido = trim($_POST['apellido'] ?? '');
-        $passwordRaw = $_POST['password'] ?? '';
-        $rol = (int) ($_POST['rol_id'] ?? 0);
+        $password = $_POST['password'] ?? '';
+        $rol      = $_POST['rol_id'] ?? null;
 
-        $errors = [];
-
-        // =============================
-        // VALIDACIONES
-        // =============================
-
-        if (!$username) {
-            $errors['username'] = "Username obligatorio";
-        } elseif (!preg_match('/^[a-z0-9_]{3,20}$/', $username)) {
-            $errors['username'] = "Username inválido";
-        }
-
-        if (!$nombre) {
-            $errors['nombre'] = "Nombre obligatorio";
-        } elseif (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}$/', $nombre)) {
-            $errors['nombre'] = "Nombre inválido";
-        }
-
-        if (!$passwordRaw) {
-            $errors['password'] = "Password obligatorio";
-        } elseif (strlen($passwordRaw) < 6) {
-            $errors['password'] = "Password mínimo 6 caracteres";
-        }
-
-        if (!$rol) {
-            $errors['rol_id'] = "Selecciona un rol";
-        }
-
-        // 🔒 PROTEGER SUPER
-        if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
-            $errors['rol_id'] = "No puedes asignar rol SUPER";
-        }
-
-        // =============================
-        // VALIDAR DUPLICADO
-        // =============================
-        $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ? LIMIT 1");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-
-        if ($stmt->get_result()->num_rows > 0) {
-            $errors['username'] = "El username ya existe";
-        }
-
-        // =============================
-        // SUBIR IMAGEN
-        // =============================
-
-        $imagenNombre = "default.png";
-
-        if (!empty($_FILES['imagen']['name'])) {
-
-            $carpeta = $this->userImagesPath() . "/";
-
-            if (!is_dir($carpeta)) {
-                mkdir($carpeta, 0755, true);
-            }
-
-            $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
-            $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (in_array($ext, $permitidas)) {
-
-                $mime = mime_content_type($_FILES['imagen']['tmp_name']);
-                $permitidosMime = ['image/jpeg', 'image/png', 'image/webp'];
-
-                if (in_array($mime, $permitidosMime)) {
-
-                    $imagenNombre = md5(uniqid(rand(), true)) . "." . $ext;
-                    $rutaCompleta = $carpeta . $imagenNombre;
-
-                    if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
-                        $imagenNombre = "default.png";
-                    }
-                }
-            }
-        }
-
-        // =============================
-        // SI HAY ERRORES
-        // =============================
-        if (!empty($errors)) {
-            $_SESSION['error'] = $errors;
+        // 🔒 validación básica
+        if (!$username || !$nombre || !$password || !$rol) {
+            $_SESSION['error'] = "Datos incompletos";
             return $this->redirect(BASE_URL . "/users/create");
         }
 
-        // =============================
-        // HASH
-        // =============================
-        $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
-
-        // =============================
-        // INSERT
-        // =============================
-        $stmt = $db->prepare("
-        INSERT INTO usuarios 
-        (username, nombre, apellido, imagen, password, rol_id, estado)
-        VALUES (?, ?, ?, ?, ?, ?, 1)
-    ");
-
-        $stmt->bind_param("sssssi", $username, $nombre, $apellido, $imagenNombre, $password, $rol);
-
-        if (!$stmt->execute()) {
-            $_SESSION['error'] = "Error al guardar usuario";
-            return $this->redirect(BASE_URL . "/users/create");
-        }
-
-        // =============================
-        // AUDITORÍA
-        // =============================
-        $admin = $_SESSION['user']['username'] ?? 'Sistema';
-
-        $detalle = "Usuario creado: {$username} | Rol: {$rol} | Por: {$admin}";
-
-        auditoria("CREATE", "usuarios", $stmt->insert_id, $detalle, "users");
-
-        $_SESSION['success'] = "Usuario creado correctamente";
-
-        return $this->redirect(BASE_URL . "/users");
-    }
-
-    // ✏️ EDITAR
-    public function edit()
-    {
-        $this->auth();
-        $this->onlyAdmin();
-
-        global $db;
-
-        $id = (int) ($_GET['id'] ?? 0);
-
-        if (!$id) {
-            $_SESSION['error'] = "ID inválido";
+        // 🔒 evitar crear SUPER
+        if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+            $_SESSION['error'] = "No autorizado";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        // obtener usuario
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $estado = Status::ACTIVO;
+
+        $stmt = $db->prepare("
+            INSERT INTO usuarios (username, nombre, apellido, password, rol_id, estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+
+        $stmt->bind_param("ssssii", $username, $nombre, $apellido, $passwordHash, $rol, $estado);
+
+        if (!$stmt->execute()) {
+            $_SESSION['error'] = "Error al crear usuario";
+            return $this->redirect(BASE_URL . "/users/create");
+        }
+
+        $_SESSION['success'] = "Usuario creado";
+        $this->redirect(BASE_URL . "/users");
+    }
+
+    // ======================================================
+    // EDIT
+    // ======================================================
+    public function edit()
+    {
+        global $db;
+
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            return $this->redirect(BASE_URL . "/users");
+        }
+
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -218,464 +119,154 @@ class UsersController extends Controller
         $user = $stmt->get_result()->fetch_assoc();
 
         if (!$user) {
-            $_SESSION['error'] = "Usuario no encontrado";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        // imagen por defecto si no tiene
-        if (empty($user['imagen'])) {
-            $user['imagen'] = "default.png";
-        }
-
-        // roles
         $roles = $db->query("SELECT * FROM roles")->fetch_all(MYSQLI_ASSOC);
 
-        $this->render('Modules/Users/Views/edit', [
-            'user' => $user,
-            'roles' => $roles,
-            'title' => 'Editar Usuario'
-        ]);
+        $this->render('Modules/Users/Views/edit', compact('user', 'roles'));
     }
 
+    // ======================================================
+    // UPDATE
+    // ======================================================
     public function update()
     {
-        $this->auth();
-        $this->onlyAdmin();
-
         global $db;
 
-        $id = (int) ($_POST['id'] ?? 0);
-        $nombre = trim($_POST['nombre'] ?? '');
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        $id       = $_POST['id'] ?? null;
+        $nombre   = trim($_POST['nombre'] ?? '');
         $apellido = trim($_POST['apellido'] ?? '');
-        $rol = (int) ($_POST['rol_id'] ?? 0);
-        $passwordRaw = $_POST['password'] ?? null;
+        $rol      = $_POST['rol_id'] ?? null;
 
         if (!$id || !$nombre || !$rol) {
             $_SESSION['error'] = "Datos inválidos";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        // 🔍 verificar usuario
-        $stmt = $db->prepare("SELECT id, rol_id, imagen FROM usuarios WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $userDB = $stmt->get_result()->fetch_assoc();
-
-        if (!$userDB) {
-            $_SESSION['error'] = "Usuario no existe";
+        if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+            $_SESSION['error'] = "No autorizado";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        // 🔒 reglas de seguridad
-        if ($rol == 1 && $_SESSION['user']['rol'] != 1) {
-            $_SESSION['error'] = "No puedes asignar rol SUPER";
-            return $this->redirect(BASE_URL . "/users");
-        }
+        if (!empty($_POST['password'])) {
 
-        if ($id == $_SESSION['user']['id'] && $rol !== (int) $_SESSION['user']['rol']) {
-            $_SESSION['error'] = "No puedes cambiar tu propio rol";
-            return $this->redirect(BASE_URL . "/users");
-        }
-
-        // 🔐 validar password
-        if (!empty($passwordRaw) && strlen($passwordRaw) < 6) {
-            $_SESSION['error'] = "Password mínimo 6 caracteres";
-            return $this->redirect(BASE_URL . "/users");
-        }
-
-        // 🖼️ imagen actual
-        $imagenNombre = $userDB['imagen'] ?? 'default.png';
-
-        // 🖼️ nueva imagen
-        if (!empty($_FILES['imagen']['name']) && $_FILES['imagen']['error'] === 0) {
-
-            $carpeta = $this->userImagesPath() . "/";
-
-            if (!is_dir($carpeta)) {
-                mkdir($carpeta, 0755, true);
-            }
-
-            $ext = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
-            $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (in_array($ext, $permitidas)) {
-
-                $mime = mime_content_type($_FILES['imagen']['tmp_name']);
-                $permitidosMime = ['image/jpeg', 'image/png', 'image/webp'];
-
-                if (in_array($mime, $permitidosMime)) {
-                    $nuevoNombre = md5(uniqid(rand(), true)) . "." . $ext;
-
-                    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta . $nuevoNombre)) {
-                        if (!empty($userDB['imagen']) && $userDB['imagen'] !== 'default.png') {
-                            $old = $carpeta . $userDB['imagen'];
-                            if (file_exists($old)) unlink($old);
-                        }
-
-                        $imagenNombre = $nuevoNombre;
-                    }
-                }
-            }
-        }
-
-        // 🔥 CONSTRUIR UPDATE DINÁMICO
-        if (!empty($passwordRaw)) {
-
-            $password = password_hash($passwordRaw, PASSWORD_BCRYPT);
+            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
             $stmt = $db->prepare("
-            UPDATE usuarios 
-            SET nombre=?, apellido=?, rol_id=?, imagen=?, password=? 
-            WHERE id=?
-        ");
+                UPDATE usuarios 
+                SET nombre=?, apellido=?, password=?, rol_id=? 
+                WHERE id=?
+            ");
 
-            $stmt->bind_param("ssissi", $nombre, $apellido, $rol, $imagenNombre, $password, $id);
+            $stmt->bind_param("sssii", $nombre, $apellido, $password, $rol, $id);
+
         } else {
 
             $stmt = $db->prepare("
-            UPDATE usuarios 
-            SET nombre=?, apellido=?, rol_id=?, imagen=? 
-            WHERE id=?
-        ");
+                UPDATE usuarios 
+                SET nombre=?, apellido=?, rol_id=? 
+                WHERE id=?
+            ");
 
-            $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagenNombre, $id);
+            $stmt->bind_param("ssii", $nombre, $apellido, $rol, $id);
         }
 
         $stmt->execute();
 
-        auditoria("UPDATE", "usuarios", $id, "Actualización de usuario", "users");
-
-        $_SESSION['success'] = "Usuario actualizado correctamente";
-
-        return $this->redirect(BASE_URL . "/users");
+        $_SESSION['success'] = "Usuario actualizado";
+        $this->redirect(BASE_URL . "/users");
     }
 
-
+    // ======================================================
+    // TOGGLE
+    // ======================================================
     public function toggle()
-    {
-        // 🔹 limpiar buffer (evita romper JSON)
-        if (ob_get_length()) ob_clean();
-
-        header('Content-Type: application/json');
-
-        try {
-
-            $db = conectarDB();
-
-            // 🔒 AUTENTICACIÓN
-            if (!isset($_SESSION['user'])) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'No autenticado'
-                ]);
-                exit;
-            }
-
-            // 🔒 ROLES PERMITIDOS (SUPER y ADMIN)
-            if (!in_array($_SESSION['user']['rol'], [1, 2])) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'No autorizado'
-                ]);
-                exit;
-            }
-
-            $id = $_POST['id'] ?? null;
-
-            if (!$id) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'ID inválido'
-                ]);
-                exit;
-            }
-
-            if ((int) $id === (int) $_SESSION['user']['id']) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'No puedes cambiar tu propio estado'
-                ]);
-                exit;
-            }
-
-            // 🔍 OBTENER USUARIO
-            $stmt = $db->prepare("
-            SELECT id, estado, username 
-            FROM usuarios 
-            WHERE id = ?
-        ");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-
-            $userDB = $stmt->get_result()->fetch_assoc();
-
-            if (!$userDB) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'Usuario no existe'
-                ]);
-                exit;
-            }
-
-            $estadoActual = (int)$userDB['estado'];
-
-            // 🚨 NO TOCAR ELIMINADOS
-            if ($estadoActual === 0) {
-                echo json_encode([
-                    'ok' => false,
-                    'error' => 'Usuario eliminado'
-                ]);
-                exit;
-            }
-
-            // 🔄 CALCULAR NUEVO ESTADO (1 ↔ 2)
-            $nuevoEstado = ($estadoActual === 1) ? 2 : 1;
-
-            // 🔥 UPDATE
-            $stmt = $db->prepare("
-            UPDATE usuarios 
-            SET estado = ? 
-            WHERE id = ?
-        ");
-            $stmt->bind_param("ii", $nuevoEstado, $id);
-            $stmt->execute();
-
-            // 🧠 FUNCION TEXTO ESTADO
-            $estadoTexto = function ($estado) {
-                return match ($estado) {
-                    1 => 'Activo',
-                    2 => 'Inactivo',
-                    0 => 'Eliminado',
-                    default => 'Desconocido'
-                };
-            };
-
-            // 🔍 USUARIO QUE REALIZA LA ACCIÓN
-            $usuarioAccion = $_SESSION['user']['username'] ?? 'Sistema';
-
-            // 📝 DETALLE AUDITORÍA
-            $detalle = "Usuario: {$userDB['username']} | Estado: "
-                . $estadoTexto($estadoActual) . " → "
-                . $estadoTexto($nuevoEstado)
-                . " | Por: {$usuarioAccion}";
-
-            // 📊 AUDITORÍA
-            if (function_exists('auditoria')) {
-                auditoria(
-                    "UPDATE",
-                    "usuarios",
-                    $id,
-                    $detalle,
-                    "users"
-                );
-            }
-
-            // ✅ RESPUESTA
-            echo json_encode([
-                'ok' => true,
-                'estado' => $nuevoEstado,
-                'estado_texto' => $estadoTexto($nuevoEstado)
-            ]);
-            exit;
-        } catch (\Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
-            exit;
-        }
-    }
-
-    public function delete()
-    {
-        // 🔹 limpiar salida
-        if (ob_get_length()) ob_clean();
-
-        header('Content-Type: application/json');
-
-        try {
-
-            $db = conectarDB();
-
-            // 🔐 autenticación
-            if (!isset($_SESSION['user'])) {
-                echo json_encode(['ok' => false, 'error' => 'No autenticado']);
-                return;
-            }
-
-            // 🔐 PERMISOS
-            $rol = $_SESSION['user']['rol_nombre'] ?? '';
-
-            if (!in_array($rol, ['super', 'administrador'])) {
-                echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-                return;
-            }
-
-            $id = $_POST['id'] ?? null;
-
-            if (!$id) {
-                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-                return;
-            }
-
-            if ((int) $id === (int) $_SESSION['user']['id']) {
-                echo json_encode(['ok' => false, 'error' => 'No puedes eliminar tu propio usuario']);
-                return;
-            }
-
-            // 🔍 1. OBTENER DATOS ANTES DE ELIMINAR
-            $stmt = $db->prepare("SELECT username, estado FROM usuarios WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $user = $stmt->get_result()->fetch_assoc();
-
-            if (!$user) {
-                echo json_encode(['ok' => false, 'error' => 'Usuario no existe']);
-                return;
-            }
-
-            // 🔥 2. SOFT DELETE
-            $stmt = $db->prepare("UPDATE usuarios SET estado = 0 WHERE id = ?");
-            $stmt->bind_param("i", $id);
-
-            if (!$stmt->execute()) {
-                echo json_encode(['ok' => false, 'error' => $stmt->error]);
-                return;
-            }
-
-            // 🧠 3. AUDITORÍA 
-            $admin = $_SESSION['user']['username'] ?? 'Sistema';
-
-            $detalle = json_encode([
-                'usuario' => $user['username'],
-                'estado_anterior' => $user['estado'],
-                'estado_nuevo' => 0,
-                'accion_por' => $admin
-            ]);
-
-            auditoria("DELETE", "usuarios", $id, $detalle, "users");
-
-            echo json_encode(['ok' => true]);
-            return;
-        } catch (\Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
-            return;
-        }
-    }
-
-
-
-    // =========================================================
-    // VALIDAR USERNAME (AJAX)
-    // =========================================================
-
-    public function checkUsername()
     {
         global $db;
 
         header('Content-Type: application/json');
 
-        $username = strtolower(trim($_POST['username'] ?? ''));
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!$username) {
-            echo json_encode(['success' => false]);
-            return;
+        if (!Roles::canEdit($rolId)) {
+            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
-        $stmt = $db->prepare("
-            SELECT id 
-            FROM usuarios 
-            WHERE username = ? 
-            LIMIT 1
-        ");
+        $id = $_POST['id'] ?? null;
 
-        $stmt->bind_param("s", $username);
+        $stmt = $db->prepare("SELECT estado FROM usuarios WHERE id=?");
+        $stmt->bind_param("i", $id);
         $stmt->execute();
 
-        $exists = $stmt->get_result()->num_rows > 0;
+        $user = $stmt->get_result()->fetch_assoc();
 
-        echo json_encode([
-            'success' => true,
-            'exists' => $exists
-        ]);
+        if (!$user) {
+            return print json_encode(['ok' => false, 'error' => 'Usuario no existe']);
+        }
+
+        $nuevoEstado = $user['estado'] == Status::ACTIVO 
+            ? Status::INACTIVO 
+            : Status::ACTIVO;
+
+        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
+        $stmt->bind_param("ii", $nuevoEstado, $id);
+        $stmt->execute();
+
+        echo json_encode(['ok' => true, 'estado' => $nuevoEstado]);
     }
 
-
-    // =========================================================
-    // RESTAURAR USUARIO
-    // =========================================================
-
-    public function restore()
+    // ======================================================
+    // DELETE
+    // ======================================================
+    public function delete()
     {
-        if (ob_get_length()) ob_clean();
+        global $db;
+
         header('Content-Type: application/json');
 
-        try {
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-            $db = conectarDB();
-
-            if (!isset($_SESSION['user'])) {
-                echo json_encode(['ok' => false, 'error' => 'No autenticado']);
-                exit;
-            }
-
-            // 🔒 SOLO SUPER
-            if ($_SESSION['user']['rol'] != 1) {
-                echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-                exit;
-            }
-
-            $id = $_POST['id'] ?? null;
-
-            if (!$id) {
-                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-                exit;
-            }
-
-            // 🔍 usuario
-            $stmt = $db->prepare("SELECT username, estado FROM usuarios WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-
-            $user = $stmt->get_result()->fetch_assoc();
-
-            if (!$user) {
-                echo json_encode(['ok' => false, 'error' => 'Usuario no existe']);
-                exit;
-            }
-
-            if ($user['estado'] != 0) {
-                echo json_encode(['ok' => false, 'error' => 'No está eliminado']);
-                exit;
-            }
-
-            // 🔥 restaurar
-            $stmt = $db->prepare("UPDATE usuarios SET estado = 2 WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-
-            // 🔥 auditoría
-            $admin = $_SESSION['user']['username'] ?? 'Sistema';
-
-            $detalle = "Usuario: {$user['username']} | Eliminado → Inactivo | Por: {$admin}";
-
-            auditoria("RESTORE", "usuarios", $id, $detalle, "users");
-
-            echo json_encode([
-                'ok' => true
-            ]);
-            exit;
-        } catch (\Exception $e) {
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
-            exit;
+        if (!Roles::canDelete($rolId)) {
+            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
+
+        $id = $_POST['id'] ?? null;
+
+        $estado = Status::ELIMINADO;
+
+        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
+        $stmt->bind_param("ii", $estado, $id);
+        $stmt->execute();
+
+        echo json_encode(['ok' => true]);
+    }
+
+    // ======================================================
+    // RESTORE
+    // ======================================================
+    public function restore()
+    {
+        global $db;
+
+        header('Content-Type: application/json');
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!Roles::canRestore($rolId)) {
+            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        }
+
+        $id = $_POST['id'] ?? null;
+
+        $estado = Status::ACTIVO;
+
+        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
+        $stmt->bind_param("ii", $estado, $id);
+        $stmt->execute();
+
+        echo json_encode(['ok' => true]);
     }
 }

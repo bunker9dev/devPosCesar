@@ -53,10 +53,14 @@
         <!-- Rol -->
         <div class="form-group">
             <label>Rol</label>
-            <select name="rol_id">
+
+            <select name="rol_id" <?= !$canEdit ? 'disabled' : '' ?>>
+
                 <?php foreach ($roles as $r): ?>
 
-                    <?php if ($r['id'] == 1 && $_SESSION['user']['rol'] != 1) continue; ?>
+                    <?php
+                    if ($r['id'] == \App\Core\Roles::SUPER && $rolId !== \App\Core\Roles::SUPER) continue;
+                    ?>
 
                     <option
                         value="<?= $r['id'] ?>"
@@ -65,7 +69,14 @@
                     </option>
 
                 <?php endforeach; ?>
+
             </select>
+
+            <!-- 🔥 SOLO SI ESTÁ DESHABILITADO -->
+            <?php if (!$canEdit): ?>
+                <input type="hidden" name="rol_id" value="<?= $user['rol_id'] ?>">
+            <?php endif; ?>
+
         </div>
 
         <!-- Botones -->

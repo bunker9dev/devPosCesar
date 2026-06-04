@@ -42,7 +42,9 @@ class ColorController extends Controller
 
     public function delete()
     {
+      
         header('Content-Type: application/json');
+         
 
         try {
             $id = $_POST['id'] ?? null;

@@ -24,68 +24,74 @@
             <?php foreach ($users as $u): ?>
                 <tr>
                     <th></th>
+
                     <td data-label="ID"><?= $u['id'] ?></td>
+
                     <td data-label="Usuario"><?= $u['username'] ?></td>
+
                     <td data-label="Nombre"><?= $u['nombre'] ?></td>
+
                     <td>
                         <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>"
                             class="avatar">
                     </td>
+
                     <td data-label="Rol"><?= $u['rol'] ?></td>
 
+                    <!-- =========================
+                    ESTADO (STANDARD)
+                    ========================== -->
                     <td data-label="Estado">
 
+                        <?php $estado = (int)$u['estado']; ?>
+
                         <span
-                            class="badge estado-toggle 
-                            <?= $u['estado'] == 1 ? 'active' : ($u['estado'] == 2 ? 'inactive' : 'deleted') ?>"
-
+                            class="badge estado-toggle toggle-user 
+                            <?= $estado === $Status::ACTIVO ? 'active' : ($estado === $Status::INACTIVO ? 'inactive' : 'deleted') ?>"
+                            
                             data-id="<?= $u['id'] ?>"
-                            data-estado="<?= $u['estado'] ?>">
+                            data-url="<?= BASE_URL ?>/users/toggle"
+                            data-estado="<?= $estado ?>">
 
-                            <?php if ($u['estado'] == 1): ?>
-                                Activo
-                            <?php elseif ($u['estado'] == 2): ?>
-                                Inactivo
-                            <?php else: ?>
-                                Eliminado
-                            <?php endif; ?>
+                            <?= $estado === $Status::ACTIVO ? 'Activo' : ($estado === $Status::INACTIVO ? 'Inactivo' : 'Eliminado') ?>
 
                         </span>
 
-                    </td>
-                    <td data-label="Acciones">
-                        <div class="actions">
+                        </td>
 
-                            <!-- ✏️ EDITAR -->
-                            <?php if ($canEdit): ?>
-                                <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
-                                    Editar
-                                </a>
-                            <?php endif; ?>
+                        <!-- =========================
+                        ACCIONES (CON PERMISOS)
+                        ========================== -->
+                        <td data-label="Acciones">
+                            <div class="actions">
 
-                            <!-- 🗑️ ELIMINAR -->
-                            <?php if ($u['estado'] != 0 && $canDelete): ?>
-                                <button class="btn-action delete" data-id="<?= $u['id'] ?>">
-                                    Eliminar
-                                </button>
-                            <?php endif; ?>
+                                <!-- ✏️ EDITAR -->
+                                <?php if ($canEdit && $estado !== $Status::ELIMINADO): ?>
+                                    <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
+                                        Editar
+                                    </a>
+                                <?php endif; ?>
 
-                            <!-- ♻️ RESTAURAR -->
-                            <?php if ($u['estado'] == 0 && $rol === 'super'): ?>
-                                <button class="btn-restore" data-id="<?= $u['id'] ?>">
-                                    Restaurar
-                                </button>
-                            <?php endif; ?>
+                                <!-- 🗑️ ELIMINAR -->
+                                <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
+                                    <button class="btn-action delete btn-delete"
+                                        data-id="<?= $u['id'] ?>"
+                                        data-name="<?= htmlspecialchars($u['username']) ?>"
+                                        data-entity="usuario">
+                                        Eliminar
+                                    </button>
+                                <?php endif; ?>
 
-                        </div>
-                    </td>
+                                <!-- ♻️ RESTAURAR -->
+                                <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
+                                    <button class="btn-action restore btn-restore"
+                                        data-id="<?= $u['id'] ?>">
+                                        Restaurar
+                                    </button>
+                                <?php endif; ?>
 
-                    <!-- PENDIENTE ACTIVAR -->
-                    <!-- <td>
-                        <?= $u['ultimo_login']
-                            ? date('d/m/Y H:i', strtotime($u['ultimo_login']))
-                            : 'Nunca' ?>
-                    </td> -->
+                            </div>
+                        </td>
 
                 </tr>
             <?php endforeach; ?>

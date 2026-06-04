@@ -2,13 +2,11 @@
 
 namespace App\Core;
 
-define('ROL_SUPER', 1);
-define('ROL_ADMIN', 2);
+use App\Core\Roles;
+use App\Core\Status;
 
 class Controller
 {
-
-
     protected function render($view, $data = [], $layout = 'main')
     {
         $viewPath = __DIR__ . '/../' . $view . '.php';
@@ -17,14 +15,21 @@ class Controller
             die("Vista no encontrada: " . $view);
         }
 
-        // 🔥 PERMISOS
-        $data['rol'] = $_SESSION['user']['rol_nombre'] ?? '';
+        //  USER DATA
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        $data['canEdit'] = in_array($data['rol'], ['super', 'administrador', 'secretaria']);
-        $data['canDelete'] = in_array($data['rol'], ['super', 'administrador']);
-        $data['canRestore'] = ($data['rol'] === 'super');
 
-        // 🔥 TITLE AUTOMÁTICO
+        //  GLOBAL DATA PARA TODAS LAS VISTAS
+        $data['Status'] = Status::class;
+        $data['rolId'] = $rolId;
+        $data['rolNombre'] = $_SESSION['user']['rol_nombre'] ?? '';
+
+        //  PERMISOS CENTRALIZADOS
+        $data['canEdit'] = Roles::canEdit($rolId);
+        $data['canDelete'] = Roles::canDelete($rolId);
+        $data['canRestore'] = Roles::canRestore($rolId);
+
+        //  TITLE AUTOMÁTICO
         if (!isset($data['title'])) {
             $data['title'] = $this->generateTitle($view);
         }
@@ -35,7 +40,6 @@ class Controller
 
         require __DIR__ . "/../Views/layouts/{$layout}.php";
     }
-
 
     protected function redirect($url)
     {
@@ -50,10 +54,10 @@ class Controller
         }
     }
 
+    //  USAR SOLO rol_id 
     protected function isAdmin()
     {
-
-        return in_array($_SESSION['user']['rol'] ?? null, [ROL_SUPER, ROL_ADMIN]);
+        return Roles::canEdit($_SESSION['user']['rol_id'] ?? null);
     }
 
     protected function onlyAdmin()
@@ -67,9 +71,8 @@ class Controller
     {
         $parts = explode('/', strtolower($view));
 
-        // Modules/Suppliers/Views/index
-        $module = $parts[1] ?? ''; // Suppliers
-        $action = end($parts);     // index
+        $module = $parts[1] ?? '';
+        $action = end($parts);
 
         $modulesMap = [
             'suppliers' => 'Proveedores',
@@ -87,7 +90,6 @@ class Controller
         $moduleName = $modulesMap[$module] ?? ucfirst($module);
         $actionName = $actionsMap[$action] ?? ucfirst($action);
 
-        // 🔥 RESULTADO PRO
         if ($action === 'index') {
             return $moduleName;
         }

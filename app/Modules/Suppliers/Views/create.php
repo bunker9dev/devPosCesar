@@ -3,6 +3,10 @@ $old = $_SESSION['old'] ?? [];
 $errors = $_SESSION['errors'] ?? [];
 
 unset($_SESSION['old'], $_SESSION['errors']);
+
+function oldValue($field, $old) {
+    return htmlspecialchars($old[$field] ?? '');
+}
 ?>
 
 <form method="POST" action="<?= BASE_URL ?>/suppliers/store" class="form-users">
@@ -14,7 +18,8 @@ unset($_SESSION['old'], $_SESSION['errors']);
             id="nombre"
             name="nombre"
             placeholder="Ej: Comercial XYZ SAS"
-            value="<?= $old['nombre'] ?? '' ?>"
+            value="<?= oldValue('nombre', $old) ?>"
+            autocomplete="organization"
             required
         >
 
@@ -30,8 +35,8 @@ unset($_SESSION['old'], $_SESSION['errors']);
         <label>Apellidos (opcional)</label>
         <input 
             name="apellidos"
-            value="<?= $old['apellidos'] ?? '' ?>"
-            placeholder="Solo si aplica"
+            value="<?= oldValue('apellidos', $old) ?>"
+            autocomplete="off"
         >
     </div>
 
@@ -42,7 +47,8 @@ unset($_SESSION['old'], $_SESSION['errors']);
             id="nit"
             name="nit"
             placeholder="Número de identificación"
-            value="<?= $old['nit'] ?? '' ?>"
+            value="<?= oldValue('nit', $old) ?>"
+            autocomplete="off"
             required
         >
 
@@ -59,19 +65,22 @@ unset($_SESSION['old'], $_SESSION['errors']);
         <input 
             name="ciudad"
             placeholder="Medellín"
-            value="<?= $old['ciudad'] ?? '' ?>"
+            value="<?= oldValue('ciudad', $old) ?>"
+            autocomplete="address-level2"
         >
     </div>
 
-    <!-- CAMPOS SUPER -->
-    <?php if ($isSuper): ?>
-        
+    <!-- CAMPOS EDITABLES -->
+    <?php if ($canEdit): ?>
+
         <div class="form-group">
             <label>Email (opcional)</label>
             <input 
+                type="email"
                 name="email"
                 placeholder="correo@empresa.com"
-                value="<?= $old['email'] ?? '' ?>"
+                value="<?= oldValue('email', $old) ?>"
+                autocomplete="email"
             >
         </div>
 
@@ -81,7 +90,8 @@ unset($_SESSION['old'], $_SESSION['errors']);
                 id="telefono"
                 name="telefono"
                 placeholder="3001234567"
-                value="<?= $old['telefono'] ?? '' ?>"
+                value="<?= oldValue('telefono', $old) ?>"
+                autocomplete="tel"
             >
 
             <small id="telefono-msg" class="input-msg"></small>
@@ -101,4 +111,4 @@ unset($_SESSION['old'], $_SESSION['errors']);
     window.BASE_URL = "<?= BASE_URL ?>";
 </script>
 
-<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-create.js"></script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-form.js"></script>

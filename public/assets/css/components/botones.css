@@ -1,5 +1,31 @@
 /* BOTONES */
 
+button {
+  border: none;
+  outline: none;
+  font-family: inherit;
+}
+
+
+
+/* boton hamburgesa */
+.btn-toggle {
+  background: var(--bg-button);
+  color: var(--primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.btn-toggle:hover {
+  background: var(--bg-button-hover);
+}
+
+
+
+
 .error_btn {
     display: inline-block;
     margin-top: 15px;
@@ -33,10 +59,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: 0.3s;
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
 }
 
 .btn-primary:hover {
@@ -114,6 +136,9 @@
   transform: scale(0.95);
 }
 
+.is-clickable {
+  cursor: pointer;
+}
 
 .btn-action.disabled,
 .btn-action:disabled {
@@ -152,4 +177,49 @@
 /* CLICK */
 .btn-danger:active {
     transform: scale(0.97);
+}
+
+
+/* ================================
+   🔘 TOGGLE ESTADO (WAREHOUSE)
+================================ */
+
+.btn-toggle-state {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 90px; 
+  text-align: center;
+}
+
+/* ACTIVO */
+.btn-toggle-state.active {
+  background: rgba(var(--success-rgb), 0.15);
+  color: var(--success);
+  border-color: rgba(var(--success-rgb), 0.4);
+}
+
+/* INACTIVO */
+.btn-toggle-state.inactive {
+  background: rgba(var(--danger-rgb), 0.15);
+  color: var(--danger);
+  border-color: rgba(var(--danger-rgb), 0.4);
+}
+
+/* HOVER */
+.btn-toggle-state.active:hover {
+  box-shadow: 0 0 6px rgba(var(--success-rgb), 0.6);
+}
+
+.btn-toggle-state.inactive:hover {
+  box-shadow: 0 0 6px rgba(var(--danger-rgb), 0.6);
+}
+
+/* CLICK */
+.btn-toggle-state:active {
+  transform: scale(0.95);
 }

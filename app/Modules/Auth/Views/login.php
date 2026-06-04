@@ -11,7 +11,7 @@
 
         <h2>Iniciar Sesión</h2>
 
-        <form method="POST" action="<?= BASE_URL ?>/auth/login">
+       <form method="POST" action="<?= BASE_URL ?>/login">
             <input type="text" name="user" placeholder="Usuario" required>
             <input type="password" name="pass" placeholder="Contraseña" required>
 

@@ -193,20 +193,20 @@ export function initUserValidation() {
 }
 
 // =========================================================
-// 🔹 VALIDACIÓN DE PASSWORD
+// VALIDACIÓN DE PASSWORD
 // =========================================================
 
 export function initPasswordValidation() {
   const input = document.getElementById("password");
   if (!input) return;
 
-  // 🔥 buscar el mensaje RELATIVO al input
+  // buscar el mensaje RELATIVO al input
   const msg = input.parentElement.querySelector(".input-msg");
 
   input.addEventListener("input", () => {
     const value = input.value;
 
-    // 👉 en EDIT: si está vacío → no validar
+    //  en EDIT: si está vacío → no validar
     if (value.length === 0) {
       msg.textContent = "";
       input.dataset.valid = "true";
@@ -260,40 +260,64 @@ export function initUserFormValidation() {
 // =========================================================
 function initUserToggle() {
   document.addEventListener("click", async (e) => {
-    const el = e.target.closest(".estado-toggle");
+    const el = e.target.closest(".toggle-user");
     if (!el) return;
 
     const estadoActual = parseInt(el.dataset.estado);
-
-    if (estadoActual === 0) return;
+    if (estadoActual === 0) return; // no permitir eliminados
 
     if (el.classList.contains("loading")) return;
 
     const id = el.dataset.id;
+    const url = el.dataset.url;
+
+    if (!id || !url) return;
 
     el.classList.add("loading");
+    el.style.opacity = "0.6";
+    el.style.pointerEvents = "none";
 
     try {
-      const res = await post("/users/toggle", { id });
+      const res = await post(url, { id });
 
       if (!res.ok) throw new Error(res.error);
+      if (!res || typeof res.estado === "undefined") {
+        throw new Error("Respuesta inválida del servidor");
+      }
 
       // =============================
       // ACTUALIZAR UI
       // =============================
-      el.dataset.estado = res.estado;
-      el.textContent = res.estado_texto;
+      const estado = parseInt(res.estado);
 
-      el.classList.remove("active", "inactive");
+      el.dataset.estado = estado;
 
-      if (res.estado == 1) {
-        el.classList.add("active");
+      // 🔥 TEXTO CONTROLADO POR FRONTEND
+      let texto = "";
+
+      if (estado === 1) {
+        texto = "Activo";
+      } else if (estado === 2) {
+        texto = "Inactivo";
       } else {
+        texto = "Eliminado";
+      }
+
+      el.textContent = texto;
+
+      // 🔥 CLASES
+      el.classList.remove("active", "inactive", "deleted");
+
+      if (estado === 1) {
+        el.classList.add("active");
+      } else if (estado === 2) {
         el.classList.add("inactive");
+      } else {
+        el.classList.add("deleted");
       }
 
       // =============================
-      // 🔥 EVENTO GLOBAL (AQUÍ VA)
+      // EVENTO GLOBAL
       // =============================
       Events.emit("users:updated", {
         id,
@@ -308,6 +332,8 @@ function initUserToggle() {
       });
     } finally {
       el.classList.remove("loading");
+      el.style.opacity = "";
+      el.style.pointerEvents = "";
     }
   });
 }
@@ -361,51 +387,6 @@ export function initImagePreview() {
 // =========================================================
 //  ELIMINAR USUARIOS
 // =========================================================
-
-// function initUserDelete() {
-//   document.addEventListener("click", async (e) => {
-
-//     const btn = e.target.closest(".delete");
-//     if (!btn) return;
-
-//     const id = btn.dataset.id;
-
-//     if (!confirm("¿Eliminar usuario?")) return;
-
-//     try {
-//       const res = await post("/users/delete", { id });
-
-//       if (!res.ok) throw new Error(res.error);
-
-//       const row = btn.closest("tr");
-//       const badge = row.querySelector(".estado-toggle");
-
-//       // 🔥 actualizar UI (igual que restore pero inverso)
-//       badge.dataset.estado = 0;
-//       badge.textContent = "Eliminado";
-
-//       badge.classList.remove("active", "inactive");
-//       badge.classList.add("deleted");
-
-//       btn.remove(); // quitar botón eliminar
-
-//       // 🔥 opcional: evento global
-//       Events.emit("users:updated", {
-//         id,
-//         estado: 0,
-//       });
-
-//     } catch (err) {
-//       console.error(err);
-
-//       Events.emit("alerts:show", {
-//         type: "error",
-//         message: err.message || "Error al eliminar",
-//       });
-//     }
-
-//   });
-// }
 function initUserDelete() {
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".delete");
@@ -413,18 +394,18 @@ function initUserDelete() {
 
     const id = btn.dataset.id;
 
-    // 🔍 DEBUG AQUÍ
+    //  DEBUG AQUÍ
     console.log("DELETE ID:", id);
 
     if (!confirm("¿Eliminar usuario?")) return;
 
     try {
-      // 🔍 DEBUG ANTES DEL POST
+      //  DEBUG ANTES DEL POST
       console.log("Enviando petición...");
 
       const res = await post("/users/delete", { id });
 
-      // 🔍 DEBUG RESPUESTA
+      // DEBUG RESPUESTA
       console.log("RESPUESTA:", res);
 
       if (!res.ok) throw new Error(res.error);

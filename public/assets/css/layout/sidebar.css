@@ -185,20 +185,7 @@
     left: 0;
   }
 }
-/* boton hamburgesa */
-.btn-toggle {
-  background: var(--bg-button);
-  color: var(--primary);
-  border: none;
-  padding: 8px 12px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 18px;
-}
 
-.btn-toggle:hover {
-  background: var(--bg-button-hover);
-}
 
 .sidebar-group-toggle {
   position: relative;
