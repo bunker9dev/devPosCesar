@@ -3,16 +3,14 @@
         <i data-lucide="check-circle"></i>
         <?= $_SESSION['success'] ?>
     </div>
-<?php unset($_SESSION['success']);
-endif; ?>
+<?php unset($_SESSION['success']); endif; ?>
 
 <?php if (!empty($_SESSION['error'])): ?>
     <div class="alert alert-error" id="alertMessage">
         <i data-lucide="alert-circle"></i>
         <?= $_SESSION['error'] ?>
     </div>
-<?php unset($_SESSION['error']);
-endif; ?>
+<?php unset($_SESSION['error']); endif; ?>
 
 
 <!-- 🔥 CREAR COLOR -->
@@ -95,13 +93,13 @@ endif; ?>
                     <td data-label="Acciones">
                         <div class="actions">
 
-                            <!-- EDIT -->
+                            <!-- ✅ EDIT (CORREGIDO) -->
                             <?php if ($canEdit && empty($color['deleted_at'])): ?>
                                 <button
                                     class="btn-action edit btn-edit"
-                                    data-id="<?= $type['id'] ?>"
-                                    data-name="<?= htmlspecialchars($type['nombre']) ?>"
-                                    data-url="<?= BASE_URL ?>/products/types/update">
+                                    data-id="<?= $color['id'] ?>"
+                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
+                                    data-url="<?= BASE_URL ?>/products/colors/update">
                                     Editar
                                 </button>
                             <?php endif; ?>
