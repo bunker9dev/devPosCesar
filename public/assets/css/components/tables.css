@@ -219,7 +219,7 @@
 
 tr.deleted {
   opacity: 0.5;
-  text-decoration: line-through;
+  text-decoration: none;
 }
 
 

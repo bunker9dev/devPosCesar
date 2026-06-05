@@ -9,6 +9,25 @@ class CatalogService
 {
     private $db;
 
+    // 🔥 TABLAS PERMITIDAS (SEGURIDAD)
+    private $allowedTables = [
+        'fabric_colors',
+        'fabric_types',
+        'warehouses'
+    ];
+
+    // 🔥 RELACIONES (FK)
+    private $catalogMap = [
+        'fabric_colors' => [
+            'related' => 'products',
+            'fk' => 'fabric_color_id'
+        ],
+        'fabric_types' => [
+            'related' => 'products',
+            'fk' => 'fabric_type_id'
+        ]
+    ];
+
     public function __construct()
     {
         global $db;
@@ -16,38 +35,54 @@ class CatalogService
     }
 
     // ======================================================
-    // LISTAR
+    // 🔐 VALIDAR TABLA
     // ======================================================
-    public function getAll($table)
+    private function validateTable($table)
     {
+        if (!in_array($table, $this->allowedTables)) {
+            throw new Exception("Tabla no permitida");
+        }
+    }
+
+    // ======================================================
+    // 📋 LISTAR
+    // ======================================================
+    public function getAll($table, $includeDeleted = false)
+    {
+        $this->validateTable($table);
+
+        $where = $includeDeleted ? "" : "WHERE estado <> " . Status::ELIMINADO;
+
         $query = "
             SELECT *
             FROM {$table}
+            {$where}
             ORDER BY estado ASC, id DESC
         ";
 
         return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
 
-    // =========================================
-    // CREAR
-    // ========================================
+    // ======================================================
+    // ➕ CREAR
+    // ======================================================
     public function create($table, $nombre)
     {
+        $this->validateTable($table);
+
         $nombre = trim($nombre);
 
         if (!$nombre) {
             throw new Exception("El nombre es obligatorio");
         }
 
-        // 🔒 evitar duplicados
         if ($this->existsByName($table, $nombre)) {
             throw new Exception("El nombre ya existe");
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO {$table} (nombre, estado)
-            VALUES (?, ?)
+            INSERT INTO {$table} (nombre, estado, created_at)
+            VALUES (?, ?, NOW())
         ");
 
         $estado = Status::ACTIVO;
@@ -66,10 +101,12 @@ class CatalogService
     }
 
     // ======================================================
-    // ACTUALIZAR
+    // ✏️ ACTUALIZAR
     // ======================================================
     public function update($table, $id, $nombre)
     {
+        $this->validateTable($table);
+
         $nombre = trim($nombre);
 
         if (!$id) {
@@ -86,7 +123,7 @@ class CatalogService
 
         $stmt = $this->db->prepare("
             UPDATE {$table}
-            SET nombre=?
+            SET nombre=?, updated_at=NOW()
             WHERE id=?
         ");
 
@@ -102,10 +139,12 @@ class CatalogService
     }
 
     // ======================================================
-    // TOGGLE
+    // 🔄 TOGGLE
     // ======================================================
     public function toggle($table, $id)
     {
+        $this->validateTable($table);
+
         $stmt = $this->db->prepare("
             SELECT estado, nombre FROM {$table} WHERE id=?
         ");
@@ -127,7 +166,9 @@ class CatalogService
             : Status::ACTIVO;
 
         $stmt = $this->db->prepare("
-            UPDATE {$table} SET estado=? WHERE id=?
+            UPDATE {$table}
+            SET estado=?
+            WHERE id=?
         ");
         $stmt->bind_param("ii", $nuevoEstado, $id);
         $stmt->execute();
@@ -143,10 +184,22 @@ class CatalogService
     }
 
     // ======================================================
-    // DELETE (SOFT)
+    // 🗑️ DELETE (SOFT + VALIDACIÓN FK)
     // ======================================================
     public function delete($table, $id)
     {
+        $this->validateTable($table);
+
+        // 🔥 VALIDAR RELACIÓN AUTOMÁTICA
+        if (isset($this->catalogMap[$table])) {
+
+            $rel = $this->catalogMap[$table];
+
+            if ($this->isUsed($rel['related'], $rel['fk'], $id)) {
+                throw new Exception("El registro está en uso");
+            }
+        }
+
         $stmt = $this->db->prepare("
             UPDATE {$table}
             SET estado=?, deleted_at=NOW()
@@ -167,10 +220,12 @@ class CatalogService
     }
 
     // ======================================================
-    // RESTORE
+    // ♻️ RESTORE
     // ======================================================
     public function restore($table, $id)
     {
+        $this->validateTable($table);
+
         $stmt = $this->db->prepare("
             UPDATE {$table}
             SET estado=?, deleted_at=NULL
@@ -191,9 +246,9 @@ class CatalogService
     }
 
     // ======================================================
-    // VALIDAR USO (FK)
+    // 🔍 VALIDAR USO (FK)
     // ======================================================
-    public function isUsed($table, $id, $relatedTable, $fk)
+    private function isUsed($relatedTable, $fk, $id)
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as total
@@ -210,7 +265,7 @@ class CatalogService
     }
 
     // ======================================================
-    // VALIDAR NOMBRE DUPLICADO
+    // 🔁 VALIDAR DUPLICADOS
     // ======================================================
     private function existsByName($table, $nombre, $excludeId = null)
     {
@@ -234,7 +289,7 @@ class CatalogService
     }
 
     // ======================================================
-    // AUDITORÍA
+    // 🧠 AUDITORÍA
     // ======================================================
     private function audit($accion, $tabla, $id, $detalle)
     {

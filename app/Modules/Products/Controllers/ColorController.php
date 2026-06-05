@@ -32,27 +32,34 @@ class ColorController extends Controller
     {
         try {
             $this->service->create($this->table, $_POST['nombre']);
+
             $_SESSION['success'] = "Color creado correctamente";
+
         } catch (\Exception $e) {
+
             $_SESSION['error'] = $e->getMessage();
         }
 
         header('Location: ' . BASE_URL . '/products/colors');
+        exit;
     }
 
     public function delete()
     {
-      
         header('Content-Type: application/json');
-         
 
         try {
+
             $id = $_POST['id'] ?? null;
 
             if (!$id) {
-                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-                exit;
+                throw new \Exception('ID inválido');
             }
+
+            // 🔥 VALIDACIÓN PRO (si implementas en service)
+            // if ($this->service->isInUse($this->table, $id)) {
+            //     throw new \Exception('El color está en uso');
+            // }
 
             $this->service->delete($this->table, $id);
 
@@ -77,11 +84,11 @@ class ColorController extends Controller
         header('Content-Type: application/json');
 
         try {
+
             $id = $_POST['id'] ?? null;
 
             if (!$id) {
-                echo json_encode(['ok' => false, 'error' => 'ID inválido']);
-                exit;
+                throw new \Exception('ID inválido');
             }
 
             $this->service->restore($this->table, $id);
@@ -107,21 +114,26 @@ class ColorController extends Controller
         header('Content-Type: application/json');
 
         try {
+
             $id = $_POST['id'] ?? null;
-            $nombre = $_POST['nombre'] ?? '';
+            $nombre = trim($_POST['nombre'] ?? '');
+
+            if (!$id || !$nombre) {
+                throw new \Exception('Datos inválidos');
+            }
 
             $this->service->update($this->table, $id, $nombre);
 
             echo json_encode([
-                'success' => true,
+                'ok' => true,
                 'message' => 'Color actualizado'
             ]);
 
         } catch (\Exception $e) {
 
             echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
+                'ok' => false,
+                'error' => $e->getMessage()
             ]);
         }
 

@@ -3,96 +3,81 @@
 namespace App\Modules\Products\Controllers;
 
 use App\Core\Controller;
+use App\Modules\Products\Services\WarehouseService;
 
 class WarehouseController extends Controller
 {
+    private $service;
+
+    public function __construct()
+    {
+        $this->auth();
+        $this->onlyAdmin();
+
+        $this->service = new WarehouseService();
+    }
+
+    // ======================================================
+    // LISTAR
+    // ======================================================
     public function index()
     {
-        $db = conectarDB();
+        $warehouses = $this->service->getAllWarehouses(true);
 
-        $warehouses = $db->query("
-            SELECT * FROM warehouses
-            ORDER BY id DESC
-        ")->fetch_all(MYSQLI_ASSOC);
+        $rol = $_SESSION['user']['rol_nombre'] ?? '';
+
+        $canEdit    = in_array($rol, ['super', 'administrador']);
+        $canDelete  = in_array($rol, ['super', 'administrador']);
+        $canRestore = ($rol === 'super');
 
         $this->render('Modules/Products/Views/warehouses/index', [
             'warehouses' => $warehouses,
-            'title' => 'Bodegas'
-
+            'title'      => 'Bodegas',
+            'canEdit'    => $canEdit,
+            'canDelete'  => $canDelete,
+            'canRestore' => $canRestore
         ]);
     }
 
+    // ======================================================
+    // CREAR
+    // ======================================================
     public function store()
     {
-        $db = conectarDB();
+        try {
 
-        $nombre = trim($_POST['nombre']);
-        $ubicacion = trim($_POST['ubicacion']);
+            $this->service->createWarehouse($_POST);
 
-        // VALIDAR DUPLICADO POR NOMBRE
-        $stmt = $db->prepare("
-        SELECT id 
-        FROM warehouses 
-        WHERE LOWER(nombre) = ?
-        LIMIT 1
-    ");
+            $_SESSION['success'] = "Bodega creada correctamente";
 
-        $nombreLower = strtolower($nombre);
+        } catch (\Exception $e) {
 
-        $stmt->bind_param("s", $nombreLower);
-        $stmt->execute();
-
-        if ($stmt->get_result()->num_rows > 0) {
-            $_SESSION['error'] = "El nombre ingresado ya ha sido utilizado.";
-            header("Location: " . BASE_URL . "/warehouses");
-            return;
+            $_SESSION['error'] = $e->getMessage();
         }
 
-        // GENERAR CÓDIGO
-        $result = $db->query("SELECT MAX(id) as max FROM warehouses");
-        $row = $result->fetch_assoc();
-
-        $codigo = 'BOD-' . str_pad(($row['max'] + 1), 3, '0', STR_PAD_LEFT);
-
-        //  INSERT
-        $stmt = $db->prepare("
-        INSERT INTO warehouses (codigo, nombre, ubicacion)
-        VALUES (?, ?, ?)
-    ");
-
-        $stmt->bind_param("sss", $codigo, $nombre, $ubicacion);
-        $stmt->execute();
-
-        $_SESSION['success'] = "Bodega creada correctamente";
-
-        header("Location: " . BASE_URL . "/warehouses");
+        return $this->redirect(BASE_URL . "/warehouses");
     }
 
+    // ======================================================
+    // ACTUALIZAR
+    // ======================================================
     public function update()
     {
         header('Content-Type: application/json');
 
         try {
-            $db = conectarDB();
 
-            $id = $_POST['id'];
-            $nombre = trim($_POST['nombre']);
-            $ubicacion = trim($_POST['ubicacion']);
+            $id = $_POST['id'] ?? null;
 
-            $stmt = $db->prepare("
-                UPDATE warehouses
-                SET nombre = ?, ubicacion = ?
-                WHERE id = ?
-            ");
-
-            $stmt->bind_param("ssi", $nombre, $ubicacion, $id);
-            $stmt->execute();
+            $this->service->updateWarehouse($id, $_POST);
 
             echo json_encode([
                 'success' => true,
                 'message' => 'Bodega actualizada'
             ]);
+
         } catch (\Throwable $e) {
+
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -102,79 +87,102 @@ class WarehouseController extends Controller
         exit;
     }
 
+    // ======================================================
+    // DELETE
+    // ======================================================
     public function delete()
     {
         header('Content-Type: application/json');
 
-        $db = conectarDB();
-        $id = $_POST['id'];
+        try {
 
-        $stmt = $db->prepare("
-            UPDATE warehouses
-            SET estado = -1
-            WHERE id = ?
-        ");
+            $id = $_POST['id'] ?? null;
 
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+            if (!$id) {
+                throw new \Exception("ID inválido");
+            }
 
-        echo json_encode(['ok' => true]);
+            $this->service->deleteWarehouse($id);
+
+            echo json_encode([
+                'ok' => true,
+                'message' => 'Bodega eliminada'
+            ]);
+
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        exit;
     }
 
+    // ======================================================
+    //  RESTORE
+    // ======================================================
     public function restore()
     {
         header('Content-Type: application/json');
 
-        $db = conectarDB();
-        $id = $_POST['id'];
+        try {
 
-        $stmt = $db->prepare("
-            UPDATE warehouses
-            SET estado = 1
-            WHERE id = ?
-        ");
+            $id = $_POST['id'] ?? null;
 
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+            if (!$id) {
+                throw new \Exception("ID inválido");
+            }
 
-        echo json_encode(['ok' => true]);
+            $this->service->restoreWarehouse($id);
+
+            echo json_encode([
+                'ok' => true,
+                'message' => 'Bodega restaurada'
+            ]);
+
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        exit;
     }
 
+    // ======================================================
+    // TOGGLE
+    // ======================================================
     public function toggle()
-{
-    header('Content-Type: application/json');
+    {
+        header('Content-Type: application/json');
 
-    $db = conectarDB();
-    $id = $_POST['id'];
+        try {
 
-    // 🔥 obtener estado actual
-    $stmt = $db->prepare("SELECT estado FROM warehouses WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
+            $id = $_POST['id'] ?? null;
 
-    $row = $stmt->get_result()->fetch_assoc();
+            if (!$id) {
+                throw new \Exception("ID inválido");
+            }
 
-    // ❌ no permitir toggle si eliminado
-    if ($row['estado'] == -1) {
-        echo json_encode([
-            'ok' => false,
-            'error' => 'No se puede modificar un registro eliminado'
-        ]);
-        return;
+            $estado = $this->service->toggleWarehouse($id);
+
+            echo json_encode([
+                'ok' => true,
+                'estado' => $estado
+            ]);
+
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        exit;
     }
-
-    // 🔥 alternar manual
-    $nuevoEstado = $row['estado'] == 1 ? 0 : 1;
-
-    $stmt = $db->prepare("
-        UPDATE warehouses 
-        SET estado = ?
-        WHERE id = ?
-    ");
-
-    $stmt->bind_param("ii", $nuevoEstado, $id);
-    $stmt->execute();
-
-    echo json_encode(['ok' => true]);
-}
 }

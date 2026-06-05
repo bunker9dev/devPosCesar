@@ -17,11 +17,8 @@ function initEditModal() {
 
   if (!modal) return;
 
-  let currentRow = null; // 🔥 referencia REAL
+  let currentRow = null;
 
-  // ================================
-  // ABRIR MODAL
-  // ================================
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".btn-edit");
     if (!btn) return;
@@ -29,7 +26,6 @@ function initEditModal() {
     currentRow = btn.closest("tr");
 
     idInput.value = btn.dataset.id;
-    input.value = btn.dataset.name;
 
     const nameCell = currentRow.querySelector('td[data-label="Nombre"]');
     input.value = nameCell ? nameCell.textContent.trim() : "";
@@ -40,17 +36,11 @@ function initEditModal() {
     input.focus();
   });
 
-  // ================================
-  // CERRAR
-  // ================================
   cancel?.addEventListener("click", () => {
     modal.classList.add("hidden");
     currentRow = null;
   });
 
-  // ================================
-  // SUBMIT
-  // ================================
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -61,32 +51,26 @@ function initEditModal() {
     if (!nombre || !url) return;
 
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ id, nombre }),
+      const res = await post(url, { id, nombre });
+
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error actualizando");
+      }
+
+      Events.emit("alerts:show", {
+        type: "success",
+        message: "Actualizado correctamente",
       });
 
-      const data = await res.json();
+      modal.classList.add("hidden");
 
-      if (data.success) {
-        Events.emit("alerts:show", {
-          type: "success",
-          message: data.message,
-        });
-
-        modal.classList.add("hidden");
-
-        // 🔥 actualizar fila REAL
-        if (currentRow) {
-          const cell = currentRow.querySelector('td[data-label="Nombre"]');
-          if (cell) cell.textContent = nombre;
-        }
-
-        currentRow = null;
-      } else {
-        throw new Error(data.message);
+      if (currentRow) {
+        const cell = currentRow.querySelector('td[data-label="Nombre"]');
+        if (cell) cell.textContent = nombre;
       }
+
+      currentRow = null;
+
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -109,43 +93,43 @@ function initDelete() {
 
     const row = btn.closest("tr");
 
-    // 🔥 nombre REAL desde DOM
     const nameCell = row.querySelector('td[data-label="Nombre"]');
     const name = nameCell ? nameCell.textContent.trim() : "registro";
 
     const entity = btn.dataset.entity || "elemento";
 
-    if (
-      !confirm(
-        `¿Eliminar ${entity} "${name}"?\nEsta acción no se puede deshacer.`,
-      )
-    )
-      return;
+    if (!confirm(`¿Eliminar ${entity} "${name}"?`)) return;
 
     try {
       const res = await post(url, { id });
 
-      if (!res.ok) throw new Error(res.error);
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error eliminando");
+      }
 
-      const badge = row.querySelector(".badge");
+      // const badge = row.querySelector(".badge");
+      const badge = row.querySelector(".estado-toggle");
 
       if (badge) {
-        badge.textContent = badge.dataset.labelDeleted || "Eliminado";
+        badge.textContent = "Eliminado";
         badge.classList.remove("active", "inactive");
         badge.classList.add("deleted");
       }
 
       const actions = row.querySelector("td:last-child");
-      actions.innerHTML = ``;
+      if (actions) actions.innerHTML = "";
+
+      row.classList.add("deleted");
 
       Events.emit("alerts:show", {
         type: "success",
         message: "Registro eliminado",
       });
+
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
-        message: err.message || "Error al eliminar",
+        message: err.message,
       });
     }
   });
@@ -167,33 +151,48 @@ function initRestore() {
     try {
       const res = await post(url, { id });
 
-      if (!res.ok) throw new Error(res.error);
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error restaurando");
+      }
 
-      const badge = row.querySelector(".badge");
+      // 🔥 ELEMENTO CORRECTO
+      const badge = row.querySelector(".estado-toggle");
 
       if (badge) {
+        // 🔥 CRÍTICO
+        badge.dataset.estado = 1;
+
         badge.textContent = badge.dataset.labelActive || "Activo";
+
         badge.classList.remove("deleted", "inactive");
         badge.classList.add("active");
       }
 
+      row.classList.remove("deleted");
+
+      // 🔥 OPCIONAL: reconstruir botones correctamente
       const actions = row.querySelector("td:last-child");
 
-      actions.innerHTML = `
-        <button
-          class="btn-delete"
-          data-id="${id}"
-          data-url="${url.replace("restore", "delete")}">
-          Eliminar
-        </button>
-      `;
+      if (actions) {
+        actions.innerHTML = `
+          <button class="btn-action edit btn-edit"
+            data-id="${id}">
+            Editar
+          </button>
 
-      row.classList.remove("deleted");
+          <button class="btn-action delete btn-delete"
+            data-id="${id}"
+            data-url="/users/delete">
+            Eliminar
+          </button>
+        `;
+      }
 
       Events.emit("alerts:show", {
         type: "success",
         message: "Registro restaurado",
       });
+
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -204,7 +203,7 @@ function initRestore() {
 }
 
 // ================================
-// TOGGLE WAREHOUSE
+// TOGGLE WAREHOUSE (UI)
 // ================================
 function initWarehouseToggle() {
   document.addEventListener("click", async (e) => {
@@ -217,29 +216,55 @@ function initWarehouseToggle() {
     try {
       const res = await post(url, { id });
 
-      if (!res.ok) throw new Error(res.error);
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error");
+      }
 
-      location.reload();
+      const badge = btn.closest("tr").querySelector(".estado-toggle");
+
+      if (badge) {
+        badge.dataset.estado = res.estado;
+
+        badge.classList.remove("active", "inactive");
+
+        if (res.estado == 1) {
+          badge.classList.add("active");
+          badge.textContent = "Activo";
+        } else {
+          badge.classList.add("inactive");
+          badge.textContent = "Inactivo";
+        }
+      }
+
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
-        message: err.message || "Error al cambiar estado",
+        message: err.message,
       });
     }
   });
 }
 
 // ================================
-// INIT
+// INIT CONTROLADO POR CONTEXTO
 // ================================
 document.addEventListener("DOMContentLoaded", () => {
   console.log("INIT PRODUCTS OK");
 
-  initDataTable("#tablaFabricTypes", "tipos");
-  initDataTable("#tablaColors", "colores");
+  if (document.querySelector("#tablaFabricTypes")) {
+    initDataTable("#tablaFabricTypes", "tipos");
+    initEditModal();
+    initDelete();
+    initRestore();
+  }
 
-  initEditModal();
-  initDelete();
-  initRestore();
-  initWarehouseToggle();
+  if (document.querySelector("#tablaColors")) {
+    initDataTable("#tablaColors", "colores");
+    initDelete();
+    initRestore();
+  }
+
+  if (document.querySelector("#tablaWarehouses")) {
+    initWarehouseToggle();
+  }
 });
