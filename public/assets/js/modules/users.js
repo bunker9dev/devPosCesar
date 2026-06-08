@@ -1,31 +1,26 @@
 // =========================================================
-// 📦 IMPORTS
+// IMPORTS
 // =========================================================
-
-// Sistema de eventos global (arquitectura)
 import { Events } from "../core/events.js";
-
-// Helper para peticiones HTTP (POST)
 import { post } from "../core/api.js";
+import { showToast } from "./alerts.js";
 
+// =========================================================
+//  DATATABLE
+// =========================================================
 export function initTablaUsuarios() {
   const tabla = document.getElementById("tablaUsuarios");
   if (!tabla) return;
 
   const isMobile = window.matchMedia("(max-width: 460px)").matches;
 
-  // 🔥 destruir si ya existe (CLAVE)
   if ($.fn.DataTable.isDataTable("#tablaUsuarios")) {
     $("#tablaUsuarios").DataTable().destroy();
   }
 
-  // 🔥 inicializar
   new DataTable("#tablaUsuarios", {
-    /* =====================================================
-       🔹 RESPONSIVE HÍBRIDO
-    ===================================================== */
     responsive: isMobile
-      ? false // 🔥 MOBILE → usamos cards CSS
+      ? false
       : {
           details: {
             type: "column",
@@ -35,34 +30,19 @@ export function initTablaUsuarios() {
 
     autoWidth: false,
 
-    /* =====================================================
-       🔹 PRIORIDADES DE COLAPSO
-    ===================================================== */
     columnDefs: [
-      {
-        className: "dtr-control",
-        orderable: false,
-        targets: 0,
-      },
-
-      { responsivePriority: 1, targets: 1 }, // ID
-      { responsivePriority: 2, targets: 2 }, // Usuario
-      { responsivePriority: 3, targets: 3 }, // Nombre
-
+      { className: "dtr-control", orderable: false, targets: 0 },
+      { responsivePriority: 1, targets: 1 },
+      { responsivePriority: 2, targets: 2 },
+      { responsivePriority: 3, targets: 3 },
       { responsivePriority: 100, targets: 7 },
       { responsivePriority: 99, targets: 4 },
       { responsivePriority: 98, targets: 6 },
       { responsivePriority: 97, targets: 5 },
     ],
 
-    /* =====================================================
-       🔹 ORDEN
-    ===================================================== */
     order: [[1, "asc"]],
 
-    /* =====================================================
-       🔹 BOTONES
-    ===================================================== */
     dom: "Bfrtip",
 
     buttons: [
@@ -71,9 +51,6 @@ export function initTablaUsuarios() {
       { extend: "print", text: "Print" },
     ],
 
-    /* =====================================================
-       🔹 IDIOMA
-    ===================================================== */
     language: {
       search: "Buscar:",
       lengthMenu: "Mostrar _MENU_ registros",
@@ -84,64 +61,28 @@ export function initTablaUsuarios() {
       },
     },
   });
-
-  console.log("DATATABLE PRO USERS");
 }
 
-/* =========================================================
-   🔹 EVENT INIT (ARQUITECTURA)
-========================================================= */
-Events.on("users:index", () => {
-  initTablaUsuarios();
-});
-
-/* =========================================================
-   🔹 RELOAD RESPONSIVE (PRO)
-========================================================= */
-
-let resizeTimer;
-let lastMode = null;
-
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-
-  resizeTimer = setTimeout(() => {
-    const isMobile = window.matchMedia("(max-width: 460px)").matches;
-
-    // 🔥 SOLO reinicia si cambia de modo (evita lag)
-    if (isMobile !== lastMode) {
-      lastMode = isMobile;
-
-      console.log("🔄 Cambio de modo → reiniciando tabla");
-
-      initTablaUsuarios();
-    }
-  }, 300);
-});
-
 // =========================================================
-// 🔹 VALIDACIÓN DE USERNAME
+//  VALIDACIÓN USERNAME
 // =========================================================
 export function initUserValidation() {
   const input = document.getElementById("username");
-  if (!input) return; // si no existe en la vista, salir
+  if (!input) return;
 
-  let timeout; // debounce para evitar muchas peticiones
+  const msg = document.getElementById("username-msg");
+  if (!msg) return;
+
+  let timeout = null;
 
   input.addEventListener("input", () => {
     clearTimeout(timeout);
 
-    // Normalizar (minúsculas + sin espacios)
+    // 🔥 normalizar
     input.value = input.value.toLowerCase().replace(/\s/g, "");
     const username = input.value;
 
-    const msg = document.getElementById("username-msg");
-    if (!msg) return;
-
-    // =============================
-    // VALIDACIONES LOCALES
-    // =============================
-
+    // 🔥 validaciones locales
     if (username.length < 4) {
       showMsg(msg, "Mínimo 4 caracteres", "error");
       input.dataset.exists = "true";
@@ -162,21 +103,22 @@ export function initUserValidation() {
       return;
     }
 
-    // Mostrar estado de carga
+    // 🔥 feedback inmediato
     showMsg(msg, "Verificando...", "loading");
 
-    // =============================
-    // VALIDACIÓN EN BACKEND
-    // =============================
+    // 🔥 debounce
     timeout = setTimeout(async () => {
       try {
-        const res = await post("/api/users/check-username", { username });
+        const res = await post("/users/check-username", { username });
 
-        if (!res || !res.success) {
+        // 🔥 validar respuesta
+        if (!res || typeof res.exists === "undefined") {
           showMsg(msg, "Error al validar", "error");
+          input.dataset.exists = "true";
           return;
         }
 
+        // 🔥 resultado
         if (res.exists) {
           showMsg(msg, "❌ Usuario ya existe", "error");
           input.dataset.exists = "true";
@@ -187,26 +129,24 @@ export function initUserValidation() {
       } catch (error) {
         console.error(error);
         showMsg(msg, "Error de conexión", "error");
+        input.dataset.exists = "true";
       }
-    }, 400); // debounce
+    }, 400);
   });
 }
 
 // =========================================================
-// VALIDACIÓN DE PASSWORD
+//  PASSWORD
 // =========================================================
-
 export function initPasswordValidation() {
   const input = document.getElementById("password");
   if (!input) return;
 
-  // buscar el mensaje RELATIVO al input
   const msg = input.parentElement.querySelector(".input-msg");
 
   input.addEventListener("input", () => {
     const value = input.value;
 
-    //  en EDIT: si está vacío → no validar
     if (value.length === 0) {
       msg.textContent = "";
       input.dataset.valid = "true";
@@ -229,140 +169,231 @@ export function initPasswordValidation() {
 }
 
 // =========================================================
-// BLOQUEAR ENVÍO SI HAY ERRORES
+//  FORM VALIDATION
 // =========================================================
 export function initUserFormValidation() {
-  const form = document.querySelector("form");
+  const form = document.querySelector(".form-users");
   if (!form) return;
 
   const username = document.getElementById("username");
   const password = document.getElementById("password");
 
   form.addEventListener("submit", (e) => {
-    // validar username
     if (username && username.dataset.exists === "true") {
       e.preventDefault();
-      alert("El usuario ya existe o es inválido");
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: "El usuario ya existe o es inválido",
+      });
+
       return;
     }
 
-    // validar password
     if (password && password.dataset.valid === "false") {
       e.preventDefault();
-      alert("El password no es válido");
-      return;
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: "El password no es válido",
+      });
     }
   });
 }
 
 // =========================================================
-//  TOGGLE DE ESTADO (ACTIVO / INACTIVO)
+//  TOGGLE
 // =========================================================
-function initUserToggle() {
+export function initUserToggle() {
   document.addEventListener("click", async (e) => {
     const el = e.target.closest(".toggle-user");
     if (!el) return;
 
-    const estadoActual = parseInt(el.dataset.estado);
-    if (estadoActual === 0) return; // no permitir eliminados
-
-    if (el.classList.contains("loading")) return;
-
     const id = el.dataset.id;
     const url = el.dataset.url;
 
-    if (!id || !url) return;
-
-    el.classList.add("loading");
-    el.style.opacity = "0.6";
-    el.style.pointerEvents = "none";
-
     try {
-      const res = await post(url, { id });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `id=${id}`,
+      });
 
-      if (!res.ok) throw new Error(res.error);
-      if (!res || typeof res.estado === "undefined") {
-        throw new Error("Respuesta inválida del servidor");
+      const data = await response.json();
+
+      if (!data.ok) {
+        alert(data.error || "Error");
+        return;
       }
 
-      // =============================
-      // ACTUALIZAR UI
-      // =============================
-      const estado = parseInt(res.estado);
+      // ESTADO NUEVO
+      const estado = parseInt(data.estado);
 
+      // ACTUALIZAR DATASET
       el.dataset.estado = estado;
 
-      // 🔥 TEXTO CONTROLADO POR FRONTEND
-      let texto = "";
-
-      if (estado === 1) {
-        texto = "Activo";
-      } else if (estado === 2) {
-        texto = "Inactivo";
-      } else {
-        texto = "Eliminado";
-      }
-
-      el.textContent = texto;
-
-      // 🔥 CLASES
+      // LIMPIAR CLASES
       el.classList.remove("active", "inactive", "deleted");
 
-      if (estado === 1) {
-        el.classList.add("active");
-      } else if (estado === 2) {
-        el.classList.add("inactive");
-      } else {
-        el.classList.add("deleted");
-      }
+      // ACTUALIZAR UI
+      switch (estado) {
+        case 1:
+          el.classList.add("active");
+          el.textContent = "Activo";
+          break;
 
-      // =============================
-      // EVENTO GLOBAL
-      // =============================
-      Events.emit("users:updated", {
-        id,
-        estado: res.estado,
-      });
+        case 2:
+          el.classList.add("inactive");
+          el.textContent = "Inactivo";
+          break;
+
+        case 0:
+          el.classList.add("deleted");
+          el.textContent = "Eliminado";
+          break;
+      }
     } catch (error) {
       console.error(error);
+      alert("Error de conexión");
+    }
+  });
+}
+// =========================================================
+//  DELETE
+// =========================================================
+export function initUserDelete() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-delete");
+    if (!btn) return;
 
-      Events.emit("alerts:show", {
-        type: "error",
-        message: error.message || "Error al cambiar estado",
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
+    const name = btn.dataset.name;
+
+    // 🔥 confirmación
+    if (!confirm(`¿Eliminar usuario "${name}"?`)) return;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `id=${id}`,
       });
-    } finally {
-      el.classList.remove("loading");
-      el.style.opacity = "";
-      el.style.pointerEvents = "";
+
+      const data = await response.json();
+
+      if (!data.ok) {
+        showToast(data.error || "Error al eliminar", "error");
+        return;
+      }
+
+      // 🔥 eliminar fila SIN reload
+      const row = btn.closest("tr");
+      // 🔥 cambiar estado visual en lugar de eliminar fila
+
+      const estadoBadge = row.querySelector(".toggle-user");
+
+      if (estadoBadge) {
+        estadoBadge.classList.remove("active", "inactive");
+        estadoBadge.classList.add("deleted");
+        estadoBadge.textContent = "Eliminado";
+      }
+
+      // 🔥 limpiar acciones
+      const actions = row.querySelector(".actions");
+
+      if (actions) {
+        // 🔥 SOLO SUPER VE RESTORE
+        const actions = row.querySelector(".actions");
+
+        if (actions) {
+          if (window.USER_PERMISSIONS?.restore) {
+            actions.innerHTML = `
+        <button class="btn-action restore btn-restore"
+            data-id="${id}"
+            data-url="${BASE_URL}/users/restore">
+            Restaurar
+        </button>
+    `;
+          } else {
+            actions.innerHTML = ``;
+          }
+        }
+      }
+
+      showToast("Usuario eliminado", "success");
+    } catch (error) {
+      console.error(error);
+      showToast("Error de conexión", "error");
     }
   });
 }
 
 // =========================================================
-//  HELPER PARA MENSAJES
+//  RESTORE
 // =========================================================
-function showMsg(el, text, type) {
-  el.textContent = text;
+export function initUserRestore() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
 
-  // reset clases
-  el.className = "input-msg";
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
 
-  if (type === "error") {
-    el.style.color = "red";
-  }
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `id=${id}`,
+      });
 
-  if (type === "success") {
-    el.style.color = "lime";
-  }
+      const data = await res.json();
 
-  if (type === "loading") {
-    el.style.color = "var(--primary)";
-    el.classList.add("loading");
-  }
+      if (!data.ok) {
+        showToast(data.error || "Error", "error");
+        return;
+      }
+
+      const row = btn.closest("tr");
+
+      // restaurar estado
+      const estadoBadge = row.querySelector(".toggle-user");
+
+      if (estadoBadge) {
+        estadoBadge.classList.remove("deleted");
+        estadoBadge.classList.add("active");
+        estadoBadge.textContent = "Activo";
+      }
+
+      // restaurar botones
+      const actions = row.querySelector(".actions");
+
+      actions.innerHTML = `
+                <a href="${BASE_URL}/users/edit?id=${id}" class="btn-action edit">
+                    Editar
+                </a>
+                <button class="btn-action delete btn-delete"
+                    data-id="${id}"
+                    data-url="${BASE_URL}/users/delete">
+                    Eliminar
+                </button>
+            `;
+
+      showToast("Usuario restaurado", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Error", "error");
+    }
+  });
 }
-
 // =========================================================
-//  PREVIEW IMAGENES
+//  IMAGE PREVIEW
 // =========================================================
 export function initImagePreview() {
   const input = document.querySelector('input[name="imagen"]');
@@ -385,107 +416,36 @@ export function initImagePreview() {
 }
 
 // =========================================================
-//  ELIMINAR USUARIOS
+//  HELPER
 // =========================================================
-function initUserDelete() {
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".delete");
-    if (!btn) return;
+function showMsg(el, text, type) {
+  el.textContent = text;
+  el.className = "input-msg";
 
-    const id = btn.dataset.id;
-
-    //  DEBUG AQUÍ
-    console.log("DELETE ID:", id);
-
-    if (!confirm("¿Eliminar usuario?")) return;
-
-    try {
-      //  DEBUG ANTES DEL POST
-      console.log("Enviando petición...");
-
-      const res = await post("/users/delete", { id });
-
-      // DEBUG RESPUESTA
-      console.log("RESPUESTA:", res);
-
-      if (!res.ok) throw new Error(res.error);
-
-      const row = btn.closest("tr");
-      const badge = row.querySelector(".estado-toggle");
-
-      badge.dataset.estado = 0;
-      badge.textContent = "Eliminado";
-
-      badge.classList.remove("active", "inactive");
-      badge.classList.add("deleted");
-
-      btn.remove();
-    } catch (err) {
-      console.error("ERROR:", err);
-    }
-  });
+  if (type === "error") el.style.color = "red";
+  if (type === "success") el.style.color = "lime";
+  if (type === "loading") {
+    el.style.color = "var(--primary)";
+    el.classList.add("loading");
+  }
 }
 
 // =========================================================
-//  RESTAURAR USUARIOS ELIMIDANDOS
+// EVENTS
 // =========================================================
-
-export function initUserRestore() {
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-restore");
-    if (!btn) return;
-
-    console.log("CLICK RESTORE"); // 🔥 DEBUG
-
-    const id = btn.dataset.id;
-
-    if (!confirm("¿Restaurar usuario?")) return;
-
-    try {
-      const res = await post("/users/restore", { id });
-
-      console.log(res); // 🔥 DEBUG
-
-      if (!res.ok) throw new Error(res.error);
-
-      const row = btn.closest("tr");
-      const badge = row.querySelector(".estado-toggle");
-
-      badge.dataset.estado = 2;
-      badge.textContent = "Inactivo";
-
-      badge.classList.remove("deleted");
-      badge.classList.add("inactive");
-
-      btn.remove();
-    } catch (err) {
-      console.error(err);
-    }
-  });
-}
-
-// =========================================================
-//  INTEGRACIÓN CON EVENTS (ARQUITECTURA)
-// =========================================================
-
-// Página: crear usuario
 Events.on("users:create", () => {
   initUserValidation();
   initPasswordValidation();
   initUserFormValidation();
 });
 
-// Página: listado usuarios
 Events.on("users:index", () => {
-  console.log("INIT USERS MODULE");
-
   initTablaUsuarios();
   initUserToggle();
-  initUserRestore();
   initUserDelete();
+  initUserRestore();
 });
 
-//  visualizar imagen
 Events.on("users:edit", () => {
   initImagePreview();
 });

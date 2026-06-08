@@ -1,11 +1,11 @@
-<!-- <h2 class="page-title">Usuarios</h2> -->
-
 <div class="module-header">
-    <a href="<?= BASE_URL ?>/users/create" class="btn-primary">+ Crear usuario</a>
+    <?php if ($canCreate): ?>
+        <a href="<?= BASE_URL ?>/users/create" class="btn-primary">+ Crear usuario</a>
+    <?php endif; ?>
 </div>
 
 <div class="table-container">
-    <table id="tablaUsuarios" class="table-main display ">
+    <table id="tablaUsuarios" class="table-main display">
         <thead>
             <tr>
                 <th></th>
@@ -14,9 +14,9 @@
                 <th>Nombre</th>
                 <th>Foto</th>
                 <th>Rol</th>
+                <th>Último acceso</th>
                 <th>Estado</th>
                 <th>Acciones</th>
-                <!-- <th>Último acceso</th> --> <!-- PENDIENTE ACTIVAR -->
             </tr>
         </thead>
 
@@ -25,76 +25,95 @@
                 <tr>
                     <th></th>
 
-                    <td data-label="ID"><?= $u['id'] ?></td>
-
-                    <td data-label="Usuario"><?= $u['username'] ?></td>
-
-                    <td data-label="Nombre"><?= $u['nombre'] ?></td>
-
-                    <td>
-                        <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>"
-                            class="avatar">
+                    <!-- ID -->
+                    <td data-label="ID">
+                        <?= $u['id'] ?>
                     </td>
 
-                    <td data-label="Rol"><?= $u['rol'] ?></td>
+                    <!-- USERNAME (RBAC) -->
+                    <td data-label="Usuario">
+                        <?= !empty($u['username']) 
+                            ? htmlspecialchars($u['username']) 
+                            : '—' ?>
+                    </td>
+
+                    <!-- NOMBRE -->
+                    <td data-label="Nombre">
+                        <?= htmlspecialchars($u['nombre']) ?>
+                    </td>
+
+                    <!-- AVATAR -->
+                    <td>
+                        <img src="<?= $u['avatar_url'] ?>" class="avatar">
+                    </td>
+
+                    <!-- ROL -->
+                    <td data-label="Rol">
+                        <?= htmlspecialchars($u['rol']) ?>
+                    </td>
+
+                    <!-- ÚLTIMO LOGIN -->
+                    <td data-label="Último acceso">
+                        <?= $u['ultimo_login'] ?>
+                    </td>
 
                     <!-- =========================
-                    ESTADO (STANDARD)
+                    ESTADO
                     ========================== -->
                     <td data-label="Estado">
-
-                        <?php $estado = (int)$u['estado']; ?>
-
                         <span
-                            class="badge estado-toggle toggle-user 
-                            <?= $estado === $Status::ACTIVO ? 'active' : ($estado === $Status::INACTIVO ? 'inactive' : 'deleted') ?>"
-                            
+                            class="badge estado-toggle toggle-user <?= $u['estado_class'] ?>"
                             data-id="<?= $u['id'] ?>"
                             data-url="<?= BASE_URL ?>/users/toggle"
-                            data-estado="<?= $estado ?>">
-
-                            <?= $estado === $Status::ACTIVO ? 'Activo' : ($estado === $Status::INACTIVO ? 'Inactivo' : 'Eliminado') ?>
-
+                            data-estado="<?= $u['estado'] ?>">
+                            <?= $u['estado_label'] ?>
                         </span>
+                    </td>
 
-                        </td>
+                    <!-- =========================
+                    ACCIONES
+                    ========================== -->
+                    <td data-label="Acciones">
+                        <div class="actions">
 
-                        <!-- =========================
-                        ACCIONES (CON PERMISOS)
-                        ========================== -->
-                        <td data-label="Acciones">
-                            <div class="actions">
+                            <!-- EDITAR -->
+                            <?php if ($u['can_edit']): ?>
+                                <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
+                                    Editar
+                                </a>
+                            <?php endif; ?>
 
-                                <!-- ✏️ EDITAR -->
-                                <?php if ($canEdit && $estado !== $Status::ELIMINADO): ?>
-                                    <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
-                                        Editar
-                                    </a>
-                                <?php endif; ?>
+                            <!-- ELIMINAR -->
+                            <?php if ($u['can_delete']): ?>
+                                <button class="btn-action delete btn-delete"
+                                    data-id="<?= $u['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/users/delete"
+                                    data-name="<?= htmlspecialchars($u['username'] ?? 'usuario') ?>"
+                                    data-entity="usuario">
+                                    Eliminar
+                                </button>
+                            <?php endif; ?>
 
-                                <!-- 🗑️ ELIMINAR -->
-                                <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
-                                    <button class="btn-action delete btn-delete"
-                                        data-id="<?= $u['id'] ?>"
-                                        data-name="<?= htmlspecialchars($u['username']) ?>"
-                                        data-entity="usuario">
-                                        Eliminar
-                                    </button>
-                                <?php endif; ?>
+                            <!-- RESTAURAR -->
+                            <?php if ($u['can_restore']): ?>
+                                <button class="btn-action restore btn-restore"
+                                    data-id="<?= $u['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/users/restore">
+                                    Restaurar
+                                </button>
+                            <?php endif; ?>
 
-                                <!-- ♻️ RESTAURAR -->
-                                <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
-                                    <button class="btn-action restore btn-restore"
-                                        data-id="<?= $u['id'] ?>">
-                                        Restaurar
-                                    </button>
-                                <?php endif; ?>
-
-                            </div>
-                        </td>
+                        </div>
+                    </td>
 
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 </div>
+
+<!-- 🔥 EVENTO PARA INICIALIZAR JS -->
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-index.js"></script>
+<script>
+    window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
+</script>

@@ -50,6 +50,7 @@ $router->post('/users/update', 'Users\\Controllers\\UsersController@update', ['a
 $router->post('/users/delete', 'Users\\Controllers\\UsersController@delete', ['auth', 'delete']);
 $router->post('/users/restore', 'Users\\Controllers\\UsersController@restore', ['auth', 'restore']);
 $router->post('/users/toggle', 'Users\\Controllers\\UsersController@toggle', ['auth', 'edit']);
+$router->post('/users/check-username', 'Users\\Controllers\\UsersController@checkUsername', ['auth']);
 
 
 

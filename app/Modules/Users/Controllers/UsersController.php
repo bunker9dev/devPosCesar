@@ -3,54 +3,53 @@
 namespace App\Modules\Users\Controllers;
 
 use App\Core\Controller;
-use App\Core\Roles;
-use App\Core\Status;
+use App\Modules\Users\Services\UserService;
+use App\Services\PermissionService;
 
 class UsersController extends Controller
 {
+    // ======================================================
+    // INDEX
+    // ======================================================
     public function index()
     {
-        global $db;
-
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        $query = "
-            SELECT u.*, r.nombre as rol 
-            FROM usuarios u
-            JOIN roles r ON u.rol_id = r.id
-        ";
-
-        // 🔒 no ver eliminados si no es super
-        if ($rolId !== Roles::SUPER) {
-            $query .= " WHERE u.estado IN (" . Status::ACTIVO . "," . Status::INACTIVO . ")";
+        if (!PermissionService::can($rolId, 'users', 'view')) {
+            return $this->redirect(BASE_URL);
         }
 
-        $result = $db->query($query);
-        $users = $result->fetch_all(MYSQLI_ASSOC);
+        $users = UserService::getAllForList($rolId);
 
-        $this->render('Modules/Users/Views/index', compact('users'));
+        $permissions = PermissionService::getModulePermissions($rolId, 'users');
+
+        $this->render('Modules/Users/Views/index', [
+            'users' => $users,
+            'canCreate' => $permissions['create']
+        ]);
     }
 
     // ======================================================
-    // CREATE
+    // CREATE (FORM)
     // ======================================================
     public function create()
     {
-        global $db;
-
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        // 🔒 filtrar roles
-        if ($rolId === Roles::SUPER) {
-            $roles = $db->query("SELECT * FROM roles")->fetch_all(MYSQLI_ASSOC);
-        } else {
-            $stmt = $db->prepare("SELECT * FROM roles WHERE id != ?");
-            $stmt->bind_param("i", Roles::SUPER);
-            $stmt->execute();
-            $roles = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        if (!PermissionService::can($rolId, 'users', 'create')) {
+            return $this->redirect(BASE_URL . "/users");
         }
 
-        $this->render('Modules/Users/Views/create', compact('roles'));
+        $roles = UserService::getRolesForCreate($rolId);
+
+        $permissions = PermissionService::getModulePermissions($rolId, 'users');
+
+        $this->render('Modules/Users/Views/create', [
+            'roles' => $roles,
+            'canCreate' => $permissions['create'],
+            'currentRoleId' => $_SESSION['user']['rol_id'],
+            'currentRoleName' => $_SESSION['user']['rol_nombre'],
+        ]);
     }
 
     // ======================================================
@@ -58,53 +57,39 @@ class UsersController extends Controller
     // ======================================================
     public function store()
     {
-        global $db;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->redirect(BASE_URL . "/users");
+        }
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        $username = trim($_POST['username'] ?? '');
-        $nombre   = trim($_POST['nombre'] ?? '');
-        $apellido = trim($_POST['apellido'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $rol      = $_POST['rol_id'] ?? null;
-
-        // 🔒 validación básica
-        if (!$username || !$nombre || !$password || !$rol) {
-            $_SESSION['error'] = "Datos incompletos";
-            return $this->redirect(BASE_URL . "/users/create");
-        }
-
-        // 🔒 evitar crear SUPER
-        if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+        if (!PermissionService::can($rolId, 'users', 'create')) {
             $_SESSION['error'] = "No autorizado";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $estado = Status::ACTIVO;
+        try {
+            UserService::create($_POST, $rolId);
 
-        $stmt = $db->prepare("
-            INSERT INTO usuarios (username, nombre, apellido, password, rol_id, estado)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+            $_SESSION['success'] = "Usuario creado";
+            return $this->redirect(BASE_URL . "/users");
+        } catch (\Exception $e) {
 
-        $stmt->bind_param("ssssii", $username, $nombre, $apellido, $passwordHash, $rol, $estado);
-
-        if (!$stmt->execute()) {
-            $_SESSION['error'] = "Error al crear usuario";
+            $_SESSION['error'] = $e->getMessage() ?: "Error al crear usuario";
             return $this->redirect(BASE_URL . "/users/create");
         }
-
-        $_SESSION['success'] = "Usuario creado";
-        $this->redirect(BASE_URL . "/users");
     }
 
     // ======================================================
-    // EDIT
+    // EDIT (FORM)
     // ======================================================
     public function edit()
     {
-        global $db;
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'users', 'edit')) {
+            return $this->redirect(BASE_URL . "/users");
+        }
 
         $id = $_GET['id'] ?? null;
 
@@ -112,19 +97,15 @@ class UsersController extends Controller
             return $this->redirect(BASE_URL . "/users");
         }
 
-        $stmt = $db->prepare("SELECT * FROM usuarios WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+        try {
+            $data = UserService::getForEdit($id, $rolId);
 
-        $user = $stmt->get_result()->fetch_assoc();
+            $this->render('Modules/Users/Views/edit', $data);
+        } catch (\Exception $e) {
 
-        if (!$user) {
+            $_SESSION['error'] = $e->getMessage();
             return $this->redirect(BASE_URL . "/users");
         }
-
-        $roles = $db->query("SELECT * FROM roles")->fetch_all(MYSQLI_ASSOC);
-
-        $this->render('Modules/Users/Views/edit', compact('user', 'roles'));
     }
 
     // ======================================================
@@ -132,52 +113,34 @@ class UsersController extends Controller
     // ======================================================
     public function update()
     {
-        global $db;
-
-        $rolId = $_SESSION['user']['rol_id'] ?? null;
-
-        $id       = $_POST['id'] ?? null;
-        $nombre   = trim($_POST['nombre'] ?? '');
-        $apellido = trim($_POST['apellido'] ?? '');
-        $rol      = $_POST['rol_id'] ?? null;
-
-        if (!$id || !$nombre || !$rol) {
-            $_SESSION['error'] = "Datos inválidos";
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return $this->redirect(BASE_URL . "/users");
         }
 
-        if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'users', 'edit')) {
             $_SESSION['error'] = "No autorizado";
             return $this->redirect(BASE_URL . "/users");
         }
 
-        if (!empty($_POST['password'])) {
+        $id = $_POST['id'] ?? null;
 
-            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-
-            $stmt = $db->prepare("
-                UPDATE usuarios 
-                SET nombre=?, apellido=?, password=?, rol_id=? 
-                WHERE id=?
-            ");
-
-            $stmt->bind_param("sssii", $nombre, $apellido, $password, $rol, $id);
-
-        } else {
-
-            $stmt = $db->prepare("
-                UPDATE usuarios 
-                SET nombre=?, apellido=?, rol_id=? 
-                WHERE id=?
-            ");
-
-            $stmt->bind_param("ssii", $nombre, $apellido, $rol, $id);
+        if (!$id) {
+            $_SESSION['error'] = "ID inválido";
+            return $this->redirect(BASE_URL . "/users");
         }
 
-        $stmt->execute();
+        try {
+            UserService::update($_POST, $rolId);
 
-        $_SESSION['success'] = "Usuario actualizado";
-        $this->redirect(BASE_URL . "/users");
+            $_SESSION['success'] = "Usuario actualizado";
+            return $this->redirect(BASE_URL . "/users");
+        } catch (\Exception $e) {
+
+            $_SESSION['error'] = $e->getMessage() ?: "Error al actualizar usuario";
+            return $this->redirect(BASE_URL . "/users");
+        }
     }
 
     // ======================================================
@@ -185,37 +148,34 @@ class UsersController extends Controller
     // ======================================================
     public function toggle()
     {
-        global $db;
-
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!Roles::canEdit($rolId)) {
+        if (!PermissionService::can($rolId, 'users', 'edit')) {
             return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
         $id = $_POST['id'] ?? null;
 
-        $stmt = $db->prepare("SELECT estado FROM usuarios WHERE id=?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $user = $stmt->get_result()->fetch_assoc();
-
-        if (!$user) {
-            return print json_encode(['ok' => false, 'error' => 'Usuario no existe']);
+        if (!$id) {
+            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
         }
 
-        $nuevoEstado = $user['estado'] == Status::ACTIVO 
-            ? Status::INACTIVO 
-            : Status::ACTIVO;
+        try {
+            $estado = UserService::toggle($id, $rolId);
 
-        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
-        $stmt->bind_param("ii", $nuevoEstado, $id);
-        $stmt->execute();
+            echo json_encode([
+                'ok' => true,
+                'estado' => $estado
+            ]);
+        } catch (\Exception $e) {
 
-        echo json_encode(['ok' => true, 'estado' => $nuevoEstado]);
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     // ======================================================
@@ -223,25 +183,31 @@ class UsersController extends Controller
     // ======================================================
     public function delete()
     {
-        global $db;
-
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!Roles::canDelete($rolId)) {
+        if (!PermissionService::can($rolId, 'users', 'delete')) {
             return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
         $id = $_POST['id'] ?? null;
 
-        $estado = Status::ELIMINADO;
+        if (!$id) {
+            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+        }
 
-        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
-        $stmt->bind_param("ii", $estado, $id);
-        $stmt->execute();
+        try {
+            UserService::delete($id, $rolId);
 
-        echo json_encode(['ok' => true]);
+            echo json_encode(['ok' => true]);
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     // ======================================================
@@ -249,24 +215,59 @@ class UsersController extends Controller
     // ======================================================
     public function restore()
     {
-        global $db;
-
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!Roles::canRestore($rolId)) {
-            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        // 🔥 SOLO SUPER
+        if ($rolId != \App\Core\Roles::SUPER) {
+            return print json_encode([
+                'ok' => false,
+                'error' => 'No autorizado'
+            ]);
         }
 
         $id = $_POST['id'] ?? null;
 
-        $estado = Status::ACTIVO;
+        if (!$id) {
+            return print json_encode([
+                'ok' => false,
+                'error' => 'ID inválido'
+            ]);
+        }
 
-        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
-        $stmt->bind_param("ii", $estado, $id);
-        $stmt->execute();
+        try {
+            \App\Modules\Users\Services\UserService::restore($id, $rolId);
 
-        echo json_encode(['ok' => true]);
+            echo json_encode(['ok' => true]);
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    // ======================================================
+    // VERIFICAR DISPONIBILIDAD DE USERNAME
+    // ======================================================
+
+    public function checkUsername()
+    {
+        header('Content-Type: application/json');
+
+          $username = $_POST['username'] ?? '';
+
+        if (!$username) {
+            echo json_encode(['exists' => false]);
+            return;
+        }
+
+        $exists = \App\Modules\Users\Services\UserService::usernameExists($username);
+
+        echo json_encode([
+            'success' => true,
+            'exists' => $exists
+        ]);
     }
 }

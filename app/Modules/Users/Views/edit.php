@@ -9,23 +9,24 @@
             <label>Usuario</label>
             <input
                 type="text"
-                value="<?= $user['username'] ?>"
+                value="<?= htmlspecialchars($user['username']) ?>"
                 disabled>
-            <input type="hidden" name="username" value="<?= $user['username'] ?>">
+            <input type="hidden" name="username" value="<?= htmlspecialchars($user['username']) ?>">
         </div>
 
         <!-- Nombre -->
         <div class="form-group">
             <label>Nombre</label>
-            <input type="text" name="nombre" value="<?= $user['nombre'] ?>" required>
+            <input type="text" name="nombre" value="<?= htmlspecialchars($user['nombre']) ?>" required>
         </div>
 
         <!-- Apellido -->
         <div class="form-group">
             <label>Apellido</label>
-            <input type="text" name="apellido" value="<?= $user['apellido'] ?>">
+            <input type="text" name="apellido" value="<?= htmlspecialchars($user['apellido']) ?>">
         </div>
 
+        <!-- Password -->
         <div class="form-group">
             <label>Nueva contraseña</label>
             <input
@@ -40,7 +41,7 @@
         <div class="form-group">
             <label>Avatar actual</label>
             <img
-                src="<?= BASE_URL ?>/assets/img/users/<?= $user['imagen'] ?>"
+                src="<?= $user['avatar_url'] ?>"
                 class="avatar-preview"
                 id="preview">
         </div>
@@ -58,21 +59,17 @@
 
                 <?php foreach ($roles as $r): ?>
 
-                    <?php
-                    if ($r['id'] == \App\Core\Roles::SUPER && $rolId !== \App\Core\Roles::SUPER) continue;
-                    ?>
-
                     <option
                         value="<?= $r['id'] ?>"
                         <?= $r['id'] == $user['rol_id'] ? 'selected' : '' ?>>
-                        <?= $r['nombre'] ?>
+                        <?= htmlspecialchars($r['nombre']) ?>
                     </option>
 
                 <?php endforeach; ?>
 
             </select>
 
-            <!-- 🔥 SOLO SI ESTÁ DESHABILITADO -->
+            <!-- mantener valor si está deshabilitado -->
             <?php if (!$canEdit): ?>
                 <input type="hidden" name="rol_id" value="<?= $user['rol_id'] ?>">
             <?php endif; ?>
@@ -81,7 +78,11 @@
 
         <!-- Botones -->
         <div class="form-actions">
-            <button type="submit" class="btn-primary">Actualizar</button>
+
+            <?php if ($canEdit): ?>
+                <button type="submit" class="btn-primary">Actualizar</button>
+            <?php endif; ?>
+
             <a href="<?= BASE_URL ?>/users" class="btn-secondary">Cancelar</a>
         </div>
 
@@ -89,40 +90,9 @@
 
 </div>
 
-
-
-<!-- scritps para ajax -->
+<!-- CONFIG GLOBAL -->
 <script>
     window.BASE_URL = "<?= BASE_URL ?>";
 </script>
+
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-edit.js"></script>
-
-
-
-<!-- ######################################################################################################################## -->
-
-
-
-
-
-<!-- ######################################################################################################################## -->
-
-<!-- 
-
-
-<form method="POST" action="<?= BASE_URL ?>/users/update">
-    <input type="hidden" name="id" value="<?= $user['id'] ?>">
-
-    <input name="nombre" value="<?= $user['nombre'] ?>">
-    <input name="apellido" value="<?= $user['apellido'] ?>">
-
-    <select name="rol_id">
-        <?php foreach ($roles as $r): ?>
-            <option value="<?= $r['id'] ?>" <?= $r['id'] == $user['rol_id'] ? 'selected' : '' ?>>
-                <?= $r['nombre'] ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
-    <button>Actualizar</button>
-</form> -->

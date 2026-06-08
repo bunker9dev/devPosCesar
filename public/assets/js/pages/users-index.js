@@ -1,6 +1,13 @@
-import { initUserToggle, initUserRestore } from '../modules/users.js';
+// import { initUserToggle, initUserDelete } from '../modules/users.js';
+
+// document.addEventListener("DOMContentLoaded", () => {
+//     initUserToggle();
+//     initUserDelete();
+// });
+
+import { Events } from "../core/events.js";
+import "../modules/users.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-    initUserToggle();
-    initUserRestore(); // 🔥 IMPORTANTE
+    Events.emit("users:index");
 });

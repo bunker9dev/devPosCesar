@@ -1,38 +1,25 @@
+import { Events } from "../core/events.js";
 
-
-import { initUserValidation, initPasswordValidation } from '../modules/users.js';
-import { showToast } from '../modules/alerts.js';
+// IMPORTAR EL MÓDULO 
+import "../modules/users.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    // flash messages
     if (window.APP_FLASH?.success) {
-        showToast(window.APP_FLASH.success, "success");
+        Events.emit("alerts:show", {
+            type: "success",
+            message: window.APP_FLASH.success
+        });
     }
 
     if (window.APP_FLASH?.error) {
-        showToast(window.APP_FLASH.error, "error");
+        Events.emit("alerts:show", {
+            type: "error",
+            message: window.APP_FLASH.error
+        });
     }
 
-      // validación AJAX
-    initUserValidation();
-    initPasswordValidation();
-
-    const form = document.querySelector(".form-users");
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
-
-    form.addEventListener("submit", (e) => {
-
-        if (username.dataset.exists === "true") {
-            e.preventDefault();
-            alert("El username ya está en uso");
-        }
-
-        if (password.dataset.valid === "false") {
-            e.preventDefault();
-            alert("Password inválido");
-        }
-
-    });
-
+    // 
+    Events.emit("users:create");
 });
