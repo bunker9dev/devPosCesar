@@ -10,7 +10,7 @@ import '../modules/sidebar.js';
 // IMPORTAR PÁGINAS
 import "../pages/dashboard.js";
 import "../pages/login.js";
-import "../modules/tablaVentas.js";
+import "../modules/table.js";
 import "../modules/suppliers.js";
 import "../modules/inventory.js";
 import "../modules/products.js";
@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
   Events.emit("alerts:init");
 
   // tablas
-  if (document.getElementById("tablaVentas")) {
-    Events.emit("tablaVentas:init");
+  if (document.getElementById("table")) {
+    Events.emit("table:init");
   }
 
   // users

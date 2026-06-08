@@ -40,15 +40,21 @@
         <!-- Avatar -->
         <div class="form-group">
             <label>Avatar actual</label>
+
             <img
                 src="<?= $user['avatar_url'] ?>"
                 class="avatar-preview"
-                id="preview">
+                id="preview"> 
         </div>
 
         <div class="form-group">
             <label>Cambiar Avatar</label>
-            <input type="file" name="imagen" accept="image/*">
+
+            <input
+                type="file"
+                name="imagen"
+                id="input-imagen" 
+            accept="image/*">
         </div>
 
         <!-- Rol -->

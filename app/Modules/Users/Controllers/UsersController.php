@@ -215,6 +215,7 @@ class UsersController extends Controller
     // ======================================================
     public function restore()
     {
+        var_dump($_FILES); exit;
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;

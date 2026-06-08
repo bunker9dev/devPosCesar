@@ -63,7 +63,9 @@ class UserService
             throw new \Exception("No autorizado");
         }
 
-        // duplicado
+        // ============================
+        // 🔥 VALIDAR DUPLICADO
+        // ============================
         $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ?");
         $stmt->bind_param("s", $username);
         $stmt->execute();
@@ -72,20 +74,70 @@ class UserService
             throw new \Exception("Usuario ya existe");
         }
 
+        // ============================
+        // 🔥 PROCESAR IMAGEN
+        // ============================
+        $imagen = 'default.png';
+
+        if (!empty($_FILES['imagen']['name'])) {
+
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/users/';
+
+            // validar tipo
+            $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+
+            if (!str_starts_with($mime, 'image/')) {
+                throw new \Exception("El archivo no es una imagen válida");
+            }
+
+            // validar tamaño (2MB)
+            if ($_FILES['imagen']['size'] > 2 * 1024 * 1024) {
+                throw new \Exception("La imagen supera el tamaño permitido (2MB)");
+            }
+
+            // extensión
+            $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+
+            // nombre único
+            $imagen = uniqid('user_') . '.' . $ext;
+
+            $destino = $uploadDir . $imagen;
+
+            if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
+                throw new \Exception("Error al subir la imagen");
+            }
+        }
+
+        // ============================
+        // 🔥 INSERT CON IMAGEN
+        // ============================
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
         $estado = Status::ACTIVO;
 
         $stmt = $db->prepare("
-            INSERT INTO usuarios (username, nombre, apellido, password, rol_id, estado)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+        INSERT INTO usuarios 
+        (username, nombre, apellido, password, rol_id, estado, imagen)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
 
-        $stmt->bind_param("ssssii", $username, $nombre, $apellido, $passwordHash, $rol, $estado);
+        $stmt->bind_param(
+            "ssssiss",
+            $username,
+            $nombre,
+            $apellido,
+            $passwordHash,
+            $rol,
+            $estado,
+            $imagen
+        );
 
         if (!$stmt->execute()) {
             throw new \Exception("Error al crear usuario");
         }
 
+        // ============================
+        // 🔥 AUDITORÍA
+        // ============================
         CatalogService::audit(
             'CREATE',
             'usuarios',
@@ -100,58 +152,102 @@ class UserService
     // UPDATE
     // ======================================================
     public static function update(array $data, int $rolId): void
-    {
-        global $db;
+{
+    global $db;
 
-        $id       = $data['id'] ?? null;
-        $nombre   = trim($data['nombre'] ?? '');
-        $apellido = trim($data['apellido'] ?? '');
-        $rol      = $data['rol_id'] ?? null;
-        $password = $data['password'] ?? null;
+    $id       = $data['id'] ?? null;
+    $nombre   = trim($data['nombre'] ?? '');
+    $apellido = trim($data['apellido'] ?? '');
+    $rol      = $data['rol_id'] ?? null;
+    $password = $data['password'] ?? null;
 
-        if (!$id || !$nombre || !$rol) {
-            throw new \Exception("Datos inválidos");
-        }
-
-        if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
-            throw new \Exception("No autorizado");
-        }
-
-        if (!empty($password)) {
-
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
-            $stmt = $db->prepare("
-                UPDATE usuarios 
-                SET nombre=?, apellido=?, password=?, rol_id=? 
-                WHERE id=?
-            ");
-
-            $stmt->bind_param("sssii", $nombre, $apellido, $passwordHash, $rol, $id);
-        } else {
-
-            $stmt = $db->prepare("
-                UPDATE usuarios 
-                SET nombre=?, apellido=?, rol_id=? 
-                WHERE id=?
-            ");
-
-            $stmt->bind_param("ssii", $nombre, $apellido, $rol, $id);
-        }
-
-        if (!$stmt->execute()) {
-            throw new \Exception("Error al actualizar usuario");
-        }
-
-        CatalogService::audit(
-            'UPDATE',
-            'usuarios',
-            $id,
-            "Usuario actualizado",
-            'users',
-            $_SESSION['user']['id']
-        );
+    if (!$id || !$nombre || !$rol) {
+        throw new \Exception("Datos inválidos");
     }
+
+    if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+        throw new \Exception("No autorizado");
+    }
+
+    // ============================
+    // 🔥 OBTENER IMAGEN ACTUAL
+    // ============================
+    $stmt = $db->prepare("SELECT imagen FROM usuarios WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    $user = $stmt->get_result()->fetch_assoc();
+    $imagen = $user['imagen'] ?? 'default.png';
+
+    // ============================
+    // 🔥 PROCESAR NUEVA IMAGEN
+    // ============================
+    if (!empty($_FILES['imagen']['name'])) {
+
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/users/';
+
+        $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+        $nuevaImagen = uniqid('user_') . '.' . $ext;
+
+        $destino = $uploadDir . $nuevaImagen;
+
+        if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
+            throw new \Exception("Error al subir imagen");
+        }
+
+        // 🔥 BORRAR IMAGEN ANTERIOR
+        if (!empty($imagen) && $imagen !== 'default.png') {
+            $rutaAnterior = $uploadDir . $imagen;
+            if (file_exists($rutaAnterior)) {
+                unlink($rutaAnterior);
+            }
+        }
+
+        $imagen = $nuevaImagen;
+    }
+
+    // ============================
+    // 🔥 UPDATE (CON IMAGEN)
+    // ============================
+    if (!empty($password)) {
+
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $db->prepare("
+            UPDATE usuarios 
+            SET nombre=?, apellido=?, password=?, rol_id=?, imagen=? 
+            WHERE id=?
+        ");
+
+        $stmt->bind_param("sssisi", $nombre, $apellido, $passwordHash, $rol, $imagen, $id);
+
+    } else {
+
+        $stmt = $db->prepare("
+            UPDATE usuarios 
+            SET nombre=?, apellido=?, rol_id=?, imagen=? 
+            WHERE id=?
+        ");
+
+        $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagen, $id);
+    }
+
+    if (!$stmt->execute()) {
+        throw new \Exception("Error al actualizar usuario");
+    }
+
+    // ============================
+    // 🔥 AUDITORÍA
+    // ============================
+    CatalogService::audit(
+        'UPDATE',
+        'usuarios',
+        $id,
+        "Usuario actualizado",
+        'users',
+        $_SESSION['user']['id']
+    );
+}
 
     // ======================================================
     // GET FOR EDIT

@@ -1,11 +1,14 @@
 import { Events } from "../core/events.js";
 
-// IMPORTAR EL MÓDULO 
+// SOLO importar módulo 
 import "../modules/users.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("users-create cargado");
 
-    // flash messages
+    // ================================
+    // FLASH MESSAGES
+    // ================================
     if (window.APP_FLASH?.success) {
         Events.emit("alerts:show", {
             type: "success",
@@ -20,6 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 
+    // INICIALIZA TODO EL MÓDULO USERS
     Events.emit("users:create");
 });

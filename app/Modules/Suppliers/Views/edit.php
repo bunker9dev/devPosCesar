@@ -10,7 +10,10 @@ function oldValue($field, $old, $supplier) {
 }
 ?>
 
-<form method="POST" action="<?= BASE_URL ?>/suppliers/update" class="form-users">
+<form method="POST" 
+      action="<?= BASE_URL ?>/suppliers/update" 
+      class="form-suppliers"
+      data-id="<?= $supplier['id'] ?>">
 
     <input type="hidden" name="id" value="<?= $supplier['id'] ?>">
 
@@ -31,12 +34,12 @@ function oldValue($field, $old, $supplier) {
         <?php endif; ?>
     </div>
 
-    <!-- APELLIDOS -->
+    <!-- CONTACTO -->
     <div class="form-group">
-        <label>Apellidos</label>
+        <label>Contacto</label>
         <input 
-            name="apellidos"
-            value="<?= oldValue('apellidos', $old, $supplier) ?>"
+            name="contacto"
+            value="<?= oldValue('contacto', $old, $supplier) ?>"
         >
     </div>
 
@@ -66,9 +69,9 @@ function oldValue($field, $old, $supplier) {
         >
     </div>
 
-    <!-- CAMPOS EDITABLES -->
     <?php if ($canEdit): ?>
 
+        <!-- EMAIL -->
         <div class="form-group">
             <label>Email</label>
             <input 
@@ -77,6 +80,7 @@ function oldValue($field, $old, $supplier) {
             >
         </div>
 
+        <!-- TELÉFONO -->
         <div class="form-group">
             <label>Teléfono</label>
             <input 
@@ -102,4 +106,4 @@ function oldValue($field, $old, $supplier) {
     window.BASE_URL = "<?= BASE_URL ?>";
 </script>
 
-<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-form.js"></script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-edit.js"></script>

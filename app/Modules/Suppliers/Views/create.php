@@ -9,7 +9,9 @@ function oldValue($field, $old) {
 }
 ?>
 
-<form method="POST" action="<?= BASE_URL ?>/suppliers/store" class="form-users">
+<form method="POST" 
+      action="<?= BASE_URL ?>/suppliers/store" 
+      class="form-suppliers">
 
     <!-- NOMBRE -->
     <div class="form-group">
@@ -30,13 +32,13 @@ function oldValue($field, $old) {
         <?php endif; ?>
     </div>
 
-    <!-- APELLIDOS -->
+    <!-- CONTACTO -->
     <div class="form-group">
-        <label>Apellidos (opcional)</label>
+        <label>Contacto</label>
         <input 
-            name="apellidos"
-            value="<?= oldValue('apellidos', $old) ?>"
-            autocomplete="off"
+            name="contacto"
+            placeholder="Nombre de la persona de contacto"
+            value="<?= oldValue('contacto', $old) ?>"
         >
     </div>
 
@@ -70,9 +72,9 @@ function oldValue($field, $old) {
         >
     </div>
 
-    <!-- CAMPOS EDITABLES -->
     <?php if ($canEdit): ?>
 
+        <!-- EMAIL -->
         <div class="form-group">
             <label>Email (opcional)</label>
             <input 
@@ -84,6 +86,7 @@ function oldValue($field, $old) {
             >
         </div>
 
+        <!-- TELÉFONO -->
         <div class="form-group">
             <label>Teléfono (opcional)</label>
             <input 
@@ -111,4 +114,4 @@ function oldValue($field, $old) {
     window.BASE_URL = "<?= BASE_URL ?>";
 </script>
 
-<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-form.js"></script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-create.js"></script>

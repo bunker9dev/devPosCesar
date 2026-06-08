@@ -15,7 +15,7 @@ import { Events } from "../core/events.js";
 import "../modules/warehouses.js";
 
 // (opcional si usas helper de tablas)
-import "../modules/tablaVentas.js"; // o tu initDataTable si lo tienes separado
+import "../modules/table.js"; // o tu initDataTable si lo tienes separado
 
 // =========================================================
 // 🚀 INIT PAGE

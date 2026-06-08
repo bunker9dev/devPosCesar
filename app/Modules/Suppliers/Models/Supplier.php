@@ -23,8 +23,7 @@ class Supplier
             SELECT 
                 id,
                 nombre,
-                apellidos,
-                CONCAT(nombre, ' ', IFNULL(apellidos, '')) AS nombre_completo,
+                contacto,
                 nit,
                 ciudad,
                 estado,
@@ -47,7 +46,7 @@ class Supplier
     public function find($id)
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM proveedores WHERE id=?
+            SELECT * FROM proveedores WHERE id = ?
         ");
 
         $stmt->bind_param("i", $id);
@@ -60,71 +59,25 @@ class Supplier
     }
 
     // ======================================================
-    // VALIDAR NIT
-    // ======================================================
-    public function existsByNit($nit, $excludeId = null)
-    {
-        if ($excludeId) {
-            $stmt = $this->db->prepare("
-                SELECT id FROM proveedores WHERE nit=? AND id<>?
-            ");
-            $stmt->bind_param("si", $nit, $excludeId);
-        } else {
-            $stmt = $this->db->prepare("
-                SELECT id FROM proveedores WHERE nit=?
-            ");
-            $stmt->bind_param("s", $nit);
-        }
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error validando NIT");
-        }
-
-        return $stmt->get_result()->num_rows > 0;
-    }
-
-    // ======================================================
     // CREAR
     // ======================================================
     public function create($data)
     {
-        // 🔒 VALIDACIÓN
-        if (empty($data['nombre']) || empty($data['nit'])) {
-            throw new Exception(json_encode([
-                'general' => 'Nombre y NIT son obligatorios'
-            ]));
-        }
-
-        //  NIT ÚNICO
-        if ($this->existsByNit($data['nit'])) {
-            throw new Exception(json_encode([
-                'nit' => 'El NIT ya está registrado'
-            ]));
-        }
-
-        //  CAMPOS OPCIONALES
-        $apellidos = $data['apellidos'] ?? null;
-        $email     = $data['email'] ?? null;
-        $telefono  = $data['telefono'] ?? null;
-        $ciudad    = $data['ciudad'] ?? null;
-
-        $estado = Status::ACTIVO;
-
         $stmt = $this->db->prepare("
             INSERT INTO proveedores 
-            (nombre, apellidos, nit, email, telefono, ciudad, estado, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (nombre, contacto, nit, email, telefono, ciudad, estado, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
 
         $stmt->bind_param(
             "ssssssii",
             $data['nombre'],
-            $apellidos,
+            $data['contacto'],
             $data['nit'],
-            $email,
-            $telefono,
-            $ciudad,
-            $estado,
+            $data['email'],
+            $data['telefono'],
+            $data['ciudad'],
+            $data['estado'],
             $data['user_id']
         );
 
@@ -140,38 +93,20 @@ class Supplier
     // ======================================================
     public function update($id, $data)
     {
-        if (empty($data['nombre']) || empty($data['nit'])) {
-            throw new Exception(json_encode([
-                'general' => 'Nombre y NIT son obligatorios'
-            ]));
-        }
-
-        // VALIDAR NIT ÚNICO (EXCLUYENDO EL MISMO)
-        if ($this->existsByNit($data['nit'], $id)) {
-            throw new Exception(json_encode([
-                'nit' => 'El NIT ya está registrado'
-            ]));
-        }
-
-        $apellidos = $data['apellidos'] ?? null;
-        $email     = $data['email'] ?? null;
-        $telefono  = $data['telefono'] ?? null;
-        $ciudad    = $data['ciudad'] ?? null;
-
         $stmt = $this->db->prepare("
             UPDATE proveedores 
-            SET nombre=?, apellidos=?, nit=?, email=?, telefono=?, ciudad=?, updated_by=?, updated_at=NOW()
+            SET nombre=?, contacto=?, nit=?, email=?, telefono=?, ciudad=?, updated_by=?, updated_at=NOW()
             WHERE id=?
         ");
 
         $stmt->bind_param(
             "ssssssii",
             $data['nombre'],
-            $apellidos,
+            $data['contacto'],
             $data['nit'],
-            $email,
-            $telefono,
-            $ciudad,
+            $data['email'],
+            $data['telefono'],
+            $data['ciudad'],
             $data['user_id'],
             $id
         );
@@ -189,7 +124,9 @@ class Supplier
     public function updateEstado($id, $estado)
     {
         $stmt = $this->db->prepare("
-            UPDATE proveedores SET estado=? WHERE id=?
+            UPDATE proveedores 
+            SET estado=?, updated_at=NOW()
+            WHERE id=?
         ");
 
         $stmt->bind_param("ii", $estado, $id);
@@ -204,9 +141,23 @@ class Supplier
     // ======================================================
     // DELETE (SOFT)
     // ======================================================
-    public function delete($id)
+    public function delete($id, $userId)
     {
-        return $this->updateEstado($id, Status::ELIMINADO);
+        $stmt = $this->db->prepare("
+            UPDATE proveedores 
+            SET estado=?, deleted_at=NOW(), deleted_by=?
+            WHERE id=?
+        ");
+
+        $estado = Status::ELIMINADO;
+
+        $stmt->bind_param("iii", $estado, $userId, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al eliminar proveedor");
+        }
+
+        return true;
     }
 
     // ======================================================
@@ -214,6 +165,20 @@ class Supplier
     // ======================================================
     public function restore($id)
     {
-        return $this->updateEstado($id, Status::ACTIVO);
+        $stmt = $this->db->prepare("
+            UPDATE proveedores 
+            SET estado=?, deleted_at=NULL, deleted_by=NULL
+            WHERE id=?
+        ");
+
+        $estado = Status::ACTIVO;
+
+        $stmt->bind_param("ii", $estado, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al restaurar proveedor");
+        }
+
+        return true;
     }
 }

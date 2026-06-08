@@ -1,10 +1,9 @@
-// =========================================================
-// Página: Users Edit
-// =========================================================
-
+import "../modules/users.js";
 import { Events } from "../core/events.js";
 
-//  SOLO DISPARA EL EVENTO
+
 document.addEventListener("DOMContentLoaded", () => {
-    Events.emit("users:edit");
+    console.log("EDIT INIT"); // 🔥 debug
+
+    Events.emit("users:edit"); 
 });

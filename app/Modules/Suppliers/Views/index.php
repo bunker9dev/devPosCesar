@@ -32,23 +32,24 @@
 
                     <!-- NOMBRE -->
                     <td data-label="Proveedor">
-                        <?= htmlspecialchars($s['nombre_completo'] ?? ($s['nombre'] . ' ' . $s['apellidos'])) ?>
+                        <?= htmlspecialchars($s['nombre']) ?>
                     </td>
 
+                    <!-- NIT -->
                     <td data-label="NIT">
                         <?= htmlspecialchars($s['nit']) ?>
                     </td>
 
+                    <!-- CIUDAD -->
                     <td data-label="Ciudad">
                         <?= htmlspecialchars($s['ciudad']) ?>
                     </td>
 
-                    <!-- ESTADO (TOGGLE READY) -->
+                    <!-- ESTADO -->
                     <td data-label="Estado">
                         <span
                             class="badge estado-toggle toggle-supplier
                             <?= $estado === $Status::ACTIVO ? 'active' : ($estado === $Status::INACTIVO ? 'inactive' : 'deleted') ?>"
-
                             data-id="<?= $s['id'] ?>"
                             data-url="<?= BASE_URL ?>/suppliers/toggle"
                             data-estado="<?= $estado ?>">
@@ -62,28 +63,28 @@
                     <td data-label="Acciones">
                         <div class="actions">
 
-                            <!-- ✏️ EDITAR -->
+                            <!-- EDITAR -->
                             <?php if ($canEdit): ?>
                                 <a href="<?= BASE_URL ?>/suppliers/edit?id=<?= $s['id'] ?>" class="btn-action edit">
                                     Editar
                                 </a>
                             <?php endif; ?>
 
-                            <!-- 🗑️ ELIMINAR -->
+                            <!-- ELIMINAR -->
                             <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
                                 <button 
-                                    class="btn-action delete"
+                                    class="btn-action delete btn-delete"
                                     data-id="<?= $s['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/suppliers/delete"
-                                    data-entity="proveedor">
+                                    data-name="<?= htmlspecialchars($s['nombre']) ?>"
+                                    data-url="<?= BASE_URL ?>/suppliers/delete">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
 
-                            <!-- ♻️ RESTAURAR -->
+                            <!-- RESTAURAR -->
                             <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
                                 <button 
-                                    class="btn-restore"
+                                    class="btn-action restore btn-restore"
                                     data-id="<?= $s['id'] ?>"
                                     data-url="<?= BASE_URL ?>/suppliers/restore">
                                     Restaurar
@@ -100,3 +101,9 @@
 
     </table>
 </div>
+
+<script>
+window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
+</script>
+
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-index.js"></script>
