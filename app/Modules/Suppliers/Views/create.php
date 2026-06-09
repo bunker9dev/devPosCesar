@@ -9,103 +9,90 @@ function oldValue($field, $old) {
 }
 ?>
 
-<form method="POST" 
-      action="<?= BASE_URL ?>/suppliers/store" 
-      class="form-suppliers">
+<?php if (!empty($errors)): ?>
+    <div class="alert alert-error">
+        <ul>
+            <?php foreach ($errors as $error): ?>
+                <li><?= htmlspecialchars($error) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+<?php endif; ?>
+
+<form 
+    method="POST" 
+    action="<?= BASE_URL ?>/suppliers/store" 
+    class="form-suppliers"
+    id="formSuppliers"
+>
 
     <!-- NOMBRE -->
     <div class="form-group">
         <label>Nombre o razón social</label>
         <input 
-            id="nombre"
+            type="text"
             name="nombre"
-            placeholder="Ej: Comercial XYZ SAS"
+            id="nombre"
             value="<?= oldValue('nombre', $old) ?>"
-            autocomplete="organization"
             required
         >
-
-        <?php if (!empty($errors['nombre'])): ?>
-            <small class="input-msg error"><?= $errors['nombre'] ?></small>
-        <?php else: ?>
-            <small id="nombre-msg" class="input-msg"></small>
-        <?php endif; ?>
-    </div>
-
-    <!-- CONTACTO -->
-    <div class="form-group">
-        <label>Contacto</label>
-        <input 
-            name="contacto"
-            placeholder="Nombre de la persona de contacto"
-            value="<?= oldValue('contacto', $old) ?>"
-        >
+        <small id="nombre-msg" class="input-msg"></small>
     </div>
 
     <!-- NIT -->
     <div class="form-group">
-        <label>Cédula / NIT</label>
+        <label>NIT</label>
         <input 
-            id="nit"
+            type="text"
             name="nit"
-            placeholder="Número de identificación"
+            id="nit"
+            data-exists="false"
             value="<?= oldValue('nit', $old) ?>"
-            autocomplete="off"
             required
         >
-
-        <?php if (!empty($errors['nit'])): ?>
-            <small class="input-msg error"><?= $errors['nit'] ?></small>
-        <?php else: ?>
-            <small id="nit-msg" class="input-msg"></small>
-        <?php endif; ?>
+        <small id="nit-msg" class="input-msg"></small>
     </div>
 
     <!-- CIUDAD -->
     <div class="form-group">
         <label>Ciudad</label>
         <input 
+            type="text"
             name="ciudad"
-            placeholder="Medellín"
             value="<?= oldValue('ciudad', $old) ?>"
-            autocomplete="address-level2"
         >
     </div>
 
-    <?php if ($canEdit): ?>
+    <!-- EMAIL -->
+    <div class="form-group">
+        <label>Email</label>
+        <input 
+            type="email"
+            name="email"
+            value="<?= oldValue('email', $old) ?>"
+        >
+    </div>
 
-        <!-- EMAIL -->
-        <div class="form-group">
-            <label>Email (opcional)</label>
-            <input 
-                type="email"
-                name="email"
-                placeholder="correo@empresa.com"
-                value="<?= oldValue('email', $old) ?>"
-                autocomplete="email"
-            >
-        </div>
-
-        <!-- TELÉFONO -->
-        <div class="form-group">
-            <label>Teléfono (opcional)</label>
-            <input 
-                id="telefono"
-                name="telefono"
-                placeholder="3001234567"
-                value="<?= oldValue('telefono', $old) ?>"
-                autocomplete="tel"
-            >
-
-            <small id="telefono-msg" class="input-msg"></small>
-        </div>
-
-    <?php endif; ?>
+    <!-- TELÉFONO -->
+    <div class="form-group">
+        <label>Teléfono</label>
+        <input 
+            type="text"
+            name="telefono"
+            id="telefono"
+            value="<?= oldValue('telefono', $old) ?>"
+        >
+        <small id="telefono-msg" class="input-msg"></small>
+    </div>
 
     <!-- BOTONES -->
     <div class="form-actions">
-        <button class="btn-primary">Guardar</button>
-        <a href="<?= BASE_URL ?>/suppliers" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary" id="btnSubmit">
+            Guardar
+        </button>
+        <a href="<?= BASE_URL ?>/suppliers" class="btn-secondary">
+            Cancelar
+        </a>
     </div>
 
 </form>

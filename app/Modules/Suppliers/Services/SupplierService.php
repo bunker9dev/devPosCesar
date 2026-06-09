@@ -135,12 +135,12 @@ class SupplierService
             throw new Exception("Ya está eliminado");
         }
 
-        // 🔥 VALIDACIÓN DE NEGOCIO
+        // 🔥 Validación de negocio
         if ($this->hasPurchases($id)) {
             throw new Exception("No se puede eliminar, tiene compras asociadas");
         }
 
-        $this->model->delete($id);
+        $this->model->delete($id, $userId);
 
         CatalogService::audit(
             "DELETE",
@@ -188,7 +188,7 @@ class SupplierService
     // ======================================================
     public function existsByNit($nit, $excludeId = null)
     {
-        return CatalogService::exists('proveedores', 'nit', $nit, $excludeId);
+        return $this->model->existsByNit($nit, $excludeId);
     }
 
     // ======================================================
@@ -197,7 +197,7 @@ class SupplierService
     private function hasPurchases($id): bool
     {
         $stmt = $this->db->prepare("
-            SELECT id FROM purchases WHERE proveedor_id = ?
+            SELECT id FROM purchases WHERE supplier_id = ?
         ");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -213,31 +213,44 @@ class SupplierService
         $data['nit'] = strtolower(trim($data['nit'] ?? ''));
         $data['email'] = strtolower(trim($data['email'] ?? ''));
         $data['nombre'] = trim($data['nombre'] ?? '');
-        $data['contacto'] = trim($data['contacto'] ?? '');
+        $data['telefono'] = trim($data['telefono'] ?? '');
+        $data['ciudad'] = trim($data['ciudad'] ?? '');
     }
 
     // ======================================================
-    // VALIDACIONES CENTRALIZADAS
+    // VALIDACIONES CENTRALIZADAS (FIX FINAL)
     // ======================================================
     private function validate($data, $id = null)
     {
         $errors = [];
 
+        // =========================
+        // NOMBRE
+        // =========================
         if (empty($data['nombre'])) {
             $errors['nombre'] = "El nombre es obligatorio";
         }
 
+        // =========================
+        // NIT
+        // =========================
         if (empty($data['nit'])) {
             $errors['nit'] = "El NIT es obligatorio";
         }
 
-        // 🔥 NIT ÚNICO
+        if (!empty($data['nit']) && strlen($data['nit']) < 5) {
+            $errors['nit'] = "NIT inválido";
+        }
+
         if (!empty($data['nit']) && $this->existsByNit($data['nit'], $id)) {
             $errors['nit'] = "El NIT ya está registrado";
         }
 
-        // 🔥 VALIDACIÓN EMAIL
+        // =========================
+        // EMAIL
+        // =========================
         if (!empty($data['email'])) {
+
             if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $errors['email'] = "Email inválido";
             }
@@ -247,21 +260,18 @@ class SupplierService
             }
         }
 
-        // 🔥 TELÉFONO
+        // =========================
+        // TELÉFONO
+        // =========================
         if (!empty($data['telefono']) && strlen($data['telefono']) < 7) {
             $errors['telefono'] = "Teléfono inválido";
         }
 
-        // 🔥 NIT LÓGICO
-        if (!empty($data['nit']) && strlen($data['nit']) < 5) {
-            $errors['nit'] = "NIT inválido";
-        }
-
+        // =========================
+        // THROW (CLAVE)
+        // =========================
         if (!empty($errors)) {
-            throw new Exception(json_encode([
-                'type' => 'validation',
-                'errors' => $errors
-            ]));
+            throw new Exception(json_encode($errors));
         }
     }
 }

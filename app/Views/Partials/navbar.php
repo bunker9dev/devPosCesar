@@ -14,7 +14,10 @@
         <div class="nav-user" id="nav-user">
 
             <div class="nav-user-trigger">
-                <img src="<?= BASE_URL ?>/assets/img/users/<?= !empty($u['imagen']) ? $u['imagen'] : 'default.png' ?>" class="nav-avatar">
+                <img
+                    src="<?= avatar_url($_SESSION['user']['imagen'] ?? null) ?>"
+                    class="nav-avatar"
+                    onerror="this.src='<?= BASE_URL ?>/assets/img/users/default.png'">
 
                 <span class="nav-username">
                     <?= $_SESSION['user']['nombre'] . " " . $_SESSION['user']['apellido'] ?>

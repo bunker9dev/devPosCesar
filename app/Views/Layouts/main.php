@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../../Helpers/ui.php';
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 

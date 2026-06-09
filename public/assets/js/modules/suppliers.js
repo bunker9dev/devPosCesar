@@ -1,214 +1,232 @@
 // =========================================================
-// MODULE: SUPPLIERS
+// MODULE: SUPPLIERS (PRO FIXED)
 // =========================================================
 
 import { post } from "../core/api.js";
-
-// =========================================================
-// INIT
-// =========================================================
-export function initSuppliers() {
-    initSupplierToggle();
-    initSupplierDelete();
-    initSupplierRestore();
-    initSupplierValidation();
-}
+import { Events } from "../core/events.js";
+import { showMsg } from "../core/utils.js";
 
 // =========================================================
 // TOGGLE ESTADO
 // =========================================================
 function initSupplierToggle() {
-    document.addEventListener("click", async (e) => {
-        const btn = e.target.closest(".toggle-supplier");
-        if (!btn) return;
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".toggle-supplier");
+    if (!btn) return;
 
-        const id = btn.dataset.id;
-        const url = btn.dataset.url;
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
 
-        try {
-            const res = await post(url, { id });
+    if (!id || !url) return;
 
-            if (!res.success) {
-                showToast(res.message || "Error", "error");
-                return;
-            }
+    // 🔒 evitar doble click
+    if (btn.classList.contains("loading")) return;
+    btn.classList.add("loading");
 
-            const estado = res.data.estado;
+    try {
+      const res = await post(url, { id });
 
-            btn.classList.remove("active", "inactive");
+      // 🔥 VALIDACIÓN CORRECTA
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error al cambiar estado");
+      }
 
-            if (estado == 1) {
-                btn.classList.add("active");
-                btn.textContent = "Activo";
-            } else {
-                btn.classList.add("inactive");
-                btn.textContent = "Inactivo";
-            }
+      const estado = parseInt(res.estado);
 
-        } catch (err) {
-            showToast("Error de conexión", "error");
-        }
-    });
+      // =========================
+      // UI UPDATE
+      // =========================
+      btn.dataset.estado = estado;
+
+      btn.classList.remove("active", "inactive");
+
+      if (estado === 1) {
+        btn.classList.add("active");
+        btn.textContent = btn.dataset.labelActive || "Activo";
+      } else {
+        btn.classList.add("inactive");
+        btn.textContent = btn.dataset.labelInactive || "Inactivo";
+      }
+
+      // =========================
+      // EVENTO GLOBAL
+      // =========================
+      Events.emit("suppliers:updated", { id, estado });
+    } catch (err) {
+      console.error(err);
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al cambiar estado",
+      });
+    } finally {
+      btn.classList.remove("loading");
+    }
+  });
 }
 
 // =========================================================
-// DELETE (SOFT)
+// DELETE
 // =========================================================
+let deleteInit = false;
+
 function initSupplierDelete() {
-    document.addEventListener("click", async (e) => {
-        const btn = e.target.closest(".btn-delete");
-        if (!btn) return;
+  if (deleteInit) return;
+  deleteInit = true;
 
-        const id = btn.dataset.id;
-        const url = btn.dataset.url;
-        const name = btn.dataset.name;
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-delete");
+    if (!btn) return;
 
-        if (!confirm(`¿Eliminar proveedor "${name}"?`)) return;
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
+    const name = btn.dataset.name;
 
-        try {
-            const res = await post(url, { id });
+    if (!confirm(`¿Eliminar proveedor "${name}"?`)) return;
 
-            if (!res.success) {
-                showToast(res.message || "Error al eliminar", "error");
-                return;
-            }
+    // evita doble click
+    if (btn.classList.contains("loading")) return;
+    btn.classList.add("loading");
 
-            const row = btn.closest("tr");
+    try {
+      const res = await post(url, { id });
 
-            // 🔥 actualizar estado visual
-            const badge = row.querySelector(".toggle-supplier");
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error al eliminar");
+      }
 
-            if (badge) {
-                badge.classList.remove("active", "inactive");
-                badge.classList.add("deleted");
-                badge.textContent = "Eliminado";
-            }
+      location.reload();
+    } catch (err) {
+      console.error(err);
 
-            // 🔥 limpiar acciones
-            const actions = row.querySelector(".actions");
-
-            if (actions) {
-                if (window.USER_ROLE_ID == 1) {
-                    actions.innerHTML = `
-                        <button class="btn-action restore btn-restore"
-                            data-id="${id}"
-                            data-url="${BASE_URL}/suppliers/restore">
-                            Restaurar
-                        </button>
-                    `;
-                } else {
-                    actions.innerHTML = ``;
-                }
-            }
-
-            showToast("Proveedor eliminado", "success");
-
-        } catch (err) {
-            showToast("Error de conexión", "error");
-        }
-    });
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al eliminar",
+      });
+    } finally {
+      btn.classList.remove("loading");
+    }
+  });
 }
 
 // =========================================================
 // RESTORE
 // =========================================================
 function initSupplierRestore() {
-    document.addEventListener("click", async (e) => {
-        const btn = e.target.closest(".btn-restore");
-        if (!btn) return;
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
 
-        const id = btn.dataset.id;
-        const url = btn.dataset.url;
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
 
-        try {
-            const res = await post(url, { id });
+    try {
+      const res = await post(url, { id });
 
-            if (!res.success) {
-                showToast(res.message || "Error al restaurar", "error");
-                return;
-            }
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error al eliminar");
+      }
 
-            const row = btn.closest("tr");
-
-            // 🔥 restaurar estado
-            const badge = row.querySelector(".toggle-supplier");
-
-            if (badge) {
-                badge.classList.remove("deleted");
-                badge.classList.add("active");
-                badge.textContent = "Activo";
-            }
-
-            // 🔥 restaurar acciones
-            const actions = row.querySelector(".actions");
-
-            if (actions) {
-                actions.innerHTML = `
-                    <a href="${BASE_URL}/suppliers/edit?id=${id}" class="btn-action edit">
-                        Editar
-                    </a>
-                    <button class="btn-action delete btn-delete"
-                        data-id="${id}"
-                        data-url="${BASE_URL}/suppliers/delete">
-                        Eliminar
-                    </button>
-                `;
-            }
-
-            showToast("Proveedor restaurado", "success");
-
-        } catch (err) {
-            showToast("Error de conexión", "error");
-        }
-    });
+      location.reload();
+    } catch (err) {
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message || "Error al restaurar",
+      });
+    }
+  });
 }
 
 // =========================================================
 // VALIDACIÓN NIT (AJAX)
 // =========================================================
 function initSupplierValidation() {
-    const input = document.getElementById("nit");
-    if (!input) return;
+  const input = document.getElementById("nit");
+  const msg = document.getElementById("nit-msg");
 
-    let timeout;
+  if (!input || !msg) return;
 
-    input.addEventListener("input", () => {
-        clearTimeout(timeout);
+  let timeout;
 
-        const nit = input.value.trim().toLowerCase();
-        input.value = nit;
+  input.dataset.exists = "false";
 
-        const msg = document.getElementById("nit-msg");
-        if (!msg) return;
+  input.addEventListener("input", () => {
+    clearTimeout(timeout);
 
-        if (nit.length < 5) {
-            showMsg(msg, "Mínimo 5 caracteres", "error");
-            input.dataset.exists = "true";
-            return;
+    const nit = input.value.trim().toLowerCase();
+    input.value = nit;
+
+    if (nit.length < 5) {
+      showMsg(msg, "Mínimo 5 caracteres", "error");
+      input.dataset.exists = "true";
+      return;
+    }
+
+    showMsg(msg, "Verificando...", "loading");
+
+    timeout = setTimeout(async () => {
+      try {
+        const res = await post("/suppliers/check-nit", { nit });
+
+        if (!res.ok) throw new Error();
+
+        if (res.exists) {
+          showMsg(msg, "❌ NIT ya registrado", "error");
+          input.dataset.exists = "true";
+        } else {
+          showMsg(msg, "✔️ Disponible", "success");
+          input.dataset.exists = "false";
         }
-
-        showMsg(msg, "Verificando...", "loading");
-
-        timeout = setTimeout(async () => {
-            try {
-                const res = await post("/api/suppliers/check-nit", { nit });
-
-                if (!res || !res.success) {
-                    showMsg(msg, "Error al validar", "error");
-                    return;
-                }
-
-                if (res.exists) {
-                    showMsg(msg, "❌ NIT ya registrado", "error");
-                    input.dataset.exists = "true";
-                } else {
-                    showMsg(msg, "✔️ Disponible", "success");
-                    input.dataset.exists = "false";
-                }
-
-            } catch {
-                showMsg(msg, "Error de conexión", "error");
-            }
-        }, 400);
-    });
+      } catch {
+        showMsg(msg, "Error de validación", "error");
+        input.dataset.exists = "true";
+      }
+    }, 400);
+  });
 }
+
+// =========================================================
+// VALIDACIÓN SUBMIT
+// =========================================================
+function initFormValidation() {
+  const form = document.querySelector(".form-suppliers");
+  const input = document.getElementById("nit");
+
+  if (!form || !input) return;
+
+  form.addEventListener("submit", (e) => {
+    if (input.dataset.exists === "true") {
+      e.preventDefault();
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: "El NIT ya está registrado",
+      });
+
+      return;
+    }
+
+    if (!input.value.trim()) {
+      e.preventDefault();
+
+      Events.emit("alerts:show", {
+        type: "error",
+        message: "El NIT es obligatorio",
+      });
+    }
+  });
+}
+
+// =========================================================
+// INIT EVENTS
+// =========================================================
+Events.on("suppliers:index", () => {
+  initSupplierToggle();
+  initSupplierDelete();
+  initSupplierRestore();
+});
+
+Events.on("suppliers:form", () => {
+  initSupplierValidation();
+  initFormValidation();
+});

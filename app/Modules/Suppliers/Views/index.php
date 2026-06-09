@@ -48,14 +48,13 @@
                     <!-- ESTADO -->
                     <td data-label="Estado">
                         <span
-                            class="badge estado-toggle toggle-supplier
-                            <?= $estado === $Status::ACTIVO ? 'active' : ($estado === $Status::INACTIVO ? 'inactive' : 'deleted') ?>"
+                            class="badge toggle-supplier active"
                             data-id="<?= $s['id'] ?>"
                             data-url="<?= BASE_URL ?>/suppliers/toggle"
-                            data-estado="<?= $estado ?>">
-
-                            <?= $estado === $Status::ACTIVO ? 'Activo' : ($estado === $Status::INACTIVO ? 'Inactivo' : 'Eliminado') ?>
-
+                            data-estado="<?= $s['estado'] ?>"
+                            data-label-active="Activo"
+                            data-label-inactive="Inactivo">
+                            Activo
                         </span>
                     </td>
 
@@ -72,7 +71,7 @@
 
                             <!-- ELIMINAR -->
                             <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
-                                <button 
+                                <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $s['id'] ?>"
                                     data-name="<?= htmlspecialchars($s['nombre']) ?>"
@@ -83,7 +82,7 @@
 
                             <!-- RESTAURAR -->
                             <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
-                                <button 
+                                <button
                                     class="btn-action restore btn-restore"
                                     data-id="<?= $s['id'] ?>"
                                     data-url="<?= BASE_URL ?>/suppliers/restore">
@@ -103,7 +102,7 @@
 </div>
 
 <script>
-window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
+    window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
 </script>
 
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/suppliers-index.js"></script>

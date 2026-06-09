@@ -78,12 +78,15 @@ $router->post('/suppliers/delete', 'Suppliers\\Controllers\\SupplierController@d
 $router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@restore', ['auth', 'restore']);
 $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle', ['auth', 'edit']);
 
+$router->get('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController@checkNit', ['auth']);
+
 
 // ==============================
 // ⚡ SUPPLIERS AJAX
 // ==============================
 
 $router->get('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController@checkNit', ['auth']);
+$router->post('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController@checkNit', ['auth']);
 
 
 // ==============================

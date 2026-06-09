@@ -59,6 +59,30 @@ class Supplier
     }
 
     // ======================================================
+    // VALIDAR NIT
+    // ======================================================
+    public function existsByNit($nit, $excludeId = null)
+    {
+        if ($excludeId) {
+            $stmt = $this->db->prepare("
+                SELECT id FROM proveedores WHERE nit = ? AND id <> ?
+            ");
+            $stmt->bind_param("si", $nit, $excludeId);
+        } else {
+            $stmt = $this->db->prepare("
+                SELECT id FROM proveedores WHERE nit = ?
+            ");
+            $stmt->bind_param("s", $nit);
+        }
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error validando NIT");
+        }
+
+        return $stmt->get_result()->num_rows > 0;
+    }
+
+    // ======================================================
     // CREAR
     // ======================================================
     public function create($data)
@@ -69,20 +93,27 @@ class Supplier
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
 
+        // 🔥 FIX CLAVE: valores por defecto seguros
+        $contacto = $data['contacto'] ?? '';
+        $email = $data['email'] ?? null;
+        $telefono = $data['telefono'] ?? null;
+        $ciudad = $data['ciudad'] ?? null;
+        $estado = $data['estado'] ?? Status::ACTIVO;
+
         $stmt->bind_param(
             "ssssssii",
             $data['nombre'],
-            $data['contacto'],
+            $contacto,
             $data['nit'],
-            $data['email'],
-            $data['telefono'],
-            $data['ciudad'],
-            $data['estado'],
+            $email,
+            $telefono,
+            $ciudad,
+            $estado,
             $data['user_id']
         );
 
         if (!$stmt->execute()) {
-            throw new Exception("Error al crear proveedor");
+            throw new Exception("Error al crear proveedor: " . $stmt->error);
         }
 
         return $stmt->insert_id;
@@ -99,20 +130,25 @@ class Supplier
             WHERE id=?
         ");
 
+        $contacto = $data['contacto'] ?? '';
+        $email = $data['email'] ?? null;
+        $telefono = $data['telefono'] ?? null;
+        $ciudad = $data['ciudad'] ?? null;
+
         $stmt->bind_param(
             "ssssssii",
             $data['nombre'],
-            $data['contacto'],
+            $contacto,
             $data['nit'],
-            $data['email'],
-            $data['telefono'],
-            $data['ciudad'],
+            $email,
+            $telefono,
+            $ciudad,
             $data['user_id'],
             $id
         );
 
         if (!$stmt->execute()) {
-            throw new Exception("Error al actualizar proveedor");
+            throw new Exception("Error al actualizar proveedor: " . $stmt->error);
         }
 
         return true;

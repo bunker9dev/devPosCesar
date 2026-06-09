@@ -10,7 +10,10 @@ $rolId = $_SESSION['user']['rol_id'] ?? null;
     <div class="sidebar-nav">
         <div class="nav-user">
             <div class="nav-user-sidebar">
-                <img src="<?= BASE_URL ?>/assets/img/users/default.png" class="nav-avatar">
+                <img
+                    src="<?= avatar_url($_SESSION['user']['imagen'] ?? null) ?>"
+                    class="nav-avatar"
+                    onerror="this.src='<?= BASE_URL ?>/assets/img/users/default.png'">
 
                 <span class="nav-username">
                     <?= $_SESSION['user']['nombre'] . " " . $_SESSION['user']['apellido'] ?>

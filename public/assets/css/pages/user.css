@@ -17,7 +17,8 @@
 
 /* ===== CREATE / FORM USERS PRO ===== */
 
-.form-users {
+.form-users,
+.form-suppliers {
   max-width: 480px;
   background: var(--bg-soft);
   padding: 25px;

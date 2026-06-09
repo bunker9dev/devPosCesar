@@ -63,7 +63,6 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor creado";
             return $this->redirect(BASE_URL . "/suppliers");
-
         } catch (\Exception $e) {
 
             $errors = json_decode($e->getMessage(), true);
@@ -121,7 +120,6 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor actualizado";
             return $this->redirect(BASE_URL . "/suppliers");
-
         } catch (\Exception $e) {
 
             $errors = json_decode($e->getMessage(), true);
@@ -157,7 +155,6 @@ class SupplierController extends Controller
                 'ok' => true,
                 'estado' => $estado
             ]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -188,7 +185,6 @@ class SupplierController extends Controller
             );
 
             echo json_encode(['ok' => true]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -219,7 +215,6 @@ class SupplierController extends Controller
             );
 
             echo json_encode(['ok' => true]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -227,5 +222,44 @@ class SupplierController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    public function checkNit()
+    {
+        header('Content-Type: application/json');
+
+        try {
+
+            $nit = $_POST['nit'] ?? '';
+
+            if (!$nit) {
+                echo json_encode(['exists' => false]);
+                return;
+            }
+
+            $db = conectarDB();
+
+            $stmt = $db->prepare("
+            SELECT id FROM proveedores WHERE nit = ?
+            LIMIT 1
+        ");
+
+            $stmt->bind_param("s", $nit);
+            $stmt->execute();
+
+            $exists = $stmt->get_result()->num_rows > 0;
+
+            echo json_encode([
+                'ok' => true,
+                'exists' => $exists
+            ]);
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'exists' => false
+            ]);
+        }
+
+        exit;
     }
 }
