@@ -3,14 +3,16 @@
         <i data-lucide="check-circle"></i>
         <?= $_SESSION['success'] ?>
     </div>
-<?php unset($_SESSION['success']); endif; ?>
+<?php unset($_SESSION['success']);
+endif; ?>
 
 <?php if (!empty($_SESSION['error'])): ?>
     <div class="alert alert-error" id="alertMessage">
         <i data-lucide="alert-circle"></i>
         <?= $_SESSION['error'] ?>
     </div>
-<?php unset($_SESSION['error']); endif; ?>
+<?php unset($_SESSION['error']);
+endif; ?>
 
 
 <!-- 🔥 CREAR COLOR -->
@@ -83,9 +85,13 @@
                     <!-- 🔥 ESTADO -->
                     <td data-label="Estado">
                         <?php if (!empty($color['deleted_at'])): ?>
-                            <span class="badge deleted">Eliminado</span>
+                            <span class="badge estado-toggle deleted" data-estado="0">
+                                Eliminado
+                            </span>
                         <?php else: ?>
-                            <span class="badge active">Disponible</span>
+                            <span class="badge estado-toggle active" data-estado="1">
+                                Activo
+                            </span>
                         <?php endif; ?>
                     </td>
 

@@ -93,7 +93,7 @@ $router->post('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierControlle
 // 🧵 PRODUCTS - TYPES
 // ==============================
 
-$router->get('/products/types', 'Products\\Controllers\\FabricTypeController@index', ['auth']);
+$router->get('/products/types', 'Products\\Controllers\\FabricTypeController@index', ['auth', 'view']);
 $router->post('/products/types/store', 'Products\\Controllers\\FabricTypeController@store', ['auth', 'edit']);
 $router->get('/products/types/edit', 'Products\\Controllers\\FabricTypeController@edit', ['auth', 'edit']);
 $router->post('/products/types/update', 'Products\\Controllers\\FabricTypeController@update', ['auth', 'edit']);
@@ -105,12 +105,11 @@ $router->post('/products/types/restore', 'Products\\Controllers\\FabricTypeContr
 // 🎨 PRODUCTS - COLORS
 // ==============================
 
-$router->get('/products/colors', 'Products\\Controllers\\ColorController@index', ['auth']);
+$router->get('/products/colors', 'Products\\Controllers\\ColorController@index', ['auth', 'view']);
 $router->post('/products/colors/store', 'Products\\Controllers\\ColorController@store', ['auth', 'edit']);
 $router->post('/products/colors/update', 'Products\\Controllers\\ColorController@update', ['auth', 'edit']);
 $router->post('/products/colors/delete', 'Products\\Controllers\\ColorController@delete', ['auth', 'delete']);
 $router->post('/products/colors/restore', 'Products\\Controllers\\ColorController@restore', ['auth', 'restore']);
-
 
 // ==============================
 // 🏬 WAREHOUSES

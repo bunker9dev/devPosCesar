@@ -5,6 +5,7 @@
 import { post } from "../core/api.js";
 import { Events } from "../core/events.js";
 import { showMsg } from "../core/utils.js";
+import { initDataTable } from "./table.js";
 
 // =========================================================
 // TOGGLE ESTADO

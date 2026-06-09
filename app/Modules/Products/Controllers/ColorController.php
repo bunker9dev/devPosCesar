@@ -3,6 +3,7 @@
 namespace App\Modules\Products\Controllers;
 
 use App\Core\Controller;
+use App\Core\Roles;
 use App\Modules\Products\Services\CatalogService;
 
 class ColorController extends Controller
@@ -12,15 +13,20 @@ class ColorController extends Controller
 
     public function __construct()
     {
-        $this->auth();
-        $this->onlyAdmin();
-
         $this->service = new CatalogService();
     }
 
+    // ======================================================
+    // LISTADO
+    // ======================================================
     public function index()
     {
-        $colors = $this->service->getAll($this->table);
+        $this->auth();
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+        $isSuper = $rolId === Roles::SUPER;
+
+        $colors = $this->service->getAll($this->table, $isSuper);
 
         $this->render('Modules/Products/Views/products/colors', [
             'colors' => $colors,
@@ -28,8 +34,13 @@ class ColorController extends Controller
         ]);
     }
 
+    // ======================================================
+    // STORE
+    // ======================================================
     public function store()
     {
+        $this->auth();
+
         try {
             $this->service->create($this->table, $_POST['nombre']);
 
@@ -44,22 +55,21 @@ class ColorController extends Controller
         exit;
     }
 
+    // ======================================================
+    // DELETE
+    // ======================================================
     public function delete()
     {
+        $this->auth();
+
         header('Content-Type: application/json');
 
         try {
-
             $id = $_POST['id'] ?? null;
 
             if (!$id) {
                 throw new \Exception('ID inválido');
             }
-
-            // 🔥 VALIDACIÓN PRO (si implementas en service)
-            // if ($this->service->isInUse($this->table, $id)) {
-            //     throw new \Exception('El color está en uso');
-            // }
 
             $this->service->delete($this->table, $id);
 
@@ -79,12 +89,16 @@ class ColorController extends Controller
         exit;
     }
 
+    // ======================================================
+    // RESTORE
+    // ======================================================
     public function restore()
     {
+        $this->auth();
+
         header('Content-Type: application/json');
 
         try {
-
             $id = $_POST['id'] ?? null;
 
             if (!$id) {
@@ -109,12 +123,16 @@ class ColorController extends Controller
         exit;
     }
 
+    // ======================================================
+    // UPDATE
+    // ======================================================
     public function update()
     {
+        $this->auth();
+
         header('Content-Type: application/json');
 
         try {
-
             $id = $_POST['id'] ?? null;
             $nombre = trim($_POST['nombre'] ?? '');
 

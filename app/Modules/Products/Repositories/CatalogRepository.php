@@ -2,9 +2,18 @@
 
 namespace App\Modules\Products\Repositories;
 
+use Exception;
+use App\Core\Status;
+
 class CatalogRepository
 {
     private $db;
+
+    // 🔐 WHITELIST DE TABLAS
+    private $allowedTables = [
+        'fabric_colors',
+        'fabric_types'
+    ];
 
     public function __construct()
     {
@@ -12,126 +21,242 @@ class CatalogRepository
         $this->db = $db;
     }
 
-    public function getAll($table)
+    // ======================================================
+    // VALIDAR TABLA (SEGURIDAD)
+    // ======================================================
+    private function validateTable($table)
     {
-        $rol = $_SESSION['user']['rol_nombre'] ?? '';
+        if (!in_array($table, $this->allowedTables)) {
+            throw new Exception("Tabla no permitida");
+        }
+    }
 
-        if ($rol === 'super') {
+    // ======================================================
+    // LISTAR
+    // ======================================================
+    public function getAll($table, $includeDeleted = false)
+    {
+        $this->validateTable($table);
+
+        if ($includeDeleted) {
             $sql = "SELECT * FROM $table ORDER BY id DESC";
         } else {
-            $sql = "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY id DESC";
+            $sql = "SELECT * FROM $table WHERE estado != ? ORDER BY id DESC";
         }
 
-        $result = $this->db->query($sql);
+        $stmt = $this->db->prepare($sql);
 
-        return $result->fetch_all(MYSQLI_ASSOC);
-    }
+        if (!$includeDeleted) {
+            $estado = Status::ELIMINADO;
+            $stmt->bind_param("i", $estado);
+        }
 
-    public function exists($table, $nombre)
-    {
-        $stmt = $this->db->prepare("
-            SELECT id 
-            FROM $table 
-            WHERE LOWER(nombre) = ?
-            AND deleted_at IS NULL
-            LIMIT 1
-        ");
-
-        $stmt->bind_param("s", $nombre);
         $stmt->execute();
 
-        return $stmt->get_result()->num_rows > 0;
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function nextCode($table)
-    {
-        $result = $this->db->query("SELECT MAX(id) as max FROM $table");
-        $row = $result->fetch_assoc();
-
-        return str_pad(($row['max'] + 1), 3, '0', STR_PAD_LEFT);
-    }
-
-    public function create($table, $codigo, $nombre)
-    {
-        $stmt = $this->db->prepare("
-            INSERT INTO $table (codigo, nombre)
-            VALUES (?, ?)
-        ");
-
-        $stmt->bind_param("ss", $codigo, $nombre);
-        return $stmt->execute();
-    }
-
-    public function softDelete($table, $id)
-    {
-        $stmt = $this->db->prepare("
-            UPDATE $table 
-            SET estado = 0, deleted_at = NOW()
-            WHERE id = ?
-        ");
-
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
-    }
-
-    public function restore($table, $id)
-    {
-        $stmt = $this->db->prepare("
-            UPDATE $table 
-            SET estado = 1, deleted_at = NULL
-            WHERE id = ?
-        ");
-
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
-    }
-
-
+    // ======================================================
+    // BUSCAR
+    // ======================================================
     public function find($table, $id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = ?");
+        $this->validateTable($table);
+
+        $stmt = $this->db->prepare("
+            SELECT * FROM $table WHERE id = ?
+        ");
+
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public function update($table, $id, $nombre)
+    // ======================================================
+    // VALIDAR EXISTENCIA (NOMBRE)
+    // ======================================================
+    public function exists($table, $nombre)
     {
+        $this->validateTable($table);
+
         $stmt = $this->db->prepare("
-        UPDATE $table 
-        SET nombre = ?
-        WHERE id = ?
-    ");
+            SELECT id 
+            FROM $table 
+            WHERE LOWER(nombre) = LOWER(?)
+            AND estado != ?
+            LIMIT 1
+        ");
 
-        $stmt->bind_param("si", $nombre, $id);
-        return $stmt->execute();
-    }
+        $estado = Status::ELIMINADO;
 
-    public function existsExceptId($table, $nombre, $id)
-    {
-        $stmt = $this->db->prepare("
-        SELECT id 
-        FROM $table 
-        WHERE LOWER(nombre) = LOWER(?) AND id != ?
-    ");
-
-        $stmt->bind_param("si", $nombre, $id);
+        $stmt->bind_param("si", $nombre, $estado);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;
     }
 
+    // ======================================================
+    // VALIDAR EXISTENCIA EXCLUYENDO ID
+    // ======================================================
+    public function existsExceptId($table, $nombre, $id)
+    {
+        $this->validateTable($table);
 
+        $stmt = $this->db->prepare("
+            SELECT id 
+            FROM $table 
+            WHERE LOWER(nombre) = LOWER(?) 
+            AND id != ?
+            AND estado != ?
+        ");
 
+        $estado = Status::ELIMINADO;
 
+        $stmt->bind_param("sii", $nombre, $id, $estado);
+        $stmt->execute();
+
+        return $stmt->get_result()->num_rows > 0;
+    }
+
+    // ======================================================
+    // GENERAR CÓDIGO
+    // ======================================================
+    public function nextCode($table)
+    {
+        $this->validateTable($table);
+
+        $result = $this->db->query("SELECT MAX(id) as max FROM $table");
+        $row = $result->fetch_assoc();
+
+        return str_pad(($row['max'] + 1), 3, '0', STR_PAD_LEFT);
+    }
+
+    // ======================================================
+    // CREAR
+    // ======================================================
+    public function create($table, $codigo, $nombre, $userId)
+    {
+        $this->validateTable($table);
+
+        $estado = Status::ACTIVO;
+
+        $stmt = $this->db->prepare("
+            INSERT INTO $table 
+            (codigo, nombre, estado, created_at, created_by)
+            VALUES (?, ?, ?, NOW(), ?)
+        ");
+
+        $stmt->bind_param("ssii", $codigo, $nombre, $estado, $userId);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al crear registro");
+        }
+
+        return $stmt->insert_id;
+    }
+
+    // ======================================================
+    // ACTUALIZAR
+    // ======================================================
+    public function update($table, $id, $nombre, $userId)
+    {
+        $this->validateTable($table);
+
+        $stmt = $this->db->prepare("
+            UPDATE $table 
+            SET nombre = ?, updated_at = NOW(), updated_by = ?
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("sii", $nombre, $userId, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al actualizar");
+        }
+
+        return true;
+    }
+
+    // ======================================================
+    // CAMBIAR ESTADO (TOGGLE)
+    // ======================================================
+    public function toggle($table, $id, $estado, $userId)
+    {
+        $this->validateTable($table);
+
+        $stmt = $this->db->prepare("
+            UPDATE $table 
+            SET estado = ?, updated_at = NOW(), updated_by = ?
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("iii", $estado, $userId, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al cambiar estado");
+        }
+
+        return true;
+    }
+
+    // ======================================================
+    // DELETE (SOFT)
+    // ======================================================
+    public function softDelete($table, $id, $userId)
+    {
+        $this->validateTable($table);
+
+        $estado = Status::ELIMINADO;
+
+        $stmt = $this->db->prepare("
+            UPDATE $table 
+            SET estado = ?, deleted_at = NOW(), deleted_by = ?
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("iii", $estado, $userId, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al eliminar");
+        }
+
+        return true;
+    }
+
+    // ======================================================
+    // RESTORE
+    // ======================================================
+    public function restore($table, $id, $userId)
+    {
+        $this->validateTable($table);
+
+        $estado = Status::ACTIVO;
+
+        $stmt = $this->db->prepare("
+            UPDATE $table 
+            SET estado = ?, deleted_at = NULL, deleted_by = NULL,
+                updated_at = NOW(), updated_by = ?
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("iii", $estado, $userId, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al restaurar");
+        }
+
+        return true;
+    }
+
+    // ======================================================
+    // VALIDAR USO (RELACIONES)
+    // ======================================================
     public function isUsed($table, $id)
     {
-        // 🔥 MAPEO DE USO POR TABLA
         $relations = [
             'fabric_types' => ['table' => 'products', 'field' => 'fabric_type_id'],
-            // 'fabric_colors'       => ['table' => 'products', 'field' => 'color_id'],
-            // agrega más aquí
+            'fabric_colors' => ['table' => 'products', 'field' => 'fabric_color_id'],
         ];
 
         if (!isset($relations[$table])) {
@@ -141,10 +266,10 @@ class CatalogRepository
         $rel = $relations[$table];
 
         $stmt = $this->db->prepare("
-        SELECT COUNT(*) as total
-        FROM {$rel['table']}
-        WHERE {$rel['field']} = ?
-    ");
+            SELECT COUNT(*) as total
+            FROM {$rel['table']}
+            WHERE {$rel['field']} = ?
+        ");
 
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -154,14 +279,45 @@ class CatalogRepository
         return $result['total'] > 0;
     }
 
-    public function getAllWithUsage($table)
+    // ======================================================
+    // LISTAR CON USO
+    // ======================================================
+    public function getAllWithUsage($table, $includeDeleted = false)
     {
-        $data = $this->getAll($table);
+        $data = $this->getAll($table, $includeDeleted);
 
         foreach ($data as &$row) {
             $row['is_used'] = $this->isUsed($table, $row['id']);
         }
 
         return $data;
+    }
+
+    public function updateEstado($table, $id, $estado)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE $table 
+        SET estado=? 
+        WHERE id=?
+    ");
+
+        $stmt->bind_param("ii", $estado, $id);
+        return $stmt->execute();
+    }
+
+    public function isUsedRelation($table, $field, $id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT COUNT(*) as total
+        FROM {$table}
+        WHERE {$field} = ?
+    ");
+
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $result = $stmt->get_result()->fetch_assoc();
+
+        return $result['total'] > 0;
     }
 }

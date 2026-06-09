@@ -3,7 +3,7 @@
 // ================================
 import { Events } from "../core/events.js";
 import { post } from "../core/api.js";
-import { initDataTable } from "./inventory.js";
+import { initDataTable } from "./table.js";
 
 // ================================
 // EDIT MODAL (PRO)
@@ -70,7 +70,6 @@ function initEditModal() {
       }
 
       currentRow = null;
-
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -107,7 +106,6 @@ function initDelete() {
         throw new Error(res?.error || "Error eliminando");
       }
 
-      // const badge = row.querySelector(".badge");
       const badge = row.querySelector(".estado-toggle");
 
       if (badge) {
@@ -125,7 +123,6 @@ function initDelete() {
         type: "success",
         message: "Registro eliminado",
       });
-
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -155,14 +152,11 @@ function initRestore() {
         throw new Error(res?.error || "Error restaurando");
       }
 
-      // 🔥 ELEMENTO CORRECTO
       const badge = row.querySelector(".estado-toggle");
 
       if (badge) {
-        // 🔥 CRÍTICO
         badge.dataset.estado = 1;
-
-        badge.textContent = badge.dataset.labelActive || "Activo";
+        badge.textContent = "Activo";
 
         badge.classList.remove("deleted", "inactive");
         badge.classList.add("active");
@@ -170,19 +164,21 @@ function initRestore() {
 
       row.classList.remove("deleted");
 
-      // 🔥 OPCIONAL: reconstruir botones correctamente
+      // 🔥 reconstrucción correcta de acciones
       const actions = row.querySelector("td:last-child");
 
       if (actions) {
         actions.innerHTML = `
           <button class="btn-action edit btn-edit"
-            data-id="${id}">
+            data-id="${id}"
+            data-url="${BASE_URL}/products/colors/update">
             Editar
           </button>
 
           <button class="btn-action delete btn-delete"
             data-id="${id}"
-            data-url="/users/delete">
+            data-url="${BASE_URL}/products/colors/delete"
+            data-entity="color">
             Eliminar
           </button>
         `;
@@ -192,7 +188,6 @@ function initRestore() {
         type: "success",
         message: "Registro restaurado",
       });
-
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -203,7 +198,7 @@ function initRestore() {
 }
 
 // ================================
-// TOGGLE WAREHOUSE (UI)
+// TOGGLE WAREHOUSE
 // ================================
 function initWarehouseToggle() {
   document.addEventListener("click", async (e) => {
@@ -235,7 +230,6 @@ function initWarehouseToggle() {
           badge.textContent = "Inactivo";
         }
       }
-
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -246,7 +240,7 @@ function initWarehouseToggle() {
 }
 
 // ================================
-// INIT CONTROLADO POR CONTEXTO
+// INIT CONTROLADO
 // ================================
 document.addEventListener("DOMContentLoaded", () => {
   console.log("INIT PRODUCTS OK");
@@ -260,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (document.querySelector("#tablaColors")) {
     initDataTable("#tablaColors", "colores");
+    initEditModal();
     initDelete();
     initRestore();
   }

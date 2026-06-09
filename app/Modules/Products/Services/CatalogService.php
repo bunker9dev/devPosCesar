@@ -3,39 +3,39 @@
 namespace App\Modules\Products\Services;
 
 use App\Core\Status;
+use App\Modules\Products\Repositories\CatalogRepository;
 use Exception;
 
 class CatalogService
 {
-    private $db;
+    private $repo;
 
-    // 🔥 TABLAS PERMITIDAS (SEGURIDAD)
+    // 🔐 TABLAS PERMITIDAS
     private $allowedTables = [
         'fabric_colors',
         'fabric_types',
         'warehouses'
     ];
 
-    // 🔥 RELACIONES (FK)
-    private $catalogMap = [
+    // 🔗 RELACIONES FK
+    private $relations = [
         'fabric_colors' => [
-            'related' => 'products',
-            'fk' => 'fabric_color_id'
+            'table' => 'products',
+            'field' => 'fabric_color_id'
         ],
         'fabric_types' => [
-            'related' => 'products',
-            'fk' => 'fabric_type_id'
+            'table' => 'products',
+            'field' => 'fabric_type_id'
         ]
     ];
 
     public function __construct()
     {
-        global $db;
-        $this->db = $db;
+        $this->repo = new CatalogRepository();
     }
 
     // ======================================================
-    // 🔐 VALIDAR TABLA
+    // VALIDAR TABLA
     // ======================================================
     private function validateTable($table)
     {
@@ -45,26 +45,16 @@ class CatalogService
     }
 
     // ======================================================
-    // 📋 LISTAR
+    // LISTAR
     // ======================================================
-    public function getAll($table, $includeDeleted = false)
+    public function getAll($table, $isSuper = false)
     {
         $this->validateTable($table);
-
-        $where = $includeDeleted ? "" : "WHERE estado <> " . Status::ELIMINADO;
-
-        $query = "
-            SELECT *
-            FROM {$table}
-            {$where}
-            ORDER BY estado ASC, id DESC
-        ";
-
-        return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
+        return $this->repo->getAll($table, $isSuper);
     }
 
     // ======================================================
-    // ➕ CREAR
+    // CREAR
     // ======================================================
     public function create($table, $nombre)
     {
@@ -76,32 +66,28 @@ class CatalogService
             throw new Exception("El nombre es obligatorio");
         }
 
-        if ($this->existsByName($table, $nombre)) {
+        if ($this->repo->exists($table, $nombre)) {
             throw new Exception("El nombre ya existe");
         }
 
-        $stmt = $this->db->prepare("
-            INSERT INTO {$table} (nombre, estado, created_at)
-            VALUES (?, ?, NOW())
-        ");
+        $codigo = $this->repo->nextCode($table);
+        $userId = $_SESSION['user']['id'] ?? null;
 
-        $estado = Status::ACTIVO;
+        $id = $this->repo->create($table, $codigo, $nombre, $userId);
 
-        $stmt->bind_param("si", $nombre, $estado);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al crear registro");
-        }
-
-        $id = $stmt->insert_id;
-
-        $this->audit("CREATE", $table, $id, "Creó: {$nombre}");
+        // 🔥 AUDITORÍA PRO
+        $this->audit(
+            "CREATE",
+            $table,
+            $id,
+            "Registro creado: {$nombre}"
+        );
 
         return $id;
     }
 
     // ======================================================
-    // ✏️ ACTUALIZAR
+    // UPDATE
     // ======================================================
     public function update($table, $id, $nombre)
     {
@@ -117,41 +103,38 @@ class CatalogService
             throw new Exception("El nombre es obligatorio");
         }
 
-        if ($this->existsByName($table, $nombre, $id)) {
+        // 🔥 OBTENER VALOR ANTERIOR
+        $old = $this->repo->find($table, $id);
+
+        if (!$old) {
+            throw new Exception("Registro no existe");
+        }
+
+        if ($this->repo->existsExceptId($table, $nombre, $id)) {
             throw new Exception("El nombre ya existe");
         }
 
-        $stmt = $this->db->prepare("
-            UPDATE {$table}
-            SET nombre=?, updated_at=NOW()
-            WHERE id=?
-        ");
+        $this->repo->update($table, $id, $nombre);
 
-        $stmt->bind_param("si", $nombre, $id);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al actualizar");
-        }
-
-        $this->audit("UPDATE", $table, $id, "Actualizó a: {$nombre}");
+        // 🔥 AUDITORÍA PRO (ANTES VS DESPUÉS)
+        $this->audit(
+            "UPDATE",
+            $table,
+            $id,
+            "Nombre: {$old['nombre']} → {$nombre}"
+        );
 
         return true;
     }
 
     // ======================================================
-    // 🔄 TOGGLE
+    // TOGGLE
     // ======================================================
     public function toggle($table, $id)
     {
         $this->validateTable($table);
 
-        $stmt = $this->db->prepare("
-            SELECT estado, nombre FROM {$table} WHERE id=?
-        ");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $row = $stmt->get_result()->fetch_assoc();
+        $row = $this->repo->find($table, $id);
 
         if (!$row) {
             throw new Exception("Registro no existe");
@@ -165,131 +148,88 @@ class CatalogService
             ? Status::INACTIVO
             : Status::ACTIVO;
 
-        $stmt = $this->db->prepare("
-            UPDATE {$table}
-            SET estado=?
-            WHERE id=?
-        ");
-        $stmt->bind_param("ii", $nuevoEstado, $id);
-        $stmt->execute();
+        $this->repo->updateEstado($table, $id, $nuevoEstado);
 
+        // 🔥 AUDITORÍA PRO
         $this->audit(
             "TOGGLE",
             $table,
             $id,
-            "Estado {$row['estado']} → {$nuevoEstado}"
+            "Estado: {$row['estado']} → {$nuevoEstado} | {$row['nombre']}"
         );
 
         return $nuevoEstado;
     }
 
     // ======================================================
-    // 🗑️ DELETE (SOFT + VALIDACIÓN FK)
+    // DELETE (VALIDA FK)
     // ======================================================
     public function delete($table, $id)
     {
         $this->validateTable($table);
 
-        // 🔥 VALIDAR RELACIÓN AUTOMÁTICA
-        if (isset($this->catalogMap[$table])) {
+        // 🔥 OBTENER DATA
+        $row = $this->repo->find($table, $id);
 
-            $rel = $this->catalogMap[$table];
+        if (!$row) {
+            throw new Exception("Registro no existe");
+        }
 
-            if ($this->isUsed($rel['related'], $rel['fk'], $id)) {
+        // 🔥 VALIDACIÓN FK REAL
+        if (isset($this->relations[$table])) {
+
+            $rel = $this->relations[$table];
+
+            if ($this->repo->isUsedRelation(
+                $rel['table'],
+                $rel['field'],
+                $id
+            )) {
                 throw new Exception("El registro está en uso");
             }
         }
 
-        $stmt = $this->db->prepare("
-            UPDATE {$table}
-            SET estado=?, deleted_at=NOW()
-            WHERE id=?
-        ");
+        $this->repo->softDelete($table, $id);
 
-        $estado = Status::ELIMINADO;
-
-        $stmt->bind_param("ii", $estado, $id);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al eliminar");
-        }
-
-        $this->audit("DELETE", $table, $id, "Eliminado");
+        // 🔥 AUDITORÍA PRO
+        $this->audit(
+            "DELETE",
+            $table,
+            $id,
+            "Registro eliminado: {$row['nombre']}"
+        );
 
         return true;
     }
 
     // ======================================================
-    // ♻️ RESTORE
+    // RESTORE
     // ======================================================
     public function restore($table, $id)
     {
         $this->validateTable($table);
 
-        $stmt = $this->db->prepare("
-            UPDATE {$table}
-            SET estado=?, deleted_at=NULL
-            WHERE id=?
-        ");
+        $row = $this->repo->find($table, $id);
 
-        $estado = Status::ACTIVO;
-
-        $stmt->bind_param("ii", $estado, $id);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al restaurar");
+        if (!$row) {
+            throw new Exception("Registro no existe");
         }
 
-        $this->audit("RESTORE", $table, $id, "Restaurado");
+        $this->repo->restore($table, $id);
+
+        // 🔥 AUDITORÍA PRO
+        $this->audit(
+            "RESTORE",
+            $table,
+            $id,
+            "Registro restaurado: {$row['nombre']}"
+        );
 
         return true;
     }
 
     // ======================================================
-    // 🔍 VALIDAR USO (FK)
-    // ======================================================
-    private function isUsed($relatedTable, $fk, $id)
-    {
-        $stmt = $this->db->prepare("
-            SELECT COUNT(*) as total
-            FROM {$relatedTable}
-            WHERE {$fk} = ?
-        ");
-
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $result = $stmt->get_result()->fetch_assoc();
-
-        return $result['total'] > 0;
-    }
-
-    // ======================================================
-    // 🔁 VALIDAR DUPLICADOS
-    // ======================================================
-    private function existsByName($table, $nombre, $excludeId = null)
-    {
-        if ($excludeId) {
-            $stmt = $this->db->prepare("
-                SELECT id FROM {$table}
-                WHERE nombre=? AND id<>?
-            ");
-            $stmt->bind_param("si", $nombre, $excludeId);
-        } else {
-            $stmt = $this->db->prepare("
-                SELECT id FROM {$table}
-                WHERE nombre=?
-            ");
-            $stmt->bind_param("s", $nombre);
-        }
-
-        $stmt->execute();
-
-        return $stmt->get_result()->num_rows > 0;
-    }
-
-    // ======================================================
-    // 🧠 AUDITORÍA
+    // AUDITORÍA
     // ======================================================
     private function audit($accion, $tabla, $id, $detalle)
     {
@@ -299,7 +239,7 @@ class CatalogService
             $accion,
             $tabla,
             $id,
-            "{$detalle} | Por: {$user}",
+            "{$detalle} | Usuario: {$user}",
             "products"
         );
     }
