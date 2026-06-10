@@ -34,27 +34,40 @@ class CatalogRepository
     // ======================================================
     // LISTAR
     // ======================================================
+    // public function getAll($table, $includeDeleted = false)
+    // {
+    //     $this->validateTable($table);
+
+    //     if ($includeDeleted) {
+    //         $sql = "SELECT * FROM $table ORDER BY id DESC";
+    //     } else {
+    //         $sql = "SELECT * FROM $table WHERE estado != ? ORDER BY id DESC";
+    //     }
+
+    //     $stmt = $this->db->prepare($sql);
+
+    //     if (!$includeDeleted) {
+    //         $estado = Status::ELIMINADO;
+    //         $stmt->bind_param("i", $estado);
+    //     }
+
+    //     $stmt->execute();
+
+    //     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    // }
     public function getAll($table, $includeDeleted = false)
     {
-        $this->validateTable($table);
-
         if ($includeDeleted) {
             $sql = "SELECT * FROM $table ORDER BY id DESC";
         } else {
-            $sql = "SELECT * FROM $table WHERE estado != ? ORDER BY id DESC";
+            $sql = "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY id DESC";
         }
 
-        $stmt = $this->db->prepare($sql);
+        $result = $this->db->query($sql);
 
-        if (!$includeDeleted) {
-            $estado = Status::ELIMINADO;
-            $stmt->bind_param("i", $estado);
-        }
-
-        $stmt->execute();
-
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
+
 
     // ======================================================
     // BUSCAR
@@ -159,20 +172,18 @@ class CatalogRepository
     // ======================================================
     // ACTUALIZAR
     // ======================================================
-    public function update($table, $id, $nombre, $userId)
+    public function update($table, $id, $nombre)
     {
-        $this->validateTable($table);
-
         $stmt = $this->db->prepare("
-            UPDATE $table 
-            SET nombre = ?, updated_at = NOW(), updated_by = ?
-            WHERE id = ?
-        ");
+                UPDATE $table 
+                SET nombre = ?
+                WHERE id = ?
+            ");
 
-        $stmt->bind_param("sii", $nombre, $userId, $id);
+        $stmt->bind_param("si", $nombre, $id);
 
         if (!$stmt->execute()) {
-            throw new Exception("Error al actualizar");
+            throw new \Exception("Error al actualizar");
         }
 
         return true;
@@ -228,26 +239,40 @@ class CatalogRepository
     // RESTORE
     // ======================================================
     public function restore($table, $id, $userId)
-    {
-        $this->validateTable($table);
+{
+    $this->validateTable($table);
 
-        $estado = Status::ACTIVO;
+    $estado = Status::ACTIVO;
 
-        $stmt = $this->db->prepare("
-            UPDATE $table 
-            SET estado = ?, deleted_at = NULL, deleted_by = NULL,
-                updated_at = NOW(), updated_by = ?
-            WHERE id = ?
-        ");
+    $stmt = $this->db->prepare("
+        UPDATE {$table}
+        SET 
+            estado = ?,
+            deleted_at = NULL,
+            deleted_by = NULL,
+            updated_at = NOW(),
+            updated_by = ?
+        WHERE id = ? 
+        AND deleted_at IS NOT NULL
+    ");
 
-        $stmt->bind_param("iii", $estado, $userId, $id);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al restaurar");
-        }
-
-        return true;
+    if (!$stmt) {
+        throw new Exception("Error preparando restore");
     }
+
+    $stmt->bind_param("iii", $estado, $userId, $id);
+
+    if (!$stmt->execute()) {
+        throw new Exception("Error al restaurar");
+    }
+
+    //  VALIDACIÓN REAL
+    if ($stmt->affected_rows === 0) {
+        throw new Exception("El registro no estaba eliminado o no existe");
+    }
+
+    return true;
+}
 
     // ======================================================
     // VALIDAR USO (RELACIONES)

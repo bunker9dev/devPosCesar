@@ -27,8 +27,7 @@ function initEditModal() {
 
     idInput.value = btn.dataset.id;
 
-    const nameCell = currentRow.querySelector('td[data-label="Nombre"]');
-    input.value = nameCell ? nameCell.textContent.trim() : "";
+    input.value = btn.dataset.name || "";
 
     form.dataset.url = btn.dataset.url;
 
@@ -65,8 +64,16 @@ function initEditModal() {
       modal.classList.add("hidden");
 
       if (currentRow) {
-        const cell = currentRow.querySelector('td[data-label="Nombre"]');
-        if (cell) cell.textContent = nombre;
+        const cell = currentRow.querySelector('td[data-label="Color"]');
+
+        if (cell) {
+          const chip = cell.querySelector(".color-chip");
+
+          cell.innerHTML = `
+          ${chip ? chip.outerHTML : ""}
+          ${nombre}
+        `;
+        }
       }
 
       currentRow = null;
@@ -80,7 +87,7 @@ function initEditModal() {
 }
 
 // ================================
-// DELETE (PRO)
+// DELETE 
 // ================================
 function initDelete() {
   document.addEventListener("click", async (e) => {
@@ -215,21 +222,61 @@ function initWarehouseToggle() {
         throw new Error(res?.error || "Error");
       }
 
-      const badge = btn.closest("tr").querySelector(".estado-toggle");
+      btn.dataset.estado = res.estado;
 
-      if (badge) {
-        badge.dataset.estado = res.estado;
+      btn.classList.remove("active", "inactive");
 
-        badge.classList.remove("active", "inactive");
-
-        if (res.estado == 1) {
-          badge.classList.add("active");
-          badge.textContent = "Activo";
-        } else {
-          badge.classList.add("inactive");
-          badge.textContent = "Inactivo";
-        }
+      if (res.estado == 1) {
+        btn.classList.add("active");
+        btn.textContent = "Activo";
+      } else {
+        btn.classList.add("inactive");
+        btn.textContent = "Inactivo";
       }
+    } catch (err) {
+      Events.emit("alerts:show", {
+        type: "error",
+        message: err.message,
+      });
+    }
+  });
+}
+
+// ================================
+// TOGGLE COLORS
+// ================================
+function initColorToggle() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".toggle-color");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
+
+    try {
+      const res = await post(url, { id });
+
+      if (!res || res.ok !== true) {
+        throw new Error(res?.error || "Error cambiando estado");
+      }
+
+      // 🔥 ACTUALIZA EL MISMO BOTÓN
+      btn.dataset.estado = res.estado;
+
+      btn.classList.remove("active", "inactive");
+
+      if (res.estado == 1) {
+        btn.classList.add("active");
+        btn.textContent = "Activo";
+      } else {
+        btn.classList.add("inactive");
+        btn.textContent = "Inactivo";
+      }
+
+      Events.emit("alerts:show", {
+        type: "success",
+        message: "Estado actualizado",
+      });
     } catch (err) {
       Events.emit("alerts:show", {
         type: "error",
@@ -253,10 +300,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (document.querySelector("#tablaColors")) {
-    initDataTable("#tablaColors", "colores");
+    initDataTable("#tablaColors", { entity: "colores" });
     initEditModal();
     initDelete();
     initRestore();
+    initColorToggle();
   }
 
   if (document.querySelector("#tablaWarehouses")) {

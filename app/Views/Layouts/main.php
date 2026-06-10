@@ -32,10 +32,10 @@ require_once __DIR__ . '/../../Helpers/ui.php';
 
     </div>
 
-    <!-- 🔥 TOAST CONTAINER -->
+    <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
-    <!-- 🔥 FLASH DESDE PHP -->
+    <!-- FLASH DESDE PHP -->
     <script>
         window.APP_FLASH = {
             success: <?= json_encode($_SESSION['success'] ?? null) ?>,

@@ -60,7 +60,7 @@ class CatalogService
     {
         $this->validateTable($table);
 
-        $nombre = trim($nombre);
+        $nombre = strtolower(trim($nombre));
 
         if (!$nombre) {
             throw new Exception("El nombre es obligatorio");
@@ -93,7 +93,7 @@ class CatalogService
     {
         $this->validateTable($table);
 
-        $nombre = trim($nombre);
+        $nombre = strtolower(trim($nombre));
 
         if (!$id) {
             throw new Exception("ID inválido");
@@ -189,7 +189,8 @@ class CatalogService
             }
         }
 
-        $this->repo->softDelete($table, $id);
+        $userId = $_SESSION['user']['id'] ?? null;
+        $this->repo->softDelete($table, $id, $userId);
 
         // 🔥 AUDITORÍA PRO
         $this->audit(
@@ -206,27 +207,42 @@ class CatalogService
     // RESTORE
     // ======================================================
     public function restore($table, $id)
+{
+    $this->validateTable($table);
+
+    $row = $this->repo->find($table, $id);
+
+    if (!$row) {
+        throw new Exception("Registro no existe");
+    }
+
+    $userId = $_SESSION['user']['id'] ?? null;
+
+    $this->repo->restore($table, $id, $userId);
+
+    // 🔥 AUDITORÍA PRO
+    $this->audit(
+        "RESTORE",
+        $table,
+        $id,
+        "Registro restaurado: {$row['nombre']}"
+    );
+
+    return true;
+}
+    public function getAllForList($table, $rolId)
     {
         $this->validateTable($table);
 
-        $row = $this->repo->find($table, $id);
+        // 🔥 permisos del módulo
+        $permissions = \App\Services\PermissionService::getModulePermissions($rolId, 'products');
 
-        if (!$row) {
-            throw new Exception("Registro no existe");
-        }
+        // 🔥 si puede restaurar → puede ver eliminados (igual que users)
+        $includeDeleted = $permissions['restore'];
 
-        $this->repo->restore($table, $id);
-
-        // 🔥 AUDITORÍA PRO
-        $this->audit(
-            "RESTORE",
-            $table,
-            $id,
-            "Registro restaurado: {$row['nombre']}"
-        );
-
-        return true;
+        return $this->repo->getAll($table, $includeDeleted);
     }
+
 
     // ======================================================
     // AUDITORÍA

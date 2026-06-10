@@ -23,11 +23,11 @@ class RolePermissionSeeder
         }
 
         // ======================================================
-        // 🔥 DEFINICIÓN POR ROL (FULL RBAC)
+        //  DEFINICIÓN POR ROL (FULL RBAC)
         // ======================================================
         $roles = [
 
-            // 🔥 SUPER → TODO
+            // SUPER → TODO
             1 => array_keys($permissions),
 
             // 🧑‍💼 ADMIN
@@ -41,6 +41,8 @@ class RolePermissionSeeder
                 'products.view',
                 'products.create',
                 'products.edit',
+                'products.delete',
+                
 
                 'warehouses.view',
                 'roles.view',

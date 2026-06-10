@@ -85,13 +85,18 @@ endif; ?>
                     <!-- 🔥 ESTADO -->
                     <td data-label="Estado">
                         <?php if (!empty($color['deleted_at'])): ?>
-                            <span class="badge estado-toggle deleted" data-estado="0">
+                            <span class="badge deleted">
                                 Eliminado
                             </span>
                         <?php else: ?>
-                            <span class="badge estado-toggle active" data-estado="1">
-                                Activo
-                            </span>
+                            <button
+                                class="badge estado-toggle toggle-color <?= $color['estado'] == 1 ? 'active' : 'inactive' ?>"
+                                data-id="<?= $color['id'] ?>"
+                                data-url="<?= BASE_URL ?>/products/colors/toggle"
+                                data-estado="<?= $color['estado'] ?>">
+
+                                <?= $color['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
+                            </button>
                         <?php endif; ?>
                     </td>
 

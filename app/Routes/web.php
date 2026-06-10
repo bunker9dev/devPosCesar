@@ -110,6 +110,7 @@ $router->post('/products/colors/store', 'Products\\Controllers\\ColorController@
 $router->post('/products/colors/update', 'Products\\Controllers\\ColorController@update', ['auth', 'edit']);
 $router->post('/products/colors/delete', 'Products\\Controllers\\ColorController@delete', ['auth', 'delete']);
 $router->post('/products/colors/restore', 'Products\\Controllers\\ColorController@restore', ['auth', 'restore']);
+$router->post('/products/colors/toggle', 'Products\\Controllers\\ColorController@toggle', ['auth', 'edit']);
 
 // ==============================
 // 🏬 WAREHOUSES

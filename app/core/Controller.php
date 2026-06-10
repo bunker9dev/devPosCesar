@@ -72,13 +72,19 @@ class Controller
         $parts = explode('/', strtolower($view));
 
         $module = $parts[1] ?? '';
-        $action = end($parts);
+        $submodule = end($parts);
 
         $modulesMap = [
             'suppliers' => 'Proveedores',
             'products' => 'Productos',
             'users' => 'Usuarios',
             'dashboard' => 'Dashboard'
+        ];
+
+        $submodulesMap = [
+            'colors' => 'Colores',
+            'types' => 'Tipos de tela',
+            'warehouses' => 'Bodegas'
         ];
 
         $actionsMap = [
@@ -88,9 +94,16 @@ class Controller
         ];
 
         $moduleName = $modulesMap[$module] ?? ucfirst($module);
-        $actionName = $actionsMap[$action] ?? ucfirst($action);
 
-        if ($action === 'index') {
+        // SI ES SUBMÓDULO
+        if (isset($submodulesMap[$submodule])) {
+            return $submodulesMap[$submodule];
+        }
+
+        // SI ES ACCIÓN NORMAL
+        $actionName = $actionsMap[$submodule] ?? ucfirst($submodule);
+
+        if ($submodule === 'index') {
             return $moduleName;
         }
 
