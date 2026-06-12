@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 12-06-2026 a las 09:35:40
+-- Tiempo de generación: 12-06-2026 a las 09:42:28
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -27,6 +27,7 @@ SET time_zone = "+00:00";
 -- Estructura de tabla para la tabla `auditoria`
 --
 
+DROP TABLE IF EXISTS `auditoria`;
 CREATE TABLE `auditoria` (
   `id` int(11) NOT NULL,
   `usuario_id` int(11) DEFAULT NULL,
@@ -834,6 +835,7 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 -- Estructura de tabla para la tabla `audit_logs`
 --
 
+DROP TABLE IF EXISTS `audit_logs`;
 CREATE TABLE `audit_logs` (
   `id` int(11) NOT NULL,
   `usuario_id` int(11) DEFAULT NULL,
@@ -863,6 +865,7 @@ INSERT INTO `audit_logs` (`id`, `usuario_id`, `accion`, `entidad`, `entidad_id`,
 -- Estructura de tabla para la tabla `fabric_colors`
 --
 
+DROP TABLE IF EXISTS `fabric_colors`;
 CREATE TABLE `fabric_colors` (
   `id` int(11) NOT NULL,
   `codigo` varchar(30) NOT NULL,
@@ -904,6 +907,7 @@ INSERT INTO `fabric_colors` (`id`, `codigo`, `nombre`, `hex`, `estado`, `created
 -- Estructura de tabla para la tabla `fabric_types`
 --
 
+DROP TABLE IF EXISTS `fabric_types`;
 CREATE TABLE `fabric_types` (
   `id` int(11) NOT NULL,
   `codigo` varchar(30) NOT NULL,
@@ -938,6 +942,7 @@ INSERT INTO `fabric_types` (`id`, `codigo`, `nombre`, `estado`, `created_at`, `c
 -- Estructura de tabla para la tabla `inventory_movements`
 --
 
+DROP TABLE IF EXISTS `inventory_movements`;
 CREATE TABLE `inventory_movements` (
   `id` int(11) NOT NULL,
   `roll_id` int(11) NOT NULL,
@@ -963,6 +968,7 @@ CREATE TABLE `inventory_movements` (
 -- Estructura de tabla para la tabla `permissions`
 --
 
+DROP TABLE IF EXISTS `permissions`;
 CREATE TABLE `permissions` (
   `id` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
@@ -1014,6 +1020,7 @@ INSERT INTO `permissions` (`id`, `nombre`, `modulo`, `accion`, `created_at`, `up
 -- Estructura de tabla para la tabla `proveedores`
 --
 
+DROP TABLE IF EXISTS `proveedores`;
 CREATE TABLE `proveedores` (
   `id` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
@@ -1051,6 +1058,7 @@ INSERT INTO `proveedores` (`id`, `nombre`, `contacto`, `nit`, `email`, `telefono
 -- Estructura de tabla para la tabla `purchases`
 --
 
+DROP TABLE IF EXISTS `purchases`;
 CREATE TABLE `purchases` (
   `id` int(11) NOT NULL,
   `supplier_id` int(11) NOT NULL,
@@ -1072,6 +1080,7 @@ CREATE TABLE `purchases` (
 -- Estructura de tabla para la tabla `roles`
 --
 
+DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
@@ -1096,6 +1105,7 @@ INSERT INTO `roles` (`id`, `nombre`, `descripcion`) VALUES
 -- Estructura de tabla para la tabla `role_permissions`
 --
 
+DROP TABLE IF EXISTS `role_permissions`;
 CREATE TABLE `role_permissions` (
   `id` int(11) NOT NULL,
   `role_id` int(11) NOT NULL,
@@ -1171,6 +1181,7 @@ INSERT INTO `role_permissions` (`id`, `role_id`, `permission_id`) VALUES
 -- Estructura de tabla para la tabla `rolls`
 --
 
+DROP TABLE IF EXISTS `rolls`;
 CREATE TABLE `rolls` (
   `id` int(11) NOT NULL,
   `fabric_type_id` int(11) NOT NULL,
@@ -1197,6 +1208,7 @@ CREATE TABLE `rolls` (
 -- Estructura de tabla para la tabla `usuarios`
 --
 
+DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE `usuarios` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
@@ -1259,6 +1271,7 @@ INSERT INTO `usuarios` (`id`, `username`, `nombre`, `apellido`, `imagen`, `passw
 -- Estructura de tabla para la tabla `warehouses`
 --
 
+DROP TABLE IF EXISTS `warehouses`;
 CREATE TABLE `warehouses` (
   `id` int(11) NOT NULL,
   `codigo` varchar(30) NOT NULL,
