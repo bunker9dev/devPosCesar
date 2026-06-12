@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 09-06-2026 a las 08:25:33
+-- Tiempo de generación: 12-06-2026 a las 09:35:40
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -762,7 +762,71 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 (726, 1, 'LOGOUT', 'usuarios', 1, NULL, 'Usuario cerró sesión manualmente', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-09 04:30:42'),
 (727, 2, 'LOGIN', 'usuarios', 2, NULL, 'Inicio de sesión exitoso', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-09 04:30:56'),
 (728, 2, 'CREATE', 'fabric_colors', 18, NULL, 'Registro creado: negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-09 05:59:15'),
-(729, 2, 'CREATE', 'fabric_colors', 19, NULL, 'Registro creado: azul pollito | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-09 05:59:31');
+(729, 2, 'CREATE', 'fabric_colors', 19, NULL, 'Registro creado: azul pollito | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-09 05:59:31'),
+(730, 2, 'CREATE', 'fabric_colors', 20, NULL, 'Registro creado: azul amarillo | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:11:52'),
+(731, 2, 'TOGGLE', 'fabric_colors', 20, NULL, 'Estado: 1 → 2 | azul amarillo | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:43:05'),
+(732, 2, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 1 → 2 | azul pollito | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:43:09'),
+(733, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 1 → 2 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:43:13'),
+(734, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 2 → 1 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:43:18'),
+(735, 2, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 2 → 1 | azul pollito | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:43:19'),
+(736, 2, 'TOGGLE', 'fabric_colors', 20, NULL, 'Estado: 2 → 1 | azul amarillo | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 03:43:21'),
+(737, 2, 'UPDATE', 'fabric_colors', 20, NULL, 'Nombre: azul amarillo → azul amarillos | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 04:00:13'),
+(738, 2, 'UPDATE', 'fabric_colors', 20, NULL, 'Nombre: azul amarillos → azul amarillos | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 04:00:41'),
+(739, 2, 'UPDATE', 'fabric_colors', 20, NULL, 'Nombre: azul amarillos → azul amarillos | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 04:01:50'),
+(740, 2, 'UPDATE', 'fabric_colors', 20, NULL, 'Nombre: azul amarillos → azul amarillosa | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 04:07:23'),
+(741, 2, 'DELETE', 'proveedores', 10, 'Proveedor eliminado: dos ok', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'suppliers', '2026-06-10 04:40:44'),
+(742, 2, 'DELETE', 'proveedores', 1, 'Proveedor eliminado: Juan', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'suppliers', '2026-06-10 05:37:31'),
+(743, 2, 'DELETE', 'fabric_colors', 16, NULL, 'Registro eliminado: Rojo4 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:37:37'),
+(744, 2, 'DELETE', 'fabric_colors', 18, NULL, 'Registro eliminado: negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:39:20'),
+(745, 2, 'UPDATE', 'usuarios', 27, 'Usuario actualizado', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'users', '2026-06-10 05:40:09'),
+(746, 2, 'CREATE', 'fabric_colors', 22, NULL, 'Registro creado: amarillo1 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:43:34'),
+(747, 2, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 1 → 2 | azul pollito | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:43:43'),
+(748, 2, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 2 → 1 | azul pollito | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:43:44'),
+(749, 2, 'LOGOUT', 'usuarios', 2, NULL, 'Usuario cerró sesión manualmente', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 05:43:55'),
+(750, 1, 'LOGIN', 'usuarios', 1, NULL, 'Inicio de sesión exitoso', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 05:44:10'),
+(751, 1, 'TOGGLE', 'fabric_colors', 22, NULL, 'Estado: 1 → 2 | amarillo1 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:57:47'),
+(752, 1, 'TOGGLE', 'fabric_colors', 22, NULL, 'Estado: 2 → 1 | amarillo1 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:57:49'),
+(753, 1, 'UPDATE', 'fabric_colors', 22, NULL, 'Nombre: amarillo1 → amarillo10 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:57:54'),
+(754, 1, 'DELETE', 'fabric_colors', 22, NULL, 'Registro eliminado: amarillo10 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 05:57:59'),
+(755, 1, 'TOGGLE', 'fabric_colors', 20, NULL, 'Estado: 1 → 2 | azul amarillosa | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:19:09'),
+(756, 1, 'TOGGLE', 'fabric_colors', 20, NULL, 'Estado: 2 → 1 | azul amarillosa | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:19:09'),
+(757, 1, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 1 → 2 | azul pollito | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:19:11'),
+(758, 1, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 2 → 1 | azul pollito | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:19:15'),
+(759, 1, 'LOGOUT', 'usuarios', 1, NULL, 'Usuario cerró sesión manualmente', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 06:19:45'),
+(760, 1, 'LOGIN', 'usuarios', 1, NULL, 'Inicio de sesión exitoso', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 06:19:51'),
+(761, 1, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 1 → 2 | azul pollito | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:21:28'),
+(762, 1, 'TOGGLE', 'fabric_colors', 19, NULL, 'Estado: 2 → 1 | azul pollito | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:21:30'),
+(763, 1, 'RESTORE', 'fabric_colors', 22, NULL, 'Registro restaurado: amarillo10 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:42:57'),
+(764, 1, 'RESTORE', 'fabric_colors', 18, NULL, 'Registro restaurado: negro | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:43:11'),
+(765, 1, 'RESTORE', 'fabric_colors', 17, NULL, 'Registro restaurado: Rojo5 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:43:12'),
+(766, 1, 'RESTORE', 'fabric_colors', 16, NULL, 'Registro restaurado: Rojo4 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:43:14'),
+(767, 1, 'CREATE', 'fabric_colors', 23, NULL, 'Registro creado: rojo7 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:45:11'),
+(768, 1, 'DELETE', 'fabric_colors', 23, NULL, 'Registro eliminado: rojo7 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:45:16'),
+(769, 1, 'RESTORE', 'fabric_colors', 23, NULL, 'Registro restaurado: rojo7 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:45:22'),
+(770, 1, 'LOGIN', 'usuarios', 1, NULL, 'Inicio de sesión exitoso', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 06:45:52'),
+(771, 1, 'RESTORE', 'fabric_colors', 15, NULL, 'Registro restaurado: Rojo6 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:46:00'),
+(772, 1, 'RESTORE', 'fabric_colors', 11, NULL, 'Registro restaurado: Rojo2 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:46:08'),
+(773, 1, 'RESTORE', 'fabric_colors', 9, NULL, 'Registro restaurado: Rojo | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:46:10'),
+(774, 1, 'DELETE', 'fabric_colors', 15, NULL, 'Registro eliminado: Rojo6 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:46:16'),
+(775, 1, 'DELETE', 'fabric_colors', 16, NULL, 'Registro eliminado: Rojo4 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:46:19'),
+(776, 1, 'DELETE', 'fabric_colors', 17, NULL, 'Registro eliminado: Rojo5 | Usuario: super', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 06:46:21'),
+(777, 2, 'LOGIN', 'usuarios', 2, NULL, 'Inicio de sesión exitoso', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 16:39:33'),
+(778, 2, 'TOGGLE', 'fabric_colors', 11, NULL, 'Estado: 1 → 2 | Rojo2 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 16:39:41'),
+(779, 2, 'UPDATE', 'fabric_colors', 11, NULL, 'Nombre: Rojo2 → rojo212 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 16:39:47'),
+(780, 2, 'DELETE', 'fabric_colors', 11, NULL, 'Registro eliminado: rojo212 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'products', '2026-06-10 16:39:51'),
+(781, 2, 'LOGIN', 'usuarios', 2, NULL, 'Inicio de sesión exitoso', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'auth', '2026-06-10 17:24:19'),
+(782, 2, 'TOGGLE', 'fabric_colors', 9, NULL, 'Estado: 1 → 2 | Rojo | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:08:07'),
+(783, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 1 → 2 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:22:36'),
+(784, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 2 → 1 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:22:39'),
+(785, 2, 'TOGGLE', 'fabric_colors', 9, NULL, 'Estado: 2 → 1 | Rojo | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:22:41'),
+(786, 2, 'UPDATE', 'fabric_colors', 9, NULL, 'Nombre: Rojo → rojo54 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:22:48'),
+(787, 2, 'TOGGLE', 'fabric_colors', 9, NULL, 'Estado: 1 → 2 | rojo54 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:53:09'),
+(788, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 1 → 2 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:53:11'),
+(789, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 2 → 1 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:53:13'),
+(790, 2, 'TOGGLE', 'fabric_colors', 9, NULL, 'Estado: 2 → 1 | rojo54 | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:53:15'),
+(791, 2, 'UPDATE', 'fabric_colors', 9, NULL, 'Nombre: rojo54 → rojo | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:53:23'),
+(792, 2, 'DELETE', 'fabric_colors', 20, NULL, 'Registro eliminado: azul amarillosa | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 04:53:36'),
+(793, 2, 'TOGGLE', 'fabric_colors', 18, NULL, 'Estado: 1 → 2 | negro | Usuario: admin', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'products', '2026-06-11 05:22:47');
 
 -- --------------------------------------------------------
 
@@ -773,24 +837,25 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 CREATE TABLE `audit_logs` (
   `id` int(11) NOT NULL,
   `usuario_id` int(11) DEFAULT NULL,
-  `accion` varchar(40) NOT NULL,
-  `entidad` varchar(80) NOT NULL,
+  `accion` varchar(50) NOT NULL,
+  `entidad` varchar(100) NOT NULL,
   `entidad_id` int(11) DEFAULT NULL,
-  `modulo` varchar(80) NOT NULL DEFAULT 'inventory',
-  `detalle` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`detalle`)),
+  `modulo` varchar(80) NOT NULL DEFAULT 'general',
+  `detalle` longtext DEFAULT NULL,
   `ip` varchar(45) DEFAULT NULL,
-  `user_agent` varchar(255) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `user_agent` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `audit_logs`
 --
 
-INSERT INTO `audit_logs` (`id`, `usuario_id`, `accion`, `entidad`, `entidad_id`, `modulo`, `detalle`, `ip`, `user_agent`, `created_at`) VALUES
-(8, 1, 'CREATE', 'fabric_types', 6, 'inventory', '{\"codigo\":\"006\",\"nombre\":\"Bengalina Blusera\"}', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-05-24 23:54:23'),
-(9, 1, 'CREATE', 'fabric_types', 7, 'inventory', '{\"codigo\":\"007\",\"nombre\":\"Bengalina Blusera V\"}', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-05-24 23:54:34'),
-(10, 1, 'CREATE', 'fabric_types', 8, 'inventory', '{\"codigo\":\"008\",\"nombre\":\"Chalis Est. Flores\"}', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-05-24 23:54:53');
+INSERT INTO `audit_logs` (`id`, `usuario_id`, `accion`, `entidad`, `entidad_id`, `modulo`, `detalle`, `ip`, `user_agent`, `created_at`, `updated_at`) VALUES
+(8, 1, 'CREATE', 'fabric_types', 6, 'inventory', '{\"codigo\":\"006\",\"nombre\":\"Bengalina Blusera\"}', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-05-24 23:54:23', NULL),
+(9, 1, 'CREATE', 'fabric_types', 7, 'inventory', '{\"codigo\":\"007\",\"nombre\":\"Bengalina Blusera V\"}', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-05-24 23:54:34', NULL),
+(10, 1, 'CREATE', 'fabric_types', 8, 'inventory', '{\"codigo\":\"008\",\"nombre\":\"Chalis Est. Flores\"}', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-05-24 23:54:53', NULL);
 
 -- --------------------------------------------------------
 
@@ -822,13 +887,16 @@ INSERT INTO `fabric_colors` (`id`, `codigo`, `nombre`, `hex`, `estado`, `created
 (5, '005', 'Azul', NULL, 0, '2026-05-28 17:41:00', '2026-05-31 22:06:41', NULL, NULL, NULL, NULL),
 (6, '006', 'Amarillo', NULL, 0, '2026-05-28 17:41:06', '2026-05-31 22:06:50', NULL, NULL, NULL, NULL),
 (7, '007', 'Rosado', NULL, 0, '2026-05-28 17:41:11', '2026-06-03 12:20:25', NULL, NULL, NULL, NULL),
-(9, '008', 'Rojo', NULL, 0, '2026-06-03 09:47:28', '2026-06-03 09:47:34', NULL, NULL, NULL, NULL),
-(11, '010', 'Rojo2', NULL, 0, '2026-06-03 09:50:41', '2026-06-03 09:50:48', NULL, NULL, NULL, NULL),
-(15, '012', 'Rojo6', NULL, 0, '2026-06-03 20:26:53', '2026-06-04 01:28:39', NULL, NULL, NULL, NULL),
-(16, '016', 'Rojo4', NULL, 1, '2026-06-03 20:27:08', NULL, NULL, NULL, NULL, NULL),
-(17, '017', 'Rojo5', NULL, 0, '2026-06-03 20:27:17', '2026-06-03 20:27:29', NULL, NULL, NULL, NULL),
-(18, '018', 'negro', NULL, 1, '2026-06-09 00:59:15', NULL, NULL, 2, NULL, NULL),
-(19, '019', 'azul pollito', NULL, 1, '2026-06-09 00:59:31', NULL, NULL, 2, NULL, NULL);
+(9, '008', 'rojo', NULL, 1, '2026-06-03 09:47:28', NULL, '2026-06-10 01:46:10', NULL, 1, NULL),
+(11, '010', 'rojo212', NULL, 0, '2026-06-03 09:50:41', '2026-06-10 11:39:51', '2026-06-10 01:46:08', NULL, 1, 2),
+(15, '012', 'Rojo6', NULL, 0, '2026-06-03 20:26:53', '2026-06-10 01:46:16', '2026-06-10 01:46:00', NULL, 1, 1),
+(16, '016', 'Rojo4', NULL, 0, '2026-06-03 20:27:08', '2026-06-10 01:46:18', '2026-06-10 01:43:13', NULL, 1, 1),
+(17, '017', 'Rojo5', NULL, 0, '2026-06-03 20:27:17', '2026-06-10 01:46:21', '2026-06-10 01:43:12', NULL, 1, 1),
+(18, '018', 'negro', NULL, 2, '2026-06-09 00:59:15', NULL, '2026-06-10 01:43:11', 2, 1, NULL),
+(19, '019', 'azul pollito', NULL, 1, '2026-06-09 00:59:31', NULL, NULL, 2, NULL, NULL),
+(20, '020', 'azul amarillosa', NULL, 0, '2026-06-09 22:11:51', '2026-06-10 23:53:36', NULL, 2, NULL, 2),
+(22, '021', 'amarillo10', NULL, 1, '2026-06-10 00:43:34', NULL, '2026-06-10 01:42:57', 2, 1, NULL),
+(23, '023', 'rojo7', NULL, 1, '2026-06-10 01:45:11', NULL, '2026-06-10 01:45:22', 1, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -841,24 +909,28 @@ CREATE TABLE `fabric_types` (
   `codigo` varchar(30) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `estado` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `deleted_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `created_by` int(11) DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `fabric_types`
 --
 
-INSERT INTO `fabric_types` (`id`, `codigo`, `nombre`, `estado`, `created_at`, `deleted_at`) VALUES
-(2, '1', 'algodon BordaDo', 0, '2026-05-24 22:18:54', '2026-05-31 06:45:31'),
-(6, '006', 'Bengalina Blusera', 0, '2026-05-24 23:54:23', '2026-05-28 22:34:39'),
-(7, '007', 'Bengalina blusera 3', 0, '2026-05-24 23:54:34', '2026-05-28 22:34:42'),
-(8, '008', 'Chalis Est. Flores', 0, '2026-05-24 23:54:53', '2026-05-28 22:35:00'),
-(9, '009', 'Camuflado', 0, '2026-05-25 22:27:45', '2026-05-31 07:00:37'),
-(10, '010', 'Camuflado4', 0, '2026-05-25 22:32:57', '2026-06-01 02:58:33'),
-(11, '011', 'Camuflado2', 0, '2026-05-25 22:33:43', '2026-06-01 03:05:51'),
-(12, '012', 'Bengalina2', 0, '2026-05-31 22:05:08', '2026-06-04 06:28:53'),
-(13, '013', 'Seda', 1, '2026-05-31 22:05:16', NULL);
+INSERT INTO `fabric_types` (`id`, `codigo`, `nombre`, `estado`, `created_at`, `created_by`, `updated_at`, `updated_by`, `deleted_at`, `deleted_by`) VALUES
+(2, '1', 'algodon BordaDo', 0, '2026-05-25 03:18:54', NULL, NULL, NULL, '2026-05-31 06:45:31', NULL),
+(6, '006', 'Bengalina Blusera', 0, '2026-05-25 04:54:23', NULL, NULL, NULL, '2026-05-28 22:34:39', NULL),
+(7, '007', 'Bengalina blusera 3', 0, '2026-05-25 04:54:34', NULL, NULL, NULL, '2026-05-28 22:34:42', NULL),
+(8, '008', 'Chalis Est. Flores', 0, '2026-05-25 04:54:53', NULL, NULL, NULL, '2026-05-28 22:35:00', NULL),
+(9, '009', 'Camuflado', 0, '2026-05-26 03:27:45', NULL, NULL, NULL, '2026-05-31 07:00:37', NULL),
+(10, '010', 'Camuflado4', 0, '2026-05-26 03:32:57', NULL, NULL, NULL, '2026-06-01 02:58:33', NULL),
+(11, '011', 'Camuflado2', 0, '2026-05-26 03:33:43', NULL, NULL, NULL, '2026-06-01 03:05:51', NULL),
+(12, '012', 'Bengalina2', 0, '2026-06-01 03:05:08', NULL, NULL, NULL, '2026-06-04 06:28:53', NULL),
+(13, '013', 'Seda', 1, '2026-06-01 03:05:16', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -869,14 +941,20 @@ INSERT INTO `fabric_types` (`id`, `codigo`, `nombre`, `estado`, `created_at`, `d
 CREATE TABLE `inventory_movements` (
   `id` int(11) NOT NULL,
   `roll_id` int(11) NOT NULL,
-  `tipo` enum('entrada','salida','devolucion','ajuste','traslado') NOT NULL,
+  `tipo` varchar(20) NOT NULL,
   `metros` decimal(10,2) NOT NULL,
   `precio` decimal(14,2) DEFAULT NULL,
-  `warehouse_origin_id` int(11) DEFAULT NULL,
-  `warehouse_destination_id` int(11) DEFAULT NULL,
-  `usuario_id` int(11) NOT NULL,
+  `warehouse_origen_id` int(11) DEFAULT NULL,
+  `warehouse_destino_id` int(11) DEFAULT NULL,
+  `purchase_id` int(11) DEFAULT NULL,
+  `referencia_id` int(11) DEFAULT NULL,
   `nota` varchar(255) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_by` int(11) NOT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -927,22 +1005,8 @@ INSERT INTO `permissions` (`id`, `nombre`, `modulo`, `accion`, `created_at`, `up
 (26, 'users.view_username', 'users', 'view_username', NULL, NULL),
 (27, 'users.view_email', 'users', 'view_email', NULL, NULL),
 (28, 'users.view_avatar', 'users', 'view_avatar', NULL, NULL),
-(29, 'products.view_cost', 'products', 'view_cost', NULL, NULL);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `products`
---
-
-CREATE TABLE `products` (
-  `id` int(11) NOT NULL,
-  `fabric_type_id` int(11) NOT NULL,
-  `fabric_color_id` int(11) NOT NULL,
-  `nombre` varchar(180) NOT NULL,
-  `estado` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+(29, 'products.view_cost', 'products', 'view_cost', NULL, NULL),
+(30, 'users.view_deleted', 'users', 'view_deleted', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -972,14 +1036,14 @@ CREATE TABLE `proveedores` (
 --
 
 INSERT INTO `proveedores` (`id`, `nombre`, `contacto`, `nit`, `email`, `telefono`, `ciudad`, `estado`, `created_at`, `updated_at`, `created_by`, `updated_by`, `deleted_at`, `deleted_by`) VALUES
-(1, 'Juan', '', '', NULL, '7412458', 'medellin', 1, '2026-05-21 00:57:11', '2026-06-08 23:30:25', 1, NULL, NULL, NULL),
+(1, 'Juan', '', '', NULL, '7412458', 'medellin', 0, '2026-05-21 00:57:11', '2026-06-10 00:37:31', 1, NULL, '2026-06-10 00:37:31', 2),
 (2, 'Juan55', '', '4455', '', '7412458', 'Medellín', 0, '2026-05-21 00:58:51', '2026-06-03 23:34:46', 1, 1, NULL, NULL),
 (3, 'Juan', 'Tyrty', '123456', '', '', 'Medellín', 0, '2026-05-21 11:55:44', '2026-05-26 00:29:43', 2, 1, NULL, NULL),
 (4, 'Juanxcarlos', 'arensd', '12345623', NULL, NULL, 'Medellín', 1, '2026-05-21 12:24:28', '2026-06-07 22:16:57', 2, NULL, NULL, NULL),
 (5, 'Pedro', 'sUAREZ', '1234563453', NULL, NULL, 'Medellín', 0, '2026-05-21 12:26:46', '2026-05-24 20:48:43', 2, NULL, NULL, NULL),
 (6, 'Dos', 'Gonzalez', '1245689587', '', '', 'Medellín', 0, '2026-05-21 13:08:31', '2026-06-04 23:56:04', NULL, 2, NULL, NULL),
 (9, 'Cvxc', '', '12345678', '', '', 'Medellín', 0, '2026-05-25 22:34:11', '2026-06-08 23:30:02', 1, NULL, '2026-06-08 23:30:02', 2),
-(10, 'dos ok', '', '12345', '', '', 'medellin', 1, '2026-06-08 22:49:34', '2026-06-08 23:06:00', 2, 2, NULL, NULL);
+(10, 'dos ok', '', '12345', '', '', 'medellin', 0, '2026-06-08 22:49:34', '2026-06-09 23:40:44', 2, 2, '2026-06-09 23:40:44', 2);
 
 -- --------------------------------------------------------
 
@@ -989,13 +1053,17 @@ INSERT INTO `proveedores` (`id`, `nombre`, `contacto`, `nit`, `email`, `telefono
 
 CREATE TABLE `purchases` (
   `id` int(11) NOT NULL,
-  `supplier_id` int(11) DEFAULT NULL,
-  `numero_documento` varchar(80) DEFAULT NULL,
+  `supplier_id` int(11) NOT NULL,
+  `numero_documento` varchar(80) NOT NULL,
   `fecha` date NOT NULL,
   `total` decimal(14,2) NOT NULL DEFAULT 0.00,
-  `usuario_id` int(11) NOT NULL,
-  `estado` enum('abierta','cerrada','anulada') NOT NULL DEFAULT 'cerrada',
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_by` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_by` int(11) DEFAULT NULL,
+  `estado` varchar(20) NOT NULL DEFAULT 'abierta',
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1039,61 +1107,63 @@ CREATE TABLE `role_permissions` (
 --
 
 INSERT INTO `role_permissions` (`id`, `role_id`, `permission_id`) VALUES
-(136, 1, 1),
-(137, 1, 2),
-(138, 1, 3),
-(139, 1, 4),
-(140, 1, 5),
-(141, 1, 6),
-(142, 1, 7),
-(143, 1, 8),
-(144, 1, 9),
-(145, 1, 10),
-(146, 1, 11),
-(147, 1, 12),
-(148, 1, 13),
-(149, 1, 14),
-(150, 1, 15),
-(151, 1, 16),
-(152, 1, 17),
-(153, 1, 18),
-(154, 1, 19),
-(155, 1, 20),
-(156, 1, 21),
-(157, 1, 22),
-(158, 1, 23),
-(159, 1, 24),
-(160, 1, 25),
-(161, 1, 26),
-(162, 1, 27),
-(163, 1, 28),
-(164, 1, 29),
-(165, 2, 1),
-(166, 2, 2),
-(167, 2, 3),
-(168, 2, 4),
-(169, 2, 26),
-(170, 2, 6),
-(171, 2, 7),
-(172, 2, 8),
-(173, 2, 11),
-(174, 2, 16),
-(175, 2, 21),
-(176, 3, 1),
-(177, 3, 26),
-(178, 3, 6),
-(179, 3, 21),
-(180, 4, 6),
-(181, 4, 7),
-(182, 4, 8),
-(183, 4, 11),
-(184, 4, 13),
-(185, 5, 6),
-(186, 5, 21),
-(187, 6, 1),
-(188, 6, 6),
-(189, 6, 11),
-(190, 6, 21);
+(248, 1, 1),
+(249, 1, 2),
+(250, 1, 3),
+(251, 1, 4),
+(252, 1, 5),
+(253, 1, 6),
+(254, 1, 7),
+(255, 1, 8),
+(256, 1, 9),
+(257, 1, 10),
+(258, 1, 11),
+(259, 1, 12),
+(260, 1, 13),
+(261, 1, 14),
+(262, 1, 15),
+(263, 1, 16),
+(264, 1, 17),
+(265, 1, 18),
+(266, 1, 19),
+(267, 1, 20),
+(268, 1, 21),
+(269, 1, 22),
+(270, 1, 23),
+(271, 1, 24),
+(272, 1, 25),
+(273, 1, 26),
+(274, 1, 27),
+(275, 1, 28),
+(276, 1, 29),
+(277, 1, 30),
+(278, 2, 1),
+(279, 2, 2),
+(280, 2, 3),
+(281, 2, 4),
+(282, 2, 26),
+(283, 2, 6),
+(284, 2, 7),
+(285, 2, 8),
+(286, 2, 9),
+(287, 2, 11),
+(288, 2, 16),
+(289, 2, 21),
+(290, 3, 1),
+(291, 3, 26),
+(292, 3, 6),
+(293, 3, 21),
+(294, 4, 6),
+(295, 4, 7),
+(296, 4, 8),
+(297, 4, 11),
+(298, 4, 13),
+(299, 5, 6),
+(300, 5, 21),
+(301, 6, 1),
+(302, 6, 6),
+(303, 6, 11),
+(304, 6, 21);
 
 -- --------------------------------------------------------
 
@@ -1103,7 +1173,6 @@ INSERT INTO `role_permissions` (`id`, `role_id`, `permission_id`) VALUES
 
 CREATE TABLE `rolls` (
   `id` int(11) NOT NULL,
-  `product_id` int(11) DEFAULT NULL,
   `fabric_type_id` int(11) NOT NULL,
   `fabric_color_id` int(11) NOT NULL,
   `supplier_id` int(11) NOT NULL,
@@ -1113,10 +1182,13 @@ CREATE TABLE `rolls` (
   `codigo_visible` varchar(60) NOT NULL,
   `metros` decimal(10,2) NOT NULL,
   `precio_compra` decimal(14,2) NOT NULL,
-  `estado` enum('activo','agotado','retenido','eliminado') NOT NULL DEFAULT 'activo',
+  `estado` varchar(20) NOT NULL DEFAULT 'activo',
   `created_by` int(11) NOT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_by` int(11) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1143,8 +1215,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `username`, `nombre`, `apellido`, `imagen`, `password`, `rol_id`, `estado`, `created_at`, `ultimo_login`) VALUES
-(1, 'super', 'Alvaro', 'angulo4', NULL, '$2y$10$RSzWovudV1TflDF6PEtseuIEKYaM41vy1QoJhNPiR4Mgm.gzHeVsW', 1, 1, '2026-05-13 01:58:39', '2026-06-08 23:30:17'),
-(2, 'admin', 'Jose', 'Gerente', 'user_6a265e0ca75b3.png', '$2y$10$MdmYsBXnKKZFbvtccI.qKeYHdd26cZ2G9bF123WO0DAmU4l0unAye', 2, 1, '2026-05-13 01:58:39', '2026-06-08 23:30:56'),
+(1, 'super', 'Alvaro', 'angulo4', NULL, '$2y$10$RSzWovudV1TflDF6PEtseuIEKYaM41vy1QoJhNPiR4Mgm.gzHeVsW', 1, 1, '2026-05-13 01:58:39', '2026-06-10 01:45:52'),
+(2, 'admin', 'Jose', 'Gerente', 'user_6a265e0ca75b3.png', '$2y$10$MdmYsBXnKKZFbvtccI.qKeYHdd26cZ2G9bF123WO0DAmU4l0unAye', 2, 1, '2026-05-13 01:58:39', '2026-06-10 12:24:18'),
 (3, 'bodega', 'Luis', 'Inventario', '3636d93d7ca203fd08fb0aa7d612746a.png', '$2y$10$dqoBrCstrAiDpDc4CPZl5e8IgXrHe.L3dVFf5qaa4O/lTQI7MfODi', 4, 1, '2026-05-13 01:58:39', '2026-06-04 01:26:37'),
 (4, 'asistente', 'Laura', 'Apoyo', '7b91618a516c7c3e3022fc350bd86918.png', '$2y$10$RSzWovudV1TflDF6PEtseuIEKYaM41vy1QoJhNPiR4Mgm.gzHeVsW', 4, 0, '2026-05-13 01:58:39', NULL),
 (5, 'vendedor1', 'Ana', 'Ventas', 'd481660f9d233d0d1bfa72d0606c769d.png', '$2y$10$RSzWovudV1TflDF6PEtseuIEKYaM41vy1QoJhNPiR4Mgm.gzHeVsW', 5, 0, '2026-05-13 01:58:39', NULL),
@@ -1167,7 +1239,7 @@ INSERT INTO `usuarios` (`id`, `username`, `nombre`, `apellido`, `imagen`, `passw
 (24, 'qaws', 'Juan', 'asd', 'default.png', '$2y$10$.cTUmwqb70Ec.rQ0pqpk/emS.i477UAw5dHvMVnaY9lbsZZfjnYwq', 5, 0, '2026-05-19 04:31:07', NULL),
 (25, 'qwer', 'Juan', 'Guzman', 'default.png', '$2y$10$5JkH4BqdPjkbAsM0FTdQoeSY1Zdvav1JKiqB8UjRWgpRe7S/7ggY6', 4, 0, '2026-05-19 04:32:54', NULL),
 (26, 'qasw', 'sd', 'asdas', 'default.png', '$2y$10$WhUSme2LsLrJ9FVmcVw6oOc18NmMYGTOB9aB1WWRNK1yToTgeEvY.', 4, 1, '2026-05-19 04:36:39', NULL),
-(27, 'qazxs', 'Juan', '', 'default.png', '$2y$10$Lsk4xzWFAJuUeoqC4Xl3U.sDCsOD.G9H5fQcXjCppeQ9UEbgCAzBi', 4, 1, '2026-05-19 04:44:02', NULL),
+(27, 'qazxs', 'Juan2', '', 'default.png', '$2y$10$Lsk4xzWFAJuUeoqC4Xl3U.sDCsOD.G9H5fQcXjCppeQ9UEbgCAzBi', 4, 1, '2026-05-19 04:44:02', NULL),
 (28, 'qazxc', 'qwqw', 'Guzman', 'default.png', '$2y$10$v6rKIjRcufC4xF4JsIVlkO2vkydVuo/7HQFICEZHz5P5eyL/N8KAi', 3, 1, '2026-05-19 04:44:22', NULL),
 (29, 'qwert', 'dfsdgf', 'sdfgsdfg', 'user_6a265d6e3a6e0.png', '$2y$10$ANt5oZMgyRxgF3hrA1tKHePw1m7jn14BxJS2/PtWfqM8xy5rEP42W', 4, 1, '2026-05-19 04:44:56', NULL),
 (30, 'qwsde4', 'Juan', 'Guzman', 'bff24b9076efd42f2b17ddb52ef8a3dd.png', '$2y$10$3J5mKSJ7pN.vqTQof8mOsObK206Yciwt.PERj2YChdIJ9WqgKWeRC', 5, 0, '2026-05-19 04:46:41', NULL),
@@ -1192,18 +1264,24 @@ CREATE TABLE `warehouses` (
   `codigo` varchar(30) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `ubicacion` varchar(150) DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
   `estado` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `deleted_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `warehouses`
 --
 
-INSERT INTO `warehouses` (`id`, `codigo`, `nombre`, `ubicacion`, `estado`, `created_at`) VALUES
-(1, 'BOD-PRINCIPAL', 'Bodega principal', NULL, 0, '2026-05-24 22:05:13'),
-(2, '', 'dos', 'Medellin', 1, '2026-05-30 22:30:30'),
-(5, 'BOD-003', 'tres', 'Belen', 2, '2026-05-30 22:50:16');
+INSERT INTO `warehouses` (`id`, `codigo`, `nombre`, `ubicacion`, `descripcion`, `estado`, `created_at`, `updated_at`, `deleted_at`, `created_by`, `updated_by`, `deleted_by`) VALUES
+(1, 'BOD-PRINCIPAL', 'Bodega principal', NULL, NULL, 0, '2026-05-24 22:05:13', NULL, NULL, NULL, NULL, NULL),
+(2, '', 'dos', 'Medellin', NULL, 1, '2026-05-30 22:30:30', NULL, NULL, NULL, NULL, NULL),
+(5, 'BOD-003', 'tres', 'Belen', NULL, 2, '2026-05-30 22:50:16', NULL, NULL, NULL, NULL, NULL);
 
 --
 -- Índices para tablas volcadas
@@ -1220,8 +1298,10 @@ ALTER TABLE `auditoria`
 --
 ALTER TABLE `audit_logs`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_audit_entity` (`entidad`,`entidad_id`),
-  ADD KEY `idx_audit_user` (`usuario_id`);
+  ADD KEY `idx_audit_usuario` (`usuario_id`),
+  ADD KEY `idx_audit_entidad` (`entidad`,`entidad_id`),
+  ADD KEY `idx_audit_modulo` (`modulo`),
+  ADD KEY `idx_audit_fecha` (`created_at`);
 
 --
 -- Indices de la tabla `fabric_colors`
@@ -1246,9 +1326,16 @@ ALTER TABLE `inventory_movements`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_movements_roll` (`roll_id`),
   ADD KEY `idx_movements_tipo` (`tipo`),
-  ADD KEY `idx_movements_origin` (`warehouse_origin_id`),
-  ADD KEY `idx_movements_destination` (`warehouse_destination_id`),
-  ADD KEY `fk_movements_usuario` (`usuario_id`);
+  ADD KEY `idx_movements_origin` (`warehouse_origen_id`),
+  ADD KEY `idx_movements_destination` (`warehouse_destino_id`),
+  ADD KEY `fk_mov_created_by` (`created_by`),
+  ADD KEY `fk_mov_updated_by` (`updated_by`),
+  ADD KEY `fk_mov_deleted_by` (`deleted_by`),
+  ADD KEY `idx_mov_purchase` (`purchase_id`),
+  ADD KEY `idx_mov_fecha` (`created_at`),
+  ADD KEY `idx_mov_deleted` (`deleted_at`),
+  ADD KEY `idx_mov_referencia` (`referencia_id`),
+  ADD KEY `idx_mov_roll_fecha` (`roll_id`,`created_at`);
 
 --
 -- Indices de la tabla `permissions`
@@ -1257,20 +1344,11 @@ ALTER TABLE `permissions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indices de la tabla `products`
---
-ALTER TABLE `products`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_products_type_color` (`fabric_type_id`,`fabric_color_id`),
-  ADD KEY `fk_products_color` (`fabric_color_id`);
-
---
 -- Indices de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `nit` (`nit`),
-  ADD UNIQUE KEY `nit_2` (`nit`),
   ADD KEY `idx_estado` (`estado`),
   ADD KEY `idx_created_by` (`created_by`),
   ADD KEY `idx_updated_by` (`updated_by`);
@@ -1280,8 +1358,14 @@ ALTER TABLE `proveedores`
 --
 ALTER TABLE `purchases`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_purchase_doc_supplier` (`numero_documento`,`supplier_id`),
   ADD KEY `idx_purchases_supplier` (`supplier_id`),
-  ADD KEY `idx_purchases_usuario` (`usuario_id`);
+  ADD KEY `idx_purchases_estado` (`estado`),
+  ADD KEY `idx_purchases_fecha` (`fecha`),
+  ADD KEY `idx_purchases_deleted` (`deleted_at`),
+  ADD KEY `fk_purchases_created_by` (`created_by`),
+  ADD KEY `fk_purchases_updated_by` (`updated_by`),
+  ADD KEY `fk_purchases_deleted_by` (`deleted_by`);
 
 --
 -- Indices de la tabla `roles`
@@ -1304,13 +1388,15 @@ ALTER TABLE `rolls`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_rolls_codigo_barra` (`codigo_barra`),
   ADD KEY `idx_rolls_codigo_visible` (`codigo_visible`),
-  ADD KEY `idx_rolls_warehouse_estado` (`warehouse_id`,`estado`),
-  ADD KEY `idx_rolls_product` (`product_id`),
-  ADD KEY `fk_rolls_type` (`fabric_type_id`),
   ADD KEY `fk_rolls_color` (`fabric_color_id`),
   ADD KEY `fk_rolls_supplier` (`supplier_id`),
   ADD KEY `fk_rolls_purchase` (`purchase_id`),
-  ADD KEY `fk_rolls_created_by` (`created_by`);
+  ADD KEY `fk_rolls_created_by` (`created_by`),
+  ADD KEY `fk_roll_updated_by` (`updated_by`),
+  ADD KEY `fk_roll_deleted_by` (`deleted_by`),
+  ADD KEY `idx_roll_type_color_warehouse` (`fabric_type_id`,`fabric_color_id`,`warehouse_id`),
+  ADD KEY `idx_roll_deleted` (`deleted_at`),
+  ADD KEY `idx_roll_warehouse_estado` (`warehouse_id`,`estado`);
 
 --
 -- Indices de la tabla `usuarios`
@@ -1325,7 +1411,13 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `warehouses`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_warehouses_codigo` (`codigo`);
+  ADD UNIQUE KEY `uq_warehouses_codigo` (`codigo`),
+  ADD KEY `fk_warehouse_created_by` (`created_by`),
+  ADD KEY `fk_warehouse_updated_by` (`updated_by`),
+  ADD KEY `fk_warehouse_deleted_by` (`deleted_by`),
+  ADD KEY `idx_warehouse_estado` (`estado`),
+  ADD KEY `idx_warehouse_deleted` (`deleted_at`),
+  ADD KEY `idx_warehouse_nombre` (`nombre`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -1335,7 +1427,7 @@ ALTER TABLE `warehouses`
 -- AUTO_INCREMENT de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=730;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=794;
 
 --
 -- AUTO_INCREMENT de la tabla `audit_logs`
@@ -1347,7 +1439,7 @@ ALTER TABLE `audit_logs`
 -- AUTO_INCREMENT de la tabla `fabric_colors`
 --
 ALTER TABLE `fabric_colors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `fabric_types`
@@ -1365,13 +1457,7 @@ ALTER TABLE `inventory_movements`
 -- AUTO_INCREMENT de la tabla `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
-
---
--- AUTO_INCREMENT de la tabla `products`
---
-ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
@@ -1395,7 +1481,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `role_permissions`
 --
 ALTER TABLE `role_permissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=191;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=305;
 
 --
 -- AUTO_INCREMENT de la tabla `rolls`
@@ -1420,20 +1506,22 @@ ALTER TABLE `warehouses`
 --
 
 --
+-- Filtros para la tabla `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD CONSTRAINT `fk_audit_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
 -- Filtros para la tabla `inventory_movements`
 --
 ALTER TABLE `inventory_movements`
-  ADD CONSTRAINT `fk_movements_destination` FOREIGN KEY (`warehouse_destination_id`) REFERENCES `warehouses` (`id`),
-  ADD CONSTRAINT `fk_movements_origin` FOREIGN KEY (`warehouse_origin_id`) REFERENCES `warehouses` (`id`),
-  ADD CONSTRAINT `fk_movements_roll` FOREIGN KEY (`roll_id`) REFERENCES `rolls` (`id`),
-  ADD CONSTRAINT `fk_movements_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`);
-
---
--- Filtros para la tabla `products`
---
-ALTER TABLE `products`
-  ADD CONSTRAINT `fk_products_color` FOREIGN KEY (`fabric_color_id`) REFERENCES `fabric_colors` (`id`),
-  ADD CONSTRAINT `fk_products_type` FOREIGN KEY (`fabric_type_id`) REFERENCES `fabric_types` (`id`);
+  ADD CONSTRAINT `fk_mov_created_by` FOREIGN KEY (`created_by`) REFERENCES `usuarios` (`id`),
+  ADD CONSTRAINT `fk_mov_deleted_by` FOREIGN KEY (`deleted_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_mov_purchase` FOREIGN KEY (`purchase_id`) REFERENCES `purchases` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_mov_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_movements_destination` FOREIGN KEY (`warehouse_destino_id`) REFERENCES `warehouses` (`id`),
+  ADD CONSTRAINT `fk_movements_origin` FOREIGN KEY (`warehouse_origen_id`) REFERENCES `warehouses` (`id`),
+  ADD CONSTRAINT `fk_movements_roll` FOREIGN KEY (`roll_id`) REFERENCES `rolls` (`id`);
 
 --
 -- Filtros para la tabla `proveedores`
@@ -1446,8 +1534,10 @@ ALTER TABLE `proveedores`
 -- Filtros para la tabla `purchases`
 --
 ALTER TABLE `purchases`
+  ADD CONSTRAINT `fk_purchases_created_by` FOREIGN KEY (`created_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_purchases_deleted_by` FOREIGN KEY (`deleted_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_purchases_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `proveedores` (`id`),
-  ADD CONSTRAINT `fk_purchases_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`);
+  ADD CONSTRAINT `fk_purchases_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `role_permissions`
@@ -1460,9 +1550,10 @@ ALTER TABLE `role_permissions`
 -- Filtros para la tabla `rolls`
 --
 ALTER TABLE `rolls`
+  ADD CONSTRAINT `fk_roll_deleted_by` FOREIGN KEY (`deleted_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_roll_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_rolls_color` FOREIGN KEY (`fabric_color_id`) REFERENCES `fabric_colors` (`id`),
   ADD CONSTRAINT `fk_rolls_created_by` FOREIGN KEY (`created_by`) REFERENCES `usuarios` (`id`),
-  ADD CONSTRAINT `fk_rolls_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
   ADD CONSTRAINT `fk_rolls_purchase` FOREIGN KEY (`purchase_id`) REFERENCES `purchases` (`id`),
   ADD CONSTRAINT `fk_rolls_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `proveedores` (`id`),
   ADD CONSTRAINT `fk_rolls_type` FOREIGN KEY (`fabric_type_id`) REFERENCES `fabric_types` (`id`),
@@ -1473,6 +1564,14 @@ ALTER TABLE `rolls`
 --
 ALTER TABLE `usuarios`
   ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id`);
+
+--
+-- Filtros para la tabla `warehouses`
+--
+ALTER TABLE `warehouses`
+  ADD CONSTRAINT `fk_warehouse_created_by` FOREIGN KEY (`created_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_warehouse_deleted_by` FOREIGN KEY (`deleted_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_warehouse_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
