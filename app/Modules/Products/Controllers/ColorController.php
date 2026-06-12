@@ -3,80 +3,45 @@
 namespace App\Modules\Products\Controllers;
 
 use App\Core\Controller;
+use App\Core\Roles;
 use App\Modules\Products\Services\CatalogService;
-use App\Services\PermissionService;
 
 class ColorController extends Controller
 {
     private $service;
     private $table = 'fabric_colors';
-    private $module = 'products';
 
     public function __construct()
     {
+        $this->auth();
+        $this->onlyAdmin();
+
         $this->service = new CatalogService();
     }
 
-    // ======================================================
-    // INDEX
-    // ======================================================
-    // public function index()
-    // {
-    //     $rolId = $_SESSION['user']['rol_id'] ?? null;
-
-    //     if (!PermissionService::can($rolId, $this->module, 'view')) {
-    //         return $this->redirect(BASE_URL);
-    //     }
-
-    //     $colors = $this->service->getAll($this->table);
-
-    //     $permissions = PermissionService::getModulePermissions($rolId, $this->module);
-
-    //     $this->render('Modules/Products/Views/products/colors', [
-    //         'colors' => $colors,
-    //         'canCreate' => $permissions['create'],
-    //         'canEdit' => $permissions['edit'],
-    //         'canDelete' => $permissions['delete'],
-    //         'canRestore' => $permissions['restore'],
-    //     ]);
-    // }
 
     public function index()
     {
-        $rolId = $_SESSION['user']['rol_id'] ?? null;
-
-        if (!PermissionService::can($rolId, $this->module, 'view')) {
-            return $this->redirect(BASE_URL);
-        }
-
-        // 🔥 MISMA LÓGICA QUE USERS
-        $colors = $this->service->getAllForList($this->table, $rolId);
-
-        $permissions = PermissionService::getModulePermissions($rolId, $this->module);
+        $colors = $this->service->getAll($this->table);
 
         $this->render('Modules/Products/Views/products/colors', [
             'colors' => $colors,
-            'canCreate' => $permissions['create'],
-            'canEdit' => $permissions['edit'],
-            'canDelete' => $permissions['delete'],
-            'canRestore' => $permissions['restore'],
+            'title' => 'Colores'
         ]);
     }
 
-    // ======================================================
-    // STORE
-    // ======================================================
+
     public function store()
     {
-        $rolId = $_SESSION['user']['rol_id'] ?? null;
-
-        if (!PermissionService::can($rolId, $this->module, 'create')) {
-            return $this->redirect(BASE_URL . "/products/colors");
-        }
-
         try {
 
-            $this->service->create($this->table, $_POST['nombre']);
+            $nombre = trim($_POST['nombre'] ?? '');
+
+            if (!$nombre) {
+                throw new \Exception("El nombre es obligatorio");
+            }
+
+            $this->service->create($this->table, $nombre);
 
             $_SESSION['success'] = "Color creado correctamente";
         } catch (\Exception $e) {
@@ -84,22 +49,20 @@ class ColorController extends Controller
             $_SESSION['error'] = $e->getMessage();
         }
 
-        return $this->redirect(BASE_URL . '/products/colors');
+        $this->redirect(BASE_URL . '/products/colors');
     }
 
-    // ======================================================
-    // UPDATE
-    // ======================================================
+
     public function update()
     {
+        header('Content-Type: application/json');
+
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!PermissionService::can($rolId, $this->module, 'edit')) {
+        if (!Roles::canEdit($rolId)) {
             echo json_encode(['ok' => false, 'error' => 'No autorizado']);
             exit;
         }
-
-        header('Content-Type: application/json');
 
         try {
 
@@ -114,7 +77,7 @@ class ColorController extends Controller
 
             echo json_encode([
                 'ok' => true,
-                'message' => 'Color actualizado'
+                'message' => 'Color actualizado correctamente'
             ]);
         } catch (\Exception $e) {
 
@@ -133,19 +96,17 @@ class ColorController extends Controller
         exit;
     }
 
-    // ======================================================
-    // TOGGLE
-    // ======================================================
+
     public function toggle()
     {
+        header('Content-Type: application/json');
+
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!PermissionService::can($rolId, $this->module, 'edit')) {
+        if (!Roles::canEdit($rolId)) {
             echo json_encode(['ok' => false, 'error' => 'No autorizado']);
             exit;
         }
-
-        header('Content-Type: application/json');
 
         try {
 
@@ -172,19 +133,17 @@ class ColorController extends Controller
         exit;
     }
 
-    // ======================================================
-    // DELETE
-    // ======================================================
+
     public function delete()
     {
+        header('Content-Type: application/json');
+
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!PermissionService::can($rolId, $this->module, 'delete')) {
+        if (!Roles::canDelete($rolId)) {
             echo json_encode(['ok' => false, 'error' => 'No autorizado']);
             exit;
         }
-
-        header('Content-Type: application/json');
 
         try {
 
@@ -194,38 +153,38 @@ class ColorController extends Controller
                 throw new \Exception('ID inválido');
             }
 
+            if ($this->service->isUsed($this->table, $id, 'products', 'color_id')) {
+                throw new \Exception("Este color está en uso");
+            }
+
             $this->service->delete($this->table, $id);
 
             echo json_encode([
                 'ok' => true,
-                'message' => 'Color eliminado'
+                'message' => 'Color eliminado correctamente'
             ]);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
 
             echo json_encode([
                 'ok' => false,
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'error' => $e->getMessage()
             ]);
         }
 
         exit;
     }
 
-    // ======================================================
-    // RESTORE
-    // ======================================================
+
     public function restore()
     {
+        header('Content-Type: application/json');
+
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!PermissionService::can($rolId, $this->module, 'restore')) {
+        if (!Roles::canRestore($rolId)) {
             echo json_encode(['ok' => false, 'error' => 'No autorizado']);
             exit;
         }
-
-        header('Content-Type: application/json');
 
         try {
 
@@ -239,7 +198,7 @@ class ColorController extends Controller
 
             echo json_encode([
                 'ok' => true,
-                'message' => 'Color restaurado'
+                'message' => 'Registro restaurado correctamente'
             ]);
         } catch (\Exception $e) {
 

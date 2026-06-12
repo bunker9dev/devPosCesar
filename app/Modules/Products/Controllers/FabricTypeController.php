@@ -20,9 +20,7 @@ class FabricTypeController extends Controller
         $this->service = new CatalogService();
     }
 
-    // ======================================================
-    // INDEX
-    // ======================================================
+
     public function index()
     {
         $types = $this->service->getAll($this->table);
@@ -33,17 +31,20 @@ class FabricTypeController extends Controller
         ]);
     }
 
-    // ======================================================
-    // STORE
-    // ======================================================
+
     public function store()
     {
         try {
 
-            $this->service->create($this->table, $_POST['nombre']);
+            $nombre = trim($_POST['nombre'] ?? '');
+
+            if (!$nombre) {
+                throw new \Exception("El nombre es obligatorio");
+            }
+
+            $this->service->create($this->table, $nombre);
 
             $_SESSION['success'] = "Tipo creado correctamente";
-
         } catch (\Exception $e) {
 
             $_SESSION['error'] = $e->getMessage();
@@ -51,7 +52,6 @@ class FabricTypeController extends Controller
 
         $this->redirect(BASE_URL . '/products/types');
     }
-
     // ======================================================
     // UPDATE
     // ======================================================
@@ -59,24 +59,39 @@ class FabricTypeController extends Controller
     {
         header('Content-Type: application/json');
 
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!Roles::canEdit($rolId)) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            exit;
+        }
+
         try {
 
-            $this->service->update(
-                $this->table,
-                $_POST['id'],
-                $_POST['nombre']
-            );
+            $id = $_POST['id'] ?? null;
+            $nombre = trim($_POST['nombre'] ?? '');
+
+            if (!$id || !$nombre) {
+                throw new \Exception('Datos inválidos');
+            }
+
+            $this->service->update($this->table, $id, $nombre);
 
             echo json_encode([
-                'success' => true,
+                'ok' => true,
                 'message' => 'Tipo actualizado correctamente'
             ]);
+        } catch (\Exception $e) {
 
-        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
+
+            if (str_contains($msg, 'Duplicate entry')) {
+                $msg = "El nombre ya está registrado";
+            }
 
             echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
+                'ok' => false,
+                'error' => $msg
             ]);
         }
 
@@ -99,13 +114,18 @@ class FabricTypeController extends Controller
 
         try {
 
-            $estado = $this->service->toggle($this->table, $_POST['id']);
+            $id = $_POST['id'] ?? null;
+
+            if (!$id) {
+                throw new \Exception('ID inválido');
+            }
+
+            $estado = $this->service->toggle($this->table, $id);
 
             echo json_encode([
                 'ok' => true,
                 'estado' => $estado
             ]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -133,18 +153,22 @@ class FabricTypeController extends Controller
 
         try {
 
-            // 🔥 VALIDAR USO
-            if ($this->service->isUsed($this->table, $_POST['id'], 'products', 'fabric_type_id')) {
+            $id = $_POST['id'] ?? null;
+
+            if (!$id) {
+                throw new \Exception('ID inválido');
+            }
+
+            if ($this->service->isUsed($this->table, $id, 'products', 'fabric_type_id')) {
                 throw new \Exception("Este tipo de tela está en uso");
             }
 
-            $this->service->delete($this->table, $_POST['id']);
+            $this->service->delete($this->table, $id);
 
             echo json_encode([
                 'ok' => true,
                 'message' => 'Tipo eliminado correctamente'
             ]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -172,13 +196,18 @@ class FabricTypeController extends Controller
 
         try {
 
-            $this->service->restore($this->table, $_POST['id']);
+            $id = $_POST['id'] ?? null;
+
+            if (!$id) {
+                throw new \Exception('ID inválido');
+            }
+
+            $this->service->restore($this->table, $id);
 
             echo json_encode([
                 'ok' => true,
                 'message' => 'Registro restaurado correctamente'
             ]);
-
         } catch (\Exception $e) {
 
             echo json_encode([
