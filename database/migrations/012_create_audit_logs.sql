@@ -50,3 +50,39 @@ ON audit_logs(created_at);
 -- 🔥 índice avanzado para historial
 CREATE INDEX idx_audit_full_lookup 
 ON audit_logs(entidad, entidad_id, created_at);
+
+
+-- ======================================================
+-- AUDITORÍA NIVEL PRO - ACTUALIZACIÓN
+-- ======================================================
+
+-- 1. AGREGAR CAMPOS JSON (ANTES / DESPUÉS)
+ALTER TABLE audit_logs 
+ADD COLUMN old_values JSON NULL AFTER detalle,
+ADD COLUMN new_values JSON NULL AFTER old_values;
+
+-- ======================================================
+-- 2. MEJORAR ÍNDICES (CONSULTAS PRO)
+-- ======================================================
+
+-- Búsqueda por entidad + registro + fecha
+CREATE INDEX idx_audit_entidad_fecha 
+ON audit_logs (entidad, entidad_id, created_at);
+
+-- Búsqueda por acción
+CREATE INDEX idx_audit_accion 
+ON audit_logs (accion);
+
+-- ======================================================
+-- 3. AJUSTE DE LONGITUDES (OPCIONAL PERO PRO)
+-- ======================================================
+
+-- Permitir acciones más claras (ej: LOGIN_SUCCESS, PASSWORD_RESET)
+ALTER TABLE audit_logs 
+MODIFY accion VARCHAR(100) NOT NULL;
+
+-- ======================================================
+-- 4. VALIDACIÓN FINAL
+-- ======================================================
+-- (Opcional: ver estructura)
+-- DESCRIBE audit_logs;
