@@ -211,12 +211,18 @@ export function initImagePreview() {
 }
 
 // =========================================================
-//  TOGGLE / DELETE / RESTORE (SIN CAMBIOS FUNCIONALES)
+//  TOGGLE 
 // =========================================================
+let toggleInitialized = false;
+
 export function initUserToggle() {
+  if (toggleInitialized) return;
+  toggleInitialized = true;
+
   document.addEventListener("click", async (e) => {
     const el = e.target.closest(".toggle-user");
     if (!el) return;
+
 
     const id = el.dataset.id;
     const url = el.dataset.url;
@@ -273,4 +279,9 @@ Events.on("users:edit", () => {
   initPasswordValidation();
   initUserFormValidation();
   initImagePreview();
+});
+
+
+Events.on("users:index", () => {
+  initUserToggle();
 });

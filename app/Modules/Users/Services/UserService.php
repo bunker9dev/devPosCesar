@@ -2,10 +2,10 @@
 
 namespace App\Modules\Users\Services;
 
-use App\Core\Status;
 use App\Core\Roles;
-use App\Services\CatalogService;
+use App\Core\Status;
 use App\Services\PermissionService;
+use App\Core\Repositories\AuditLogRepository;
 
 class UserService
 {
@@ -22,9 +22,9 @@ class UserService
         SELECT u.*, r.nombre as rol 
         FROM usuarios u
         JOIN roles r ON u.rol_id = r.id
-    ";
+        ";
 
-        //  OCULTAR SUPER A TODOS MENOS A SÍ MISMO
+        // OCULTAR SUPER A TODOS MENOS A SÍ MISMO
         $query .= " WHERE (u.rol_id != " . Roles::SUPER . " OR u.id = {$userId})";
 
         // PERMISOS RBAC (eliminados)
@@ -43,7 +43,7 @@ class UserService
     }
 
     // ======================================================
-    // CREATE
+    // CREATE 
     // ======================================================
     public static function create(array $data, int $rolId): void
     {
@@ -64,7 +64,7 @@ class UserService
         }
 
         // ============================
-        // 🔥 VALIDAR DUPLICADO
+        // VALIDAR DUPLICADO
         // ============================
         $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ?");
         $stmt->bind_param("s", $username);
@@ -75,7 +75,7 @@ class UserService
         }
 
         // ============================
-        // 🔥 PROCESAR IMAGEN
+        // PROCESAR IMAGEN 
         // ============================
         $imagen = 'default.png';
 
@@ -83,24 +83,18 @@ class UserService
 
             $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/users/';
 
-            // validar tipo
             $mime = mime_content_type($_FILES['imagen']['tmp_name']);
 
             if (!str_starts_with($mime, 'image/')) {
                 throw new \Exception("El archivo no es una imagen válida");
             }
 
-            // validar tamaño (2MB)
             if ($_FILES['imagen']['size'] > 2 * 1024 * 1024) {
                 throw new \Exception("La imagen supera el tamaño permitido (2MB)");
             }
 
-            // extensión
             $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-
-            // nombre único
             $imagen = uniqid('user_') . '.' . $ext;
-
             $destino = $uploadDir . $imagen;
 
             if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
@@ -109,16 +103,16 @@ class UserService
         }
 
         // ============================
-        // 🔥 INSERT CON IMAGEN
+        // INSERT
         // ============================
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
         $estado = Status::ACTIVO;
 
         $stmt = $db->prepare("
-        INSERT INTO usuarios 
-        (username, nombre, apellido, password, rol_id, estado, imagen)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
+            INSERT INTO usuarios 
+            (username, nombre, apellido, password, rol_id, estado, imagen)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
 
         $stmt->bind_param(
             "ssssiss",
@@ -136,17 +130,26 @@ class UserService
         }
 
         // ============================
-        // 🔥 AUDITORÍA
-        // ============================
-        CatalogService::audit(
-            'CREATE',
-            'usuarios',
-            $db->insert_id,
-            "Usuario creado",
-            'users',
-            $_SESSION['user']['id']
-        );
+        // AUDITORÍA ============================
+        (new AuditLogRepository($db))->log([
+            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'accion'     => 'create',
+            'entidad'    => 'usuarios',
+            'entidad_id' => $db->insert_id,
+            'modulo'     => 'users',
+            'detalle'    => [
+                'after' => [
+                    'username' => $username,
+                    'nombre'   => $nombre,
+                    'apellido' => $apellido,
+                    'rol_id'   => $rol,
+                    'imagen'   => $imagen,
+                    'estado'   => $estado
+                ]
+            ]
+        ]);
     }
+
 
     // ======================================================
     // UPDATE
@@ -170,7 +173,7 @@ class UserService
         }
 
         // ============================
-        // 🔥 OBTENER IMAGEN ACTUAL
+        // OBTENER IMAGEN ACTUAL
         // ============================
         $stmt = $db->prepare("SELECT imagen FROM usuarios WHERE id=?");
         $stmt->bind_param("i", $id);
@@ -180,7 +183,7 @@ class UserService
         $imagen = $user['imagen'] ?? 'default.png';
 
         // ============================
-        // 🔥 PROCESAR NUEVA IMAGEN
+        // PROCESAR NUEVA IMAGEN
         // ============================
         if (!empty($_FILES['imagen']['name'])) {
 
@@ -195,7 +198,7 @@ class UserService
                 throw new \Exception("Error al subir imagen");
             }
 
-            // 🔥 BORRAR IMAGEN ANTERIOR
+            // BORRAR IMAGEN ANTERIOR
             if (!empty($imagen) && $imagen !== 'default.png') {
                 $rutaAnterior = $uploadDir . $imagen;
                 if (file_exists($rutaAnterior)) {
@@ -207,7 +210,7 @@ class UserService
         }
 
         // ============================
-        // 🔥 UPDATE (CON IMAGEN)
+        // UPDATE (CON IMAGEN)
         // ============================
         if (!empty($password)) {
 
@@ -254,43 +257,55 @@ class UserService
         // ============================
         //  AUDITORÍA
         // ============================
-        CatalogService::audit(
-            'UPDATE',
-            'usuarios',
-            $id,
-            "Usuario actualizado",
-            'users',
-            $_SESSION['user']['id']
-        );
+        (new AuditLogRepository($db))->log([
+            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'accion'     => 'create',
+            'entidad'    => 'usuarios',
+            'entidad_id' => $db->insert_id,
+            'modulo'     => 'users',
+            'detalle'    => [
+                'after' => [
+                    'username' => $username,
+                    'nombre'   => $nombre,
+                    'apellido' => $apellido,
+                    'rol_id'   => $rol,
+                    'imagen'   => $imagen,
+                    'estado'   => $estado
+                ]
+            ]
+        ]);
     }
 
-    // ======================================================
-    // GET FOR EDIT
-    // ======================================================
     public static function getForEdit(int $id, int $rolId): array
-    {
-        global $db;
+{
+    global $db;
 
-        $user = CatalogService::getById('usuarios', $id);
+    $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
 
-        $roles = self::getRolesForCreate($rolId);
-
-        $permissions = PermissionService::getModulePermissions($rolId, 'users');
-
-        return [
-            'user' => [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'nombre' => $user['nombre'],
-                'apellido' => $user['apellido'],
-                'rol_id' => $user['rol_id'],
-                'avatar_url' => self::avatarUrl($user['imagen'] ?? null),
-            ],
-            'roles' => $roles,
-            'canEdit' => $permissions['edit']
-        ];
+    if (!$user) {
+        throw new \Exception("Usuario no existe");
     }
 
+    $roles = self::getRolesForCreate($rolId);
+
+    $permissions = PermissionService::getModulePermissions($rolId, 'users');
+
+    return [
+        'user' => [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'nombre' => $user['nombre'],
+            'apellido' => $user['apellido'],
+            'rol_id' => $user['rol_id'],
+            'avatar_url' => self::avatarUrl($user['imagen'] ?? null),
+        ],
+        'roles' => $roles,
+        'canEdit' => $permissions['edit']
+    ];
+}
     // ======================================================
     // ROLES PARA CREATE / EDIT
     // ======================================================
@@ -314,7 +329,7 @@ class UserService
             throw new \Exception("Error en consulta de roles");
         }
 
-        // 🔥 CORRECCIÓN AQUÍ
+        // CORRECCIÓN 
         $superId = Roles::SUPER;
 
         $stmt->bind_param("i", $superId);
@@ -326,41 +341,130 @@ class UserService
     // ======================================================
     // TOGGLE
     // ======================================================
-    public static function toggle(int $id, int $rolId): int
+    public static function toggle($id, $rolId = null)
     {
-        return CatalogService::toggle(
-            'usuarios',
-            $id,
-            $_SESSION['user']['id'],
-            'users'
-        );
+        global $db;
+       
+
+        $stmt = $db->prepare("SELECT id, estado FROM usuarios WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+
+        if (!$row) {
+            throw new \Exception("Usuario no existe");
+        }
+
+        if ($row['estado'] == \App\Core\Status::ELIMINADO) {
+            throw new \Exception("No se puede modificar eliminado");
+        }
+
+        $nuevoEstado = ($row['estado'] == \App\Core\Status::ACTIVO)
+            ? \App\Core\Status::INACTIVO
+            : \App\Core\Status::ACTIVO;
+
+        $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
+        $stmt->bind_param("ii", $nuevoEstado, $id);
+        $stmt->execute();
+        
+
+
+        // auditoría
+        (new \App\Core\Repositories\AuditLogRepository($db))->log([
+            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'accion' => 'toggle',
+            'entidad' => 'usuarios',
+            'entidad_id' => $id,
+            'modulo' => 'users',
+            'detalle' => json_encode([
+                'before' => $row['estado'],
+                'after'  => $nuevoEstado
+            ])
+        ]);
+
+        return $nuevoEstado;
     }
 
     // ======================================================
     // DELETE
     // ======================================================
     public static function delete(int $id, int $rolId): void
-    {
-        CatalogService::delete(
-            'usuarios',
-            $id,
-            $_SESSION['user']['id'],
-            'users'
-        );
+{
+    global $db;
+
+    $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+
+    if (!$row) {
+        throw new \Exception("Usuario no existe");
     }
 
+    $stmt = $db->prepare("
+        UPDATE usuarios 
+        SET deleted_at = NOW(), estado = ?, deleted_by = ?
+        WHERE id = ?
+    ");
+
+    $estado = Status::ELIMINADO;
+    $userId = $_SESSION['user']['id'] ?? null;
+
+    $stmt->bind_param("iii", $estado, $userId, $id);
+    $stmt->execute();
+
+    // auditoría
+    (new AuditLogRepository($db))->log([
+        'usuario_id' => $userId,
+        'accion' => 'delete',
+        'entidad' => 'usuarios',
+        'entidad_id' => $id,
+        'modulo' => 'users',
+        'detalle' => [
+            'before' => $row
+        ]
+    ]);
+}
     // ======================================================
     // RESTORE
     // ======================================================
-    public static function restore(int $id, int $rolId): void
-    {
-        CatalogService::restore(
-            'usuarios',
-            $id,
-            $_SESSION['user']['id'],
-            'users'
-        );
+   public static function restore(int $id, int $rolId): void
+{
+    global $db;
+
+    $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+
+    if (!$row) {
+        throw new \Exception("Usuario no existe");
     }
+
+    $stmt = $db->prepare("
+        UPDATE usuarios 
+        SET deleted_at = NULL, estado = ?, updated_by = ?
+        WHERE id = ?
+    ");
+
+    $estado = Status::ACTIVO;
+    $userId = $_SESSION['user']['id'] ?? null;
+
+    $stmt->bind_param("iii", $estado, $userId, $id);
+    $stmt->execute();
+
+    // auditoría
+    (new AuditLogRepository($db))->log([
+        'usuario_id' => $userId,
+        'accion' => 'restore',
+        'entidad' => 'usuarios',
+        'entidad_id' => $id,
+        'modulo' => 'users',
+        'detalle' => [
+            'after' => $row
+        ]
+    ]);
+}
 
     // ======================================================
     // FORMAT LIST
