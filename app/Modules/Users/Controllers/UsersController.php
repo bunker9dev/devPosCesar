@@ -113,7 +113,7 @@ class UsersController extends Controller
     // ======================================================
     public function update()
     {
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return $this->redirect(BASE_URL . "/users");
         }
@@ -216,7 +216,7 @@ class UsersController extends Controller
     // ======================================================
     public function restore()
     {
-     
+
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
@@ -258,10 +258,13 @@ class UsersController extends Controller
     {
         header('Content-Type: application/json');
 
-          $username = $_POST['username'] ?? '';
+        $username = $_POST['username'] ?? '';
 
         if (!$username) {
-            echo json_encode(['exists' => false]);
+            echo json_encode([
+                'success' => false,
+                'exists' => false
+            ]);
             return;
         }
 

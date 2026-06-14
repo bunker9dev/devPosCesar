@@ -64,6 +64,7 @@ export function initUserValidation() {
     timeout = setTimeout(async () => {
       try {
         const res = await post("/users/check-username", { username });
+        console.log("RESPONSE:", res);
 
         if (!res || typeof res.exists === "undefined") {
           showMsg(msg, "Error al validar", "error");
@@ -220,6 +221,9 @@ export function initUserToggle() {
   toggleInitialized = true;
 
   document.addEventListener("click", async (e) => {
+      console.log("INIT VALIDATION 🔥");
+  initUserValidation();
+  
     const el = e.target.closest(".toggle-user");
     if (!el) return;
 

@@ -68,3 +68,9 @@
 </form>
 
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-create.js"></script>
+
+<script type="module">
+    import { Events } from "/assets/js/core/events.js";
+
+    Events.emit("users:create");
+</script>
