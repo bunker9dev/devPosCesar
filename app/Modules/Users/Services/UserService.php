@@ -70,14 +70,13 @@ class UserService
             SELECT id 
             FROM usuarios 
             WHERE LOWER(username) = ? 
-            AND deleted_at IS NULL
             LIMIT 1
         ");
         $stmt->bind_param("s", $username);
         $stmt->execute();
 
         if ($stmt->get_result()->num_rows > 0) {
-            throw new \Exception("Usuario ya existe");
+            throw new \Exception("Usuario ya fue usado");
         }
 
         // ============================
@@ -145,7 +144,16 @@ class UserService
             $imagen
         );
 
-        if (!$stmt->execute()) {
+        try {
+            $stmt->execute();
+        } catch (\mysqli_sql_exception $e) {
+
+           
+            if ($e->getCode() == 1062) {
+                throw new \Exception("Usuario ya fue usado");
+            }
+
+            // OTROS ERRORES
             throw new \Exception("Error al crear usuario");
         }
 
@@ -174,281 +182,280 @@ class UserService
     // ======================================================
     // UPDATE
     // ======================================================
-//     public static function update(array $data, int $rolId): void
-//     {
-//         global $db;
+    //     public static function update(array $data, int $rolId): void
+    //     {
+    //         global $db;
 
-//         $id       = $data['id'] ?? null;
-//         $nombre   = trim($data['nombre'] ?? '');
-//         $apellido = trim($data['apellido'] ?? '');
-//         $rol      = $data['rol_id'] ?? null;
-//         $password = $data['password'] ?? null;
+    //         $id       = $data['id'] ?? null;
+    //         $nombre   = trim($data['nombre'] ?? '');
+    //         $apellido = trim($data['apellido'] ?? '');
+    //         $rol      = $data['rol_id'] ?? null;
+    //         $password = $data['password'] ?? null;
 
-//         if (!$id || !$nombre || !$rol) {
-//             throw new \Exception("Datos inválidos");
-//         }
+    //         if (!$id || !$nombre || !$rol) {
+    //             throw new \Exception("Datos inválidos");
+    //         }
 
-//         if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
-//             throw new \Exception("No autorizado");
-//         }
+    //         if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+    //             throw new \Exception("No autorizado");
+    //         }
 
-//         // ============================
-//         // OBTENER IMAGEN ACTUAL
-//         // ============================
-//         $stmt = $db->prepare("SELECT imagen FROM usuarios WHERE id=?");
-//         $stmt->bind_param("i", $id);
-//         $stmt->execute();
+    //         // ============================
+    //         // OBTENER IMAGEN ACTUAL
+    //         // ============================
+    //         $stmt = $db->prepare("SELECT imagen FROM usuarios WHERE id=?");
+    //         $stmt->bind_param("i", $id);
+    //         $stmt->execute();
 
-//         $user = $stmt->get_result()->fetch_assoc();
-//         $imagen = $user['imagen'] ?? 'default.png';
+    //         $user = $stmt->get_result()->fetch_assoc();
+    //         $imagen = $user['imagen'] ?? 'default.png';
 
-//         // ============================
-//         // PROCESAR NUEVA IMAGEN
-//         // ============================
-//         if (!empty($_FILES['imagen']['name'])) {
+    //         // ============================
+    //         // PROCESAR NUEVA IMAGEN
+    //         // ============================
+    //         if (!empty($_FILES['imagen']['name'])) {
 
-            
-//             $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/DEVPOSCESAR/public/assets/img/users/';
 
-//             $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-//             $nuevaImagen = uniqid('user_') . '.' . $ext;
+    //             $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/DEVPOSCESAR/public/assets/img/users/';
 
-//             $destino = $uploadDir . $nuevaImagen;
+    //             $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+    //             $nuevaImagen = uniqid('user_') . '.' . $ext;
 
-//             // if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
-//             //     throw new \Exception("Error al subir imagen");
-//             // }
+    //             $destino = $uploadDir . $nuevaImagen;
 
-//             if (!move_uploaded_file($_FILES['tmp_name'], $destino)) {
-//     die("ERROR RUTA: " . $destino);
-// }
+    //             // if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
+    //             //     throw new \Exception("Error al subir imagen");
+    //             // }
 
-//             // BORRAR IMAGEN ANTERIOR
-//             if (!empty($imagen) && $imagen !== 'default.png') {
-//                 $rutaAnterior = $uploadDir . $imagen;
-//                 if (file_exists($rutaAnterior)) {
-//                     unlink($rutaAnterior);
-//                 }
-//             }
+    //             if (!move_uploaded_file($_FILES['tmp_name'], $destino)) {
+    //     die("ERROR RUTA: " . $destino);
+    // }
 
-//             $imagen = $nuevaImagen;
-//         }
+    //             // BORRAR IMAGEN ANTERIOR
+    //             if (!empty($imagen) && $imagen !== 'default.png') {
+    //                 $rutaAnterior = $uploadDir . $imagen;
+    //                 if (file_exists($rutaAnterior)) {
+    //                     unlink($rutaAnterior);
+    //                 }
+    //             }
 
-//         // ============================
-//         // UPDATE (CON IMAGEN)
-//         // ============================
-//         if (!empty($password)) {
+    //             $imagen = $nuevaImagen;
+    //         }
 
-//             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+    //         // ============================
+    //         // UPDATE (CON IMAGEN)
+    //         // ============================
+    //         if (!empty($password)) {
 
-//             $stmt = $db->prepare("
-//             UPDATE usuarios 
-//             SET nombre=?, apellido=?, password=?, rol_id=?, imagen=? 
-//             WHERE id=?
-//         ");
+    //             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-//             $stmt->bind_param("sssisi", $nombre, $apellido, $passwordHash, $rol, $imagen, $id);
-//         } else {
+    //             $stmt = $db->prepare("
+    //             UPDATE usuarios 
+    //             SET nombre=?, apellido=?, password=?, rol_id=?, imagen=? 
+    //             WHERE id=?
+    //         ");
 
-//             $stmt = $db->prepare("
-//             UPDATE usuarios 
-//             SET nombre=?, apellido=?, rol_id=?, imagen=? 
-//             WHERE id=?
-//         ");
+    //             $stmt->bind_param("sssisi", $nombre, $apellido, $passwordHash, $rol, $imagen, $id);
+    //         } else {
 
-//             $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagen, $id);
-//         }
+    //             $stmt = $db->prepare("
+    //             UPDATE usuarios 
+    //             SET nombre=?, apellido=?, rol_id=?, imagen=? 
+    //             WHERE id=?
+    //         ");
 
-//         if (!$stmt->execute()) {
-//             throw new \Exception("Error al actualizar usuario");
-//         }
-//         // ============================
-//         // ACTUALIZAR SESIÓN (SOLO SI ES EL MISMO USUARIO)
-//         // ============================
-//         if ($_SESSION['user']['id'] == $id) {
+    //             $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagen, $id);
+    //         }
 
-//             $stmt = $db->prepare("
-//                 SELECT u.*, r.nombre AS rol_nombre
-//                 FROM usuarios u
-//                 JOIN roles r ON r.id = u.rol_id
-//                 WHERE u.id=?
-//             ");
+    //         if (!$stmt->execute()) {
+    //             throw new \Exception("Error al actualizar usuario");
+    //         }
+    //         // ============================
+    //         // ACTUALIZAR SESIÓN (SOLO SI ES EL MISMO USUARIO)
+    //         // ============================
+    //         if ($_SESSION['user']['id'] == $id) {
 
-//             $stmt->bind_param("i", $id);
-//             $stmt->execute();
+    //             $stmt = $db->prepare("
+    //                 SELECT u.*, r.nombre AS rol_nombre
+    //                 FROM usuarios u
+    //                 JOIN roles r ON r.id = u.rol_id
+    //                 WHERE u.id=?
+    //             ");
 
-//             $_SESSION['user'] = $stmt->get_result()->fetch_assoc();
-//         }
-//         // ============================
-//         //  AUDITORÍA
-//         // ============================
-//         (new AuditLogRepository($db))->log([
-//             'usuario_id' => $_SESSION['user']['id'] ?? null,
-//             'accion'     => 'create',
-//             'entidad'    => 'usuarios',
-//             'entidad_id' => $db->insert_id,
-//             'modulo'     => 'users',
-//             'detalle'    => [
-//                 'after' => [
-//                     'username' => $username,
-//                     'nombre'   => $nombre,
-//                     'apellido' => $apellido,
-//                     'rol_id'   => $rol,
-//                     'imagen'   => $imagen,
-//                     'estado'   => $estado
-//                 ]
-//             ]
-//         ]);
-//     }
+    //             $stmt->bind_param("i", $id);
+    //             $stmt->execute();
 
-public static function update(array $data, int $rolId): void
-{
-    global $db;
+    //             $_SESSION['user'] = $stmt->get_result()->fetch_assoc();
+    //         }
+    //         // ============================
+    //         //  AUDITORÍA
+    //         // ============================
+    //         (new AuditLogRepository($db))->log([
+    //             'usuario_id' => $_SESSION['user']['id'] ?? null,
+    //             'accion'     => 'create',
+    //             'entidad'    => 'usuarios',
+    //             'entidad_id' => $db->insert_id,
+    //             'modulo'     => 'users',
+    //             'detalle'    => [
+    //                 'after' => [
+    //                     'username' => $username,
+    //                     'nombre'   => $nombre,
+    //                     'apellido' => $apellido,
+    //                     'rol_id'   => $rol,
+    //                     'imagen'   => $imagen,
+    //                     'estado'   => $estado
+    //                 ]
+    //             ]
+    //         ]);
+    //     }
 
-    $id       = $data['id'] ?? null;
-    $nombre   = trim($data['nombre'] ?? '');
-    $apellido = trim($data['apellido'] ?? '');
-    $rol      = $data['rol_id'] ?? null;
-    $password = $data['password'] ?? null;
+    public static function update(array $data, int $rolId): void
+    {
+        global $db;
 
-    if (!$id || !$nombre || !$rol) {
-        throw new \Exception("Datos inválidos");
-    }
+        $id       = $data['id'] ?? null;
+        $nombre   = trim($data['nombre'] ?? '');
+        $apellido = trim($data['apellido'] ?? '');
+        $rol      = $data['rol_id'] ?? null;
+        $password = $data['password'] ?? null;
 
-    if ($rol == \App\Core\Roles::SUPER && $rolId !== \App\Core\Roles::SUPER) {
-        throw new \Exception("No autorizado");
-    }
-
-    // ============================
-    // OBTENER USUARIO ACTUAL
-    // ============================
-    $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $old = $stmt->get_result()->fetch_assoc();
-
-    if (!$old) {
-        throw new \Exception("Usuario no existe");
-    }
-
-    $imagen = $old['imagen'] ?? 'default.png';
-
-    // ============================
-    // PROCESAR NUEVA IMAGEN
-    // ============================
-    if (!empty($_FILES['imagen']['name'])) {
-
-        $file = $_FILES['imagen'];
-
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/users/';
-
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            throw new \Exception("Error al subir archivo");
+        if (!$id || !$nombre || !$rol) {
+            throw new \Exception("Datos inválidos");
         }
 
-        if ($file['size'] > 2 * 1024 * 1024) {
-            throw new \Exception("La imagen supera el tamaño permitido (2MB)");
+        if ($rol == \App\Core\Roles::SUPER && $rolId !== \App\Core\Roles::SUPER) {
+            throw new \Exception("No autorizado");
         }
 
-        $mime = mime_content_type($file['tmp_name']);
+        // ============================
+        // OBTENER USUARIO ACTUAL
+        // ============================
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $old = $stmt->get_result()->fetch_assoc();
 
-        if (!str_starts_with($mime, 'image/')) {
-            throw new \Exception("El archivo no es una imagen válida");
+        if (!$old) {
+            throw new \Exception("Usuario no existe");
         }
 
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $nuevaImagen = uniqid('user_') . '.' . $ext;
+        $imagen = $old['imagen'] ?? 'default.png';
 
-        $destino = $uploadDir . $nuevaImagen;
+        // ============================
+        // PROCESAR NUEVA IMAGEN
+        // ============================
+        if (!empty($_FILES['imagen']['name'])) {
 
-        if (!move_uploaded_file($file['tmp_name'], $destino)) {
-            throw new \Exception("Error al subir la imagen");
-        }
+            $file = $_FILES['imagen'];
 
-        // 🔥 BORRAR IMAGEN ANTERIOR
-        if (!empty($imagen) && $imagen !== 'default.png') {
-            $rutaAnterior = $uploadDir . $imagen;
-            if (file_exists($rutaAnterior)) {
-                unlink($rutaAnterior);
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/users/';
+
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                throw new \Exception("Error al subir archivo");
             }
+
+            if ($file['size'] > 2 * 1024 * 1024) {
+                throw new \Exception("La imagen supera el tamaño permitido (2MB)");
+            }
+
+            $mime = mime_content_type($file['tmp_name']);
+
+            if (!str_starts_with($mime, 'image/')) {
+                throw new \Exception("El archivo no es una imagen válida");
+            }
+
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $nuevaImagen = uniqid('user_') . '.' . $ext;
+
+            $destino = $uploadDir . $nuevaImagen;
+
+            if (!move_uploaded_file($file['tmp_name'], $destino)) {
+                throw new \Exception("Error al subir la imagen");
+            }
+
+            // 🔥 BORRAR IMAGEN ANTERIOR
+            if (!empty($imagen) && $imagen !== 'default.png') {
+                $rutaAnterior = $uploadDir . $imagen;
+                if (file_exists($rutaAnterior)) {
+                    unlink($rutaAnterior);
+                }
+            }
+
+            $imagen = $nuevaImagen;
         }
 
-        $imagen = $nuevaImagen;
-    }
+        // ============================
+        // UPDATE
+        // ============================
+        if (!empty($password)) {
 
-    // ============================
-    // UPDATE
-    // ============================
-    if (!empty($password)) {
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
-        $stmt = $db->prepare("
+            $stmt = $db->prepare("
             UPDATE usuarios 
             SET nombre=?, apellido=?, password=?, rol_id=?, imagen=? 
             WHERE id=?
         ");
 
-        $stmt->bind_param("sssisi", $nombre, $apellido, $passwordHash, $rol, $imagen, $id);
+            $stmt->bind_param("sssisi", $nombre, $apellido, $passwordHash, $rol, $imagen, $id);
+        } else {
 
-    } else {
-
-        $stmt = $db->prepare("
+            $stmt = $db->prepare("
             UPDATE usuarios 
             SET nombre=?, apellido=?, rol_id=?, imagen=? 
             WHERE id=?
         ");
 
-        $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagen, $id);
-    }
+            $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagen, $id);
+        }
 
-    if (!$stmt->execute()) {
-        throw new \Exception("Error al actualizar usuario");
-    }
+        if (!$stmt->execute()) {
+            throw new \Exception("Error al actualizar usuario");
+        }
 
-    // ============================
-    // ACTUALIZAR SESIÓN
-    // ============================
-    if ($_SESSION['user']['id'] == $id) {
+        // ============================
+        // ACTUALIZAR SESIÓN
+        // ============================
+        if ($_SESSION['user']['id'] == $id) {
 
-        $stmt = $db->prepare("
+            $stmt = $db->prepare("
             SELECT u.*, r.nombre AS rol_nombre
             FROM usuarios u
             JOIN roles r ON r.id = u.rol_id
             WHERE u.id=?
         ");
 
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
 
-        $_SESSION['user'] = $stmt->get_result()->fetch_assoc();
-    }
+            $_SESSION['user'] = $stmt->get_result()->fetch_assoc();
+        }
 
-    // ============================
-    // AUDITORÍA
-    // ============================
-    (new \App\Core\Repositories\AuditLogRepository($db))->log([
-        'usuario_id' => $_SESSION['user']['id'] ?? null,
-        'accion'     => 'update',
-        'entidad'    => 'usuarios',
-        'entidad_id' => $id,
-        'modulo'     => 'users',
-        'detalle'    => [
-            'before' => [
-                'nombre'   => $old['nombre'],
-                'apellido' => $old['apellido'],
-                'rol_id'   => $old['rol_id'],
-                'imagen'   => $old['imagen']
-            ],
-            'after' => [
-                'nombre'   => $nombre,
-                'apellido' => $apellido,
-                'rol_id'   => $rol,
-                'imagen'   => $imagen
+        // ============================
+        // AUDITORÍA
+        // ============================
+        (new \App\Core\Repositories\AuditLogRepository($db))->log([
+            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'accion'     => 'update',
+            'entidad'    => 'usuarios',
+            'entidad_id' => $id,
+            'modulo'     => 'users',
+            'detalle'    => [
+                'before' => [
+                    'nombre'   => $old['nombre'],
+                    'apellido' => $old['apellido'],
+                    'rol_id'   => $old['rol_id'],
+                    'imagen'   => $old['imagen']
+                ],
+                'after' => [
+                    'nombre'   => $nombre,
+                    'apellido' => $apellido,
+                    'rol_id'   => $rol,
+                    'imagen'   => $imagen
+                ]
             ]
-        ]
-    ]);
-}
+        ]);
+    }
 
     public static function getForEdit(int $id, int $rolId): array
     {
@@ -717,7 +724,6 @@ public static function update(array $data, int $rolId): void
             SELECT id 
             FROM usuarios 
             WHERE LOWER(username) = ?
-            AND deleted_at IS NULL
             LIMIT 1
         ");
 

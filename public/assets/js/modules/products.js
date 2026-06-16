@@ -290,7 +290,7 @@ function initColorToggle() {
 // INIT CONTROLADO
 // ================================
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("INIT PRODUCTS OK");
+  // console.log("INIT PRODUCTS OK");
 
   if (document.querySelector("#tablaFabricTypes")) {
     initDataTable("#tablaFabricTypes", "tipos");

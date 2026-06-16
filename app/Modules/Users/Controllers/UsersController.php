@@ -185,6 +185,7 @@ class UsersController extends Controller
     public function delete()
     {
         header('Content-Type: application/json');
+         
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
@@ -221,7 +222,7 @@ class UsersController extends Controller
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        // 🔥 SOLO SUPER
+        //  SOLO SUPER
         if ($rolId != \App\Core\Roles::SUPER) {
             return print json_encode([
                 'ok' => false,
@@ -250,6 +251,7 @@ class UsersController extends Controller
             ]);
         }
     }
+    
     // ======================================================
     // VERIFICAR DISPONIBILIDAD DE USERNAME
     // ======================================================

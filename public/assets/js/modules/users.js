@@ -1,4 +1,4 @@
-
+console.log("USERS JS CARGADO 🔥");
 
 // =========================================================
 // IMPORTS
@@ -64,7 +64,7 @@ export function initUserValidation() {
     timeout = setTimeout(async () => {
       try {
         const res = await post("/users/check-username", { username });
-        console.log("RESPONSE:", res);
+        // console.log("RESPONSE:", res);
 
         if (!res || typeof res.exists === "undefined") {
           showMsg(msg, "Error al validar", "error");
@@ -73,7 +73,7 @@ export function initUserValidation() {
         }
 
         if (res.exists) {
-          showMsg(msg, "❌ Usuario ya existe", "error");
+          showMsg(msg, "❌ Usuario ya fue usado", "error");
           input.dataset.exists = "true";
         } else {
           showMsg(msg, "✔️ Disponible", "success");
@@ -124,7 +124,10 @@ export function initPasswordValidation() {
 // =========================================================
 //  FORM VALIDATION
 // =========================================================
+let initialized = false;
 export function initUserFormValidation() {
+  if (initialized) return;
+  initialized = true;
   const form = document.querySelector(".form-users");
   if (!form) return;
 
@@ -212,7 +215,7 @@ export function initImagePreview() {
 }
 
 // =========================================================
-//  TOGGLE 
+//  TOGGLE
 // =========================================================
 let toggleInitialized = false;
 
@@ -221,12 +224,11 @@ export function initUserToggle() {
   toggleInitialized = true;
 
   document.addEventListener("click", async (e) => {
-      console.log("INIT VALIDATION 🔥");
-  initUserValidation();
-  
+    // console.log("INIT VALIDATION 🔥");
+    initUserValidation();
+
     const el = e.target.closest(".toggle-user");
     if (!el) return;
-
 
     const id = el.dataset.id;
     const url = el.dataset.url;
@@ -268,6 +270,109 @@ export function initUserToggle() {
 }
 
 // =========================================================
+// DELETE USER 
+// =========================================================
+let deleteInitialized = false;
+export function initUserDelete() {
+  if (deleteInitialized) return;
+  deleteInitialized = true;
+
+  console.log("INIT DELETE 🔥");
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-delete");
+    if (!btn) return;
+
+    console.log("CLICK DELETE 🔥");
+
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
+    const name = btn.dataset.name;
+
+    if (!id || !url) return;
+
+    if (!confirm(`¿Eliminar usuario ${name}?`)) return;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `id=${id}`,
+      });
+
+      const data = await response.json();
+      console.log("RESPUESTA:", data);
+
+      if (!data.ok) {
+        showToast(data.error || "Error", "error");
+        return;
+      }
+
+      const row = btn.closest("tr");
+
+      if (row) {
+        row.style.opacity = "0";
+        setTimeout(() => row.remove(), 300);
+      }
+
+      showToast("Eliminado", "success");
+    } catch (err) {
+      console.error(err);
+    }
+  });
+}
+
+// =========================================================
+// RESTORE USER 
+// =========================================================
+
+export function initUserRestore() {
+  console.log("INIT RESTORE 🔥");
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-restore");
+    if (!btn) return;
+
+    console.log("CLICK RESTORE 🔥");
+
+    const id = btn.dataset.id;
+    const url = btn.dataset.url;
+
+    if (!id || !url) {
+      console.error("Falta ID o URL");
+      return;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `id=${id}`,
+      });
+
+      const data = await response.json();
+
+      console.log("RESPUESTA RESTORE:", data);
+
+      if (!data.ok) {
+        alert(data.error || "Error al restaurar");
+        return;
+      }
+
+      // OPCIÓN SIMPLE: recargar
+      location.reload();
+    } catch (error) {
+      console.error(error);
+      alert("Error de conexión");
+    }
+  });
+}
+
+// =========================================================
 //  INIT MODULE (EVENT DRIVEN)
 // =========================================================
 Events.on("users:create", () => {
@@ -278,14 +383,15 @@ Events.on("users:create", () => {
 });
 
 Events.on("users:edit", () => {
- 
   initUserValidation();
   initPasswordValidation();
   initUserFormValidation();
   initImagePreview();
 });
 
-
 Events.on("users:index", () => {
+  console.log("EVENT users:index ");
   initUserToggle();
+  initUserDelete();
+  initUserRestore()
 });

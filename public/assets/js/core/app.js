@@ -1,10 +1,13 @@
+console.log("APP JS CARGADO 🔥");
+
+
 import { Events } from "./events.js";
 import { initNavbar } from "../modules/navbar.js";
 
 
 // IMPORTAR MÓDULOS (eventos)
 import "../modules/alerts.js";
-import "../modules/users.js";
+// import "../modules/users.js";
 import '../modules/sidebar.js';
 
 // IMPORTAR PÁGINAS

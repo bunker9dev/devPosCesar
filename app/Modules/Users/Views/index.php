@@ -112,8 +112,14 @@
     </table>
 </div>
 
-<!-- 🔥 EVENTO PARA INICIALIZAR JS -->
-<script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-index.js"></script>
+
+
 <script>
-    window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
+  window.BASE_URL = "<?= BASE_URL ?>";
+  window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
 </script>
+
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-index.js"></script>
+
+
+

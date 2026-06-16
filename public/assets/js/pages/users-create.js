@@ -4,7 +4,7 @@ import { Events } from "../core/events.js";
 import "../modules/users.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("users-create cargado");
+    // console.log("users-create cargado");
 
     // ================================
     // FLASH MESSAGES
