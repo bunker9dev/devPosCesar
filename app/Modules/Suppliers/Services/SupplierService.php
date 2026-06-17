@@ -3,7 +3,7 @@
 namespace App\Modules\Suppliers\Services;
 
 use App\Core\Status;
-use App\Services\CatalogService;
+use App\Core\Repositories\AuditLogRepository;
 use Exception;
 
 class SupplierService
@@ -43,14 +43,17 @@ class SupplierService
 
         $id = $this->model->create($data);
 
-        CatalogService::audit(
-            "CREATE",
-            "proveedores",
-            $id,
-            "Proveedor creado: {$data['nombre']}",
-            "suppliers",
-            $_SESSION['user']['id'] ?? null
-        );
+        // AUDITORÍA 
+        (new AuditLogRepository($this->db))->log([
+            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'accion'     => 'create',
+            'entidad'    => 'proveedores',
+            'entidad_id' => $id,
+            'modulo'     => 'suppliers',
+            'detalle'    => [
+                'after' => $data
+            ]
+        ]);
 
         return $id;
     }
@@ -75,20 +78,23 @@ class SupplierService
 
         $this->model->update($id, $data);
 
-        CatalogService::audit(
-            "UPDATE",
-            "proveedores",
-            $id,
-            "Proveedor actualizado: {$data['nombre']}",
-            "suppliers",
-            $_SESSION['user']['id'] ?? null
-        );
+        (new AuditLogRepository($this->db))->log([
+            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'accion'     => 'update',
+            'entidad'    => 'proveedores',
+            'entidad_id' => $id,
+            'modulo'     => 'suppliers',
+            'detalle'    => [
+                'before' => $supplier,
+                'after'  => $data
+            ]
+        ]);
 
         return true;
     }
 
     // ======================================================
-    // TOGGLE ESTADO
+    // TOGGLE
     // ======================================================
     public function toggle($id, $userId)
     {
@@ -106,22 +112,25 @@ class SupplierService
             ? Status::INACTIVO
             : Status::ACTIVO;
 
-        $this->model->updateEstado($id, $nuevoEstado);
+        $this->model->updateEstado($id, $nuevoEstado, $userId);
 
-        CatalogService::audit(
-            "TOGGLE",
-            "proveedores",
-            $id,
-            "Estado {$supplier['estado']} → {$nuevoEstado}",
-            "suppliers",
-            $userId
-        );
+        (new AuditLogRepository($this->db))->log([
+            'usuario_id' => $userId,
+            'accion'     => 'toggle',
+            'entidad'    => 'proveedores',
+            'entidad_id' => $id,
+            'modulo'     => 'suppliers',
+            'detalle'    => [
+                'estado_anterior' => $supplier['estado'],
+                'estado_nuevo'    => $nuevoEstado
+            ]
+        ]);
 
         return $nuevoEstado;
     }
 
     // ======================================================
-    // DELETE (SOFT)
+    // DELETE  (SOFT)
     // ======================================================
     public function delete($id, $userId)
     {
@@ -135,21 +144,22 @@ class SupplierService
             throw new Exception("Ya está eliminado");
         }
 
-        // 🔥 Validación de negocio
         if ($this->hasPurchases($id)) {
             throw new Exception("No se puede eliminar, tiene compras asociadas");
         }
 
         $this->model->delete($id, $userId);
 
-        CatalogService::audit(
-            "DELETE",
-            "proveedores",
-            $id,
-            "Proveedor eliminado: {$supplier['nombre']}",
-            "suppliers",
-            $userId
-        );
+        (new AuditLogRepository($this->db))->log([
+            'usuario_id' => $userId,
+            'accion'     => 'delete',
+            'entidad'    => 'proveedores',
+            'entidad_id' => $id,
+            'modulo'     => 'suppliers',
+            'detalle'    => [
+                'before' => $supplier
+            ]
+        ]);
 
         return true;
     }
@@ -169,16 +179,18 @@ class SupplierService
             throw new Exception("El proveedor no está eliminado");
         }
 
-        $this->model->restore($id);
+        $this->model->restore($id, $userId);
 
-        CatalogService::audit(
-            "RESTORE",
-            "proveedores",
-            $id,
-            "Proveedor restaurado: {$supplier['nombre']}",
-            "suppliers",
-            $userId
-        );
+        (new AuditLogRepository($this->db))->log([
+            'usuario_id' => $userId,
+            'accion'     => 'restore',
+            'entidad'    => 'proveedores',
+            'entidad_id' => $id,
+            'modulo'     => 'suppliers',
+            'detalle'    => [
+                'after' => $supplier
+            ]
+        ]);
 
         return true;
     }
@@ -192,12 +204,12 @@ class SupplierService
     }
 
     // ======================================================
-    // VALIDAR SI TIENE COMPRAS
+    // VALIDAR COMPRAS
     // ======================================================
     private function hasPurchases($id): bool
     {
         $stmt = $this->db->prepare("
-            SELECT id FROM purchases WHERE supplier_id = ?
+            SELECT id FROM purchases WHERE supplier_id = ? LIMIT 1
         ");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -206,7 +218,7 @@ class SupplierService
     }
 
     // ======================================================
-    // NORMALIZAR DATOS
+    // NORMALIZAR
     // ======================================================
     private function normalize(&$data)
     {
@@ -218,22 +230,16 @@ class SupplierService
     }
 
     // ======================================================
-    // VALIDACIONES CENTRALIZADAS (FIX FINAL)
+    // VALIDAR
     // ======================================================
     private function validate($data, $id = null)
     {
         $errors = [];
 
-        // =========================
-        // NOMBRE
-        // =========================
         if (empty($data['nombre'])) {
             $errors['nombre'] = "El nombre es obligatorio";
         }
 
-        // =========================
-        // NIT
-        // =========================
         if (empty($data['nit'])) {
             $errors['nit'] = "El NIT es obligatorio";
         }
@@ -246,30 +252,14 @@ class SupplierService
             $errors['nit'] = "El NIT ya está registrado";
         }
 
-        // =========================
-        // EMAIL
-        // =========================
-        if (!empty($data['email'])) {
-
-            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $errors['email'] = "Email inválido";
-            }
-
-            if (CatalogService::exists('proveedores', 'email', $data['email'], $id)) {
-                $errors['email'] = "Email ya registrado";
-            }
+        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = "Email inválido";
         }
 
-        // =========================
-        // TELÉFONO
-        // =========================
         if (!empty($data['telefono']) && strlen($data['telefono']) < 7) {
             $errors['telefono'] = "Teléfono inválido";
         }
 
-        // =========================
-        // THROW (CLAVE)
-        // =========================
         if (!empty($errors)) {
             throw new Exception(json_encode($errors));
         }

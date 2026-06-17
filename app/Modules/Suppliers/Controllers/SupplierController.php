@@ -4,7 +4,6 @@ namespace App\Modules\Suppliers\Controllers;
 
 use App\Core\Controller;
 use App\Core\Roles;
-use App\Core\Status;
 use App\Modules\Suppliers\Services\SupplierService;
 use App\Modules\Suppliers\Models\Supplier;
 
@@ -28,7 +27,6 @@ class SupplierController extends Controller
         $this->onlyAdmin();
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
-
         $isSuper = $rolId === Roles::SUPER;
 
         $suppliers = $this->service->getAll($isSuper);
@@ -63,6 +61,7 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor creado";
             return $this->redirect(BASE_URL . "/suppliers");
+
         } catch (\Exception $e) {
 
             $errors = json_decode($e->getMessage(), true);
@@ -120,6 +119,7 @@ class SupplierController extends Controller
 
             $_SESSION['success'] = "Proveedor actualizado";
             return $this->redirect(BASE_URL . "/suppliers");
+
         } catch (\Exception $e) {
 
             $errors = json_decode($e->getMessage(), true);
@@ -144,10 +144,16 @@ class SupplierController extends Controller
             return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+        }
+
         try {
 
             $estado = $this->service->toggle(
-                $_POST['id'],
+                $id,
                 $_SESSION['user']['id']
             );
 
@@ -155,6 +161,7 @@ class SupplierController extends Controller
                 'ok' => true,
                 'estado' => $estado
             ]);
+
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -177,14 +184,21 @@ class SupplierController extends Controller
             return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+        }
+
         try {
 
             $this->service->delete(
-                $_POST['id'],
+                $id,
                 $_SESSION['user']['id']
             );
 
             echo json_encode(['ok' => true]);
+
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -207,14 +221,21 @@ class SupplierController extends Controller
             return print json_encode(['ok' => false, 'error' => 'No autorizado']);
         }
 
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+        }
+
         try {
 
             $this->service->restore(
-                $_POST['id'],
+                $id,
                 $_SESSION['user']['id']
             );
 
             echo json_encode(['ok' => true]);
+
         } catch (\Exception $e) {
 
             echo json_encode([
@@ -224,6 +245,9 @@ class SupplierController extends Controller
         }
     }
 
+    // ======================================================
+    // VALIDAR NIT (AJAX)
+    // ======================================================
     public function checkNit()
     {
         header('Content-Type: application/json');
@@ -233,29 +257,24 @@ class SupplierController extends Controller
             $nit = $_POST['nit'] ?? '';
 
             if (!$nit) {
-                echo json_encode(['exists' => false]);
+                echo json_encode([
+                    'ok' => true,
+                    'exists' => false
+                ]);
                 return;
             }
 
-            $db = conectarDB();
-
-            $stmt = $db->prepare("
-            SELECT id FROM proveedores WHERE nit = ?
-            LIMIT 1
-        ");
-
-            $stmt->bind_param("s", $nit);
-            $stmt->execute();
-
-            $exists = $stmt->get_result()->num_rows > 0;
+            $exists = $this->service->existsByNit($nit);
 
             echo json_encode([
                 'ok' => true,
                 'exists' => $exists
             ]);
+
         } catch (\Exception $e) {
 
             echo json_encode([
+                'ok' => false,
                 'exists' => false
             ]);
         }

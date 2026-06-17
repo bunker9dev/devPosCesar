@@ -1,3 +1,9 @@
+<?php
+
+use App\Core\Status;
+?>
+
+
 <div class="module-header">
     <a href="<?= BASE_URL ?>/suppliers/create" class="btn-primary">
         + Crear proveedor
@@ -48,13 +54,13 @@
                     <!-- ESTADO -->
                     <td data-label="Estado">
                         <span
-                            class="badge toggle-supplier active"
+                            class="badge toggle-supplier <?= Status::class($estado) ?>"
                             data-id="<?= $s['id'] ?>"
                             data-url="<?= BASE_URL ?>/suppliers/toggle"
-                            data-estado="<?= $s['estado'] ?>"
-                            data-label-active="Activo"
-                            data-label-inactive="Inactivo">
-                            Activo
+                            data-estado="<?= $estado ?>">
+
+                            <?= Status::label($estado) ?>
+
                         </span>
                     </td>
 
@@ -63,35 +69,41 @@
                         <div class="actions">
 
                             <!-- EDITAR -->
-                            <?php if ($canEdit): ?>
-                                <a href="<?= BASE_URL ?>/suppliers/edit?id=<?= $s['id'] ?>" class="btn-action edit">
-                                    Editar
-                                </a>
-                            <?php endif; ?>
+                            <?php if ($s['estado'] !== Status::ELIMINADO): ?>
 
-                            <!-- ELIMINAR -->
-                            <?php if ($estado !== $Status::ELIMINADO && $canDelete): ?>
-                                <button
-                                    class="btn-action delete btn-delete"
-                                    data-id="<?= $s['id'] ?>"
-                                    data-name="<?= htmlspecialchars($s['nombre']) ?>"
-                                    data-url="<?= BASE_URL ?>/suppliers/delete">
-                                    Eliminar
-                                </button>
-                            <?php endif; ?>
+                                <?php if ($canEdit): ?>
+                                    <a href="<?= BASE_URL ?>/suppliers/edit?id=<?= $s['id'] ?>" class="btn-action edit">
+                                        Editar
+                                    </a>
+                                <?php endif; ?>
+                                <!-- ELIMINAR -->
+                                <?php if ($canDelete): ?>
+                                    <button
+                                        class="btn-action delete btn-delete"
+                                        data-id="<?= $s['id'] ?>"
+                                        data-name="<?= htmlspecialchars($s['nombre']) ?>"
+                                        data-url="<?= BASE_URL ?>/suppliers/delete">
+                                        Eliminar
+                                    </button>
+                                <?php endif; ?>
 
-                            <!-- RESTAURAR -->
-                            <?php if ($estado === $Status::ELIMINADO && $canRestore): ?>
-                                <button
-                                    class="btn-action restore btn-restore"
-                                    data-id="<?= $s['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/suppliers/restore">
-                                    Restaurar
-                                </button>
+                            <?php else: ?>
+                                <!-- RESTAURAR -->
+                                <?php if ($canRestore): ?>
+                                    <button
+                                        class="btn-action restore btn-restore"
+                                        data-id="<?= $s['id'] ?>"
+                                        data-url="<?= BASE_URL ?>/suppliers/restore">
+                                        Restaurar
+                                    </button>
+                                <?php endif; ?>
+
                             <?php endif; ?>
 
                         </div>
                     </td>
+
+
 
                 </tr>
 

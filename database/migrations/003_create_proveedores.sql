@@ -49,3 +49,11 @@ ON DELETE SET NULL;
 CREATE INDEX idx_proveedor_estado ON proveedores(estado);
 CREATE INDEX idx_proveedor_ciudad ON proveedores(ciudad);
 CREATE INDEX idx_proveedor_deleted ON proveedores(deleted_at);
+
+
+ALTER TABLE proveedores 
+ADD COLUMN ip_address VARCHAR(45) NULL,
+ADD COLUMN user_agent TEXT NULL;
+
+ALTER TABLE proveedores 
+ADD UNIQUE KEY unique_nit (nit);
