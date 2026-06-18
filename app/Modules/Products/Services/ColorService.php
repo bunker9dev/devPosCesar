@@ -2,49 +2,74 @@
 
 namespace App\Modules\Products\Services;
 
-use App\Modules\Products\Repositories\ColorRepository;
+use App\Core\Status;
 use App\Core\Repositories\AuditLogRepository;
 use Exception;
 
 class ColorService
 {
-    private $repo;
+    private $model;
     private $audit;
 
-    public function __construct($db)
+    public function __construct($model, $db)
     {
-        $this->repo = new ColorRepository($db);
+        $this->model = $model;
         $this->audit = new AuditLogRepository($db);
     }
 
     // ==================================================
     // LISTAR
     // ==================================================
-    public function getAll()
+    public function getAll($isSuper = false)
     {
-        return $this->repo->getAll();
+        return $this->model->getAll($isSuper);
     }
 
     // ==================================================
     // CREAR
     // ==================================================
-    public function create($nombre)
+    public function create($data)
     {
-        $nombre = strtolower(trim($nombre));
+        $this->normalize($data);
 
-        if (!$nombre) {
+        if (empty($data['nombre'])) {
             throw new Exception("El nombre es obligatorio");
         }
 
-        if ($this->repo->exists($nombre)) {
-            throw new Exception("El nombre ya existe");
+        //  1. SI EXISTE ELIMINADO → RESTAURAR
+        $deleted = $this->model->findDeletedByNombre($data['nombre']);
+
+        if ($deleted) {
+
+            $this->model->restore(
+                $deleted['id'],
+                $_SESSION['user']['id']
+            );
+
+            $this->audit->log([
+                'usuario_id' => $_SESSION['user']['id'] ?? null,
+                'accion' => 'restore_auto',
+                'entidad' => 'fabric_colors',
+                'entidad_id' => $deleted['id'],
+                'modulo' => 'products',
+                'detalle' => [
+                    'reason' => 'auto-restore on create'
+                ]
+            ]);
+
+            return $deleted['id'];
         }
 
-        $codigo = $this->repo->nextCode();
+        // 2. SI EXISTE ACTIVO/INACTIVO → ERROR
+        if ($this->model->existsByNombre($data['nombre'])) {
+            throw new Exception("El color ya existe");
+        }
 
-        $id = $this->repo->create($codigo, $nombre, null);
+        // 3. CREAR NUEVO
+        $data['codigo'] = $this->generateCode();
 
-        // 🔥 AUDITORÍA PRO
+        $id = $this->model->create($data);
+
         $this->audit->log([
             'usuario_id' => $_SESSION['user']['id'] ?? null,
             'accion' => 'create',
@@ -52,50 +77,34 @@ class ColorService
             'entidad_id' => $id,
             'modulo' => 'products',
             'detalle' => [
-                'after' => [
-                    'codigo' => $codigo,
-                    'nombre' => $nombre
-                ]
+                'after' => $data
             ]
         ]);
 
-        return true;
+        return $id;
     }
-
     // ==================================================
     // UPDATE
     // ==================================================
-    public function update($id, $nombre)
+    public function update($id, $data)
     {
-        $nombre = strtolower(trim($nombre));
+        $row = $this->model->find($id);
 
-        if (!$id) {
-            throw new Exception("ID inválido");
-        }
-
-        if (!$nombre) {
-            throw new Exception("El nombre es obligatorio");
-        }
-
-        $old = $this->repo->find($id);
-
-        if (!$old) {
+        if (!$row) {
             throw new Exception("Registro no existe");
         }
 
-        if ($this->repo->exists($nombre)) {
-            throw new Exception("El nombre ya existe");
+        if ($row['estado'] == Status::ELIMINADO) {
+            throw new Exception("No se puede editar eliminado");
         }
 
-        $this->repo->update($id, [
-            'codigo' => $old['codigo'],
-            'nombre' => $nombre,
-            'hex'    => $old['hex'],
-            'estado' => 1,
-            'updated_by' => $_SESSION['user']['id'] ?? null
-        ]);
+        $before = $row;
 
-        // 🔥 AUDITORÍA PRO
+        $this->normalize($data);
+        $this->validateUpdate($data, $id);
+
+        $this->model->update($id, $data);
+
         $this->audit->log([
             'usuario_id' => $_SESSION['user']['id'] ?? null,
             'accion' => 'update',
@@ -103,8 +112,8 @@ class ColorService
             'entidad_id' => $id,
             'modulo' => 'products',
             'detalle' => [
-                'before' => $old,
-                'after' => ['nombre' => $nombre]
+                'before' => $before,
+                'after'  => $data
             ]
         ]);
 
@@ -114,42 +123,33 @@ class ColorService
     // ==================================================
     // TOGGLE
     // ==================================================
-    public function toggle($id)
+    public function toggle($id, $userId)
     {
-        if (!$id) {
-            throw new Exception("ID inválido");
-        }
-
-        $row = $this->repo->find($id);
+        $row = $this->model->find($id);
 
         if (!$row) {
             throw new Exception("Registro no existe");
         }
 
-        if ($row['estado'] == 0) {
+        if ($row['estado'] == Status::ELIMINADO) {
             throw new Exception("No se puede modificar eliminado");
         }
 
-        $nuevoEstado = $row['estado'] == 1 ? 2 : 1;
+        $nuevoEstado = $row['estado'] == Status::ACTIVO
+            ? Status::INACTIVO
+            : Status::ACTIVO;
 
-        $this->repo->update($id, [
-            'codigo' => $row['codigo'],
-            'nombre' => $row['nombre'],
-            'hex'    => $row['hex'],
-            'estado' => $nuevoEstado,
-            'updated_by' => $_SESSION['user']['id'] ?? null
-        ]);
+        $this->model->updateEstado($id, $nuevoEstado, $userId);
 
-        // 🔥 AUDITORÍA PRO
         $this->audit->log([
-            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'usuario_id' => $userId,
             'accion' => 'toggle',
             'entidad' => 'fabric_colors',
             'entidad_id' => $id,
             'modulo' => 'products',
             'detalle' => [
-                'before' => ['estado' => $row['estado']],
-                'after' => ['estado' => $nuevoEstado]
+                'before' => $row['estado'],
+                'after'  => $nuevoEstado
             ]
         ]);
 
@@ -157,42 +157,34 @@ class ColorService
     }
 
     // ==================================================
-    // DELETE
+    // DELETE (SOFT)
     // ==================================================
-    public function delete($id)
+    public function delete($id, $userId)
     {
-        if (!$id) {
-            throw new Exception("ID inválido");
-        }
-
-        $row = $this->repo->find($id);
+        $row = $this->model->find($id);
 
         if (!$row) {
             throw new Exception("Registro no existe");
         }
 
-        // 🔥 VALIDAR USO
-        $stmt = $this->repo->db->prepare("
-            SELECT id FROM products WHERE color_id = ? LIMIT 1
-        ");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+        if ($row['estado'] == Status::ELIMINADO) {
+            throw new Exception("Ya está eliminado");
+        }
 
-        if ($stmt->get_result()->num_rows > 0) {
+        if ($this->model->isUsed($id)) {
             throw new Exception("El color está en uso");
         }
 
-        $this->repo->softDelete($id);
+        $this->model->delete($id, $userId);
 
-        // 🔥 AUDITORÍA PRO
         $this->audit->log([
-            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'usuario_id' => $userId,
             'accion' => 'delete',
             'entidad' => 'fabric_colors',
             'entidad_id' => $id,
             'modulo' => 'products',
             'detalle' => [
-                'before' => $row
+                'nombre' => $row['nombre']
             ]
         ]);
 
@@ -202,32 +194,100 @@ class ColorService
     // ==================================================
     // RESTORE
     // ==================================================
-    public function restore($id)
+    public function restore($id, $userId)
     {
-        if (!$id) {
-            throw new Exception("ID inválido");
-        }
-
-        $row = $this->repo->find($id);
+        $row = $this->model->find($id);
 
         if (!$row) {
             throw new Exception("Registro no existe");
         }
 
-        $this->repo->restore($id);
+        if ($row['estado'] != Status::ELIMINADO) {
+            throw new Exception("No está eliminado");
+        }
 
-        // 🔥 AUDITORÍA PRO
+        $this->model->restore($id, $userId);
+
         $this->audit->log([
-            'usuario_id' => $_SESSION['user']['id'] ?? null,
+            'usuario_id' => $userId,
             'accion' => 'restore',
             'entidad' => 'fabric_colors',
             'entidad_id' => $id,
             'modulo' => 'products',
             'detalle' => [
-                'after' => $row
+                'nombre' => $row['nombre']
             ]
         ]);
 
         return true;
+    }
+
+    // ==================================================
+    // VALIDACIÓN RESTAURAR
+    // ==================================================
+
+    private function validate($data, $excludeId = null)
+    {
+        if (empty($data['nombre'])) {
+            throw new Exception("El nombre es obligatorio");
+        }
+
+        if ($this->model->existsByNombre($data['nombre'], $excludeId)) {
+            throw new Exception("El color ya existe");
+        }
+    }
+
+    // ==================================================
+    // VALIDACIÓN CREAR
+    // ==================================================
+    private function validateCreate($data)
+    {
+        if (empty($data['nombre'])) {
+            throw new Exception("El nombre es obligatorio");
+        }
+
+        if ($this->model->existsByNombre($data['nombre'])) {
+            throw new Exception("El color ya existe");
+        }
+    }
+
+    // ==================================================
+    // VALIDACIÓN UPDATE
+    // ==================================================
+    private function validateUpdate($data, $id)
+    {
+        if (empty($data['nombre'])) {
+            throw new Exception("El nombre es obligatorio");
+        }
+
+        if ($this->model->existsByNombre($data['nombre'], $id)) {
+            throw new Exception("El color ya existe");
+        }
+    }
+
+    // ==================================================
+    // GENERAR CÓDIGO
+    // ==================================================
+    private function generateCode()
+    {
+        $last = $this->model->getLastCode();
+
+        if (!$last) {
+            return 'COL-001';
+        }
+
+        preg_match('/(\d+)$/', $last, $matches);
+
+        $num = isset($matches[1]) ? (int)$matches[1] + 1 : 1;
+
+        return 'COL-' . str_pad($num, 3, '0', STR_PAD_LEFT);
+    }
+
+    // ==================================================
+    // NORMALIZAR
+    // ==================================================
+    private function normalize(&$data)
+    {
+        $data['nombre'] = strtolower(trim($data['nombre'] ?? ''));
     }
 }

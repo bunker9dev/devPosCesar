@@ -242,49 +242,49 @@ function initWarehouseToggle() {
   });
 }
 
-// ================================
-// TOGGLE COLORS
-// ================================
-function initColorToggle() {
-  document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".toggle-color");
-    if (!btn) return;
+// // ================================
+// // TOGGLE COLORS
+// // ================================
+// function initColorToggle() {
+//   document.addEventListener("click", async (e) => {
+//     const btn = e.target.closest(".toggle-color");
+//     if (!btn) return;
 
-    const id = btn.dataset.id;
-    const url = btn.dataset.url;
+//     const id = btn.dataset.id;
+//     const url = btn.dataset.url;
 
-    try {
-      const res = await post(url, { id });
+//     try {
+//       const res = await post(url, { id });
 
-      if (!res || res.ok !== true) {
-        throw new Error(res?.error || "Error cambiando estado");
-      }
+//       if (!res || res.ok !== true) {
+//         throw new Error(res?.error || "Error cambiando estado");
+//       }
 
-      // 🔥 ACTUALIZA EL MISMO BOTÓN
-      btn.dataset.estado = res.estado;
+//       // 🔥 ACTUALIZA EL MISMO BOTÓN
+//       btn.dataset.estado = res.estado;
 
-      btn.classList.remove("active", "inactive");
+//       btn.classList.remove("active", "inactive");
 
-      if (res.estado == 1) {
-        btn.classList.add("active");
-        btn.textContent = "Activo";
-      } else {
-        btn.classList.add("inactive");
-        btn.textContent = "Inactivo";
-      }
+//       if (res.estado == 1) {
+//         btn.classList.add("active");
+//         btn.textContent = "Activo";
+//       } else {
+//         btn.classList.add("inactive");
+//         btn.textContent = "Inactivo";
+//       }
 
-      Events.emit("alerts:show", {
-        type: "success",
-        message: "Estado actualizado",
-      });
-    } catch (err) {
-      Events.emit("alerts:show", {
-        type: "error",
-        message: err.message,
-      });
-    }
-  });
-}
+//       Events.emit("alerts:show", {
+//         type: "success",
+//         message: "Estado actualizado",
+//       });
+//     } catch (err) {
+//       Events.emit("alerts:show", {
+//         type: "error",
+//         message: err.message,
+//       });
+//     }
+//   });
+// }
 
 // ================================
 // INIT CONTROLADO
@@ -299,13 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initRestore();
   }
 
-  if (document.querySelector("#tablaColors")) {
-    initDataTable("#tablaColors", { entity: "colores" });
-    initEditModal();
-    initDelete();
-    initRestore();
-    initColorToggle();
-  }
+ 
 
   if (document.querySelector("#tablaWarehouses")) {
     initWarehouseToggle();

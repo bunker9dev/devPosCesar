@@ -32,8 +32,8 @@
 
                     <!-- USERNAME (RBAC) -->
                     <td data-label="Usuario">
-                        <?= !empty($u['username']) 
-                            ? htmlspecialchars($u['username']) 
+                        <?= !empty($u['username'])
+                            ? htmlspecialchars($u['username'])
                             : '—' ?>
                     </td>
 
@@ -77,35 +77,34 @@
                         <div class="actions">
 
                             <!-- EDITAR -->
-                            <?php if ($u['can_edit']): ?>
-                                <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
+                            <?php if ($canEdit && $color['estado'] !== Status::ELIMINADO): ?>
+                                <a href="<?= BASE_URL ?>/products/colors/edit?id=<?= $color['id'] ?>" class="btn-action edit">
                                     Editar
                                 </a>
                             <?php endif; ?>
 
                             <!-- ELIMINAR -->
-                            <?php if ($u['can_delete']): ?>
+                            <?php if ($canDelete && $color['estado'] !== Status::ELIMINADO): ?>
                                 <button class="btn-action delete btn-delete"
-                                    data-id="<?= $u['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/users/delete"
-                                    data-name="<?= htmlspecialchars($u['username'] ?? 'usuario') ?>"
-                                    data-entity="usuario">
+                                    data-id="<?= $color['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/products/colors/delete"
+                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
+                                    data-entity="color">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
 
                             <!-- RESTAURAR -->
-                            <?php if ($u['can_restore']): ?>
+                            <?php if ($canRestore && $color['estado'] === Status::ELIMINADO): ?>
                                 <button class="btn-action restore btn-restore"
-                                    data-id="<?= $u['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/users/restore">
+                                    data-id="<?= $color['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/products/colors/restore">
                                     Restaurar
                                 </button>
                             <?php endif; ?>
 
                         </div>
                     </td>
-
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -115,11 +114,8 @@
 
 
 <script>
-  window.BASE_URL = "<?= BASE_URL ?>";
-  window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
+    window.BASE_URL = "<?= BASE_URL ?>";
+    window.USER_ROLE_ID = <?= $_SESSION['user']['rol_id'] ?>;
 </script>
 
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/users-index.js"></script>
-
-
-

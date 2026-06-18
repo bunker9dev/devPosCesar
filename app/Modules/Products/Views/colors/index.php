@@ -1,3 +1,7 @@
+<?php
+
+use App\Core\Status; ?>
+
 <?php if (!empty($_SESSION['success'])): ?>
     <div class="alert alert-success" id="alertMessage">
         <i data-lucide="check-circle"></i>
@@ -15,7 +19,9 @@ endif; ?>
 endif; ?>
 
 
-<!-- 🔥 CREAR COLOR -->
+<!-- =========================
+   CREAR COLOR
+========================= -->
 <form method="POST" action="<?= BASE_URL ?>/products/colors/store" id="formCreateColor">
 
     <div class="inline-create-pro">
@@ -41,7 +47,9 @@ endif; ?>
 </form>
 
 
-<!-- 🔥 TABLA -->
+<!-- =========================
+   TABLA
+========================= -->
 <div class="table-container">
 
     <table id="tablaColors" class="table-main display">
@@ -62,73 +70,79 @@ endif; ?>
 
                 <tr
                     data-id="<?= $color['id'] ?>"
-                    class="<?= !empty($color['deleted_at']) ? 'deleted' : '' ?>">
+                    class="<?= $color['estado'] == Status::ELIMINADO ? 'deleted' : '' ?>">
 
                     <td></td>
 
+                    <!-- ID -->
                     <td data-label="ID"><?= $color['id'] ?></td>
 
+                    <!-- CODIGO -->
                     <td data-label="Código">
                         <?= htmlspecialchars($color['codigo']) ?>
                     </td>
 
-                    <!-- 🔥 COLOR VISUAL -->
+                    <!-- NOMBRE -->
                     <td data-label="Color">
-                        <span
-                            class="color-chip"
-                            style="--swatch: <?= htmlspecialchars($color['hex'] ?? '#6b7280') ?>">
-                        </span>
-
                         <?= htmlspecialchars($color['nombre']) ?>
                     </td>
 
-                    <!-- 🔥 ESTADO -->
+                    <!-- =========================
+                         ESTADO
+                    ========================== -->
                     <td data-label="Estado">
-                        <?php if (!empty($color['deleted_at'])): ?>
+
+                        <?php if ($color['estado'] === Status::ELIMINADO): ?>
+
                             <span class="badge deleted">
-                                Eliminado
+                                <?= Status::label($color['estado']) ?>
                             </span>
+
                         <?php else: ?>
+
                             <button
-                                class="badge estado-toggle toggle-color <?= $color['estado'] == 1 ? 'active' : 'inactive' ?>"
+                                class="badge toggle-color <?= $color['estado'] == Status::ACTIVO ? 'active' : 'inactive' ?>"
                                 data-id="<?= $color['id'] ?>"
                                 data-url="<?= BASE_URL ?>/products/colors/toggle"
                                 data-estado="<?= $color['estado'] ?>">
 
-                                <?= $color['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
+                                <?= Status::label($color['estado']) ?>
+
                             </button>
+
                         <?php endif; ?>
+
                     </td>
 
-                    <!-- 🔥 ACCIONES -->
+                    <!-- =========================
+                         ACCIONES
+                    ========================== -->
                     <td data-label="Acciones">
                         <div class="actions">
 
-                            <!-- ✅ EDIT (CORREGIDO) -->
-                            <?php if ($canEdit && empty($color['deleted_at'])): ?>
+                            <!-- EDIT -->
+                            <?php if ($canEdit && $color['estado'] !== Status::ELIMINADO): ?>
                                 <button
                                     class="btn-action edit btn-edit"
                                     data-id="<?= $color['id'] ?>"
-                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/update">
+                                    data-name="<?= htmlspecialchars($color['nombre']) ?>">
                                     Editar
                                 </button>
                             <?php endif; ?>
 
                             <!-- DELETE -->
-                            <?php if (empty($color['deleted_at']) && $canDelete): ?>
+                            <?php if ($color['estado'] !== Status::ELIMINADO && $canDelete): ?>
                                 <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $color['id'] ?>"
                                     data-url="<?= BASE_URL ?>/products/colors/delete"
-                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
-                                    data-entity="color">
+                                    data-name="<?= htmlspecialchars($color['nombre']) ?>">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
 
                             <!-- RESTORE -->
-                            <?php if (!empty($color['deleted_at']) && $canRestore): ?>
+                            <?php if ($color['estado'] === Status::ELIMINADO && $canRestore): ?>
                                 <button
                                     class="btn-action restore btn-restore"
                                     data-id="<?= $color['id'] ?>"
@@ -148,3 +162,16 @@ endif; ?>
     </table>
 
 </div>
+
+
+<!-- =========================
+   MODALES
+========================= -->
+<?php require __DIR__ . '/modals.php'; ?>
+
+
+<!-- =========================
+   JS PAGE
+========================= -->
+
+<script type="module" src="<?= BASE_URL ?>/assets/js/pages/colors-index.js"></script>

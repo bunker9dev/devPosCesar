@@ -4,55 +4,70 @@ namespace App\Modules\Products\Controllers;
 
 use App\Core\Controller;
 use App\Core\Roles;
-use App\Modules\Products\Services\CatalogService;
+use App\Core\Status;
+use App\Modules\Products\Services\ColorService;
+use App\Modules\Products\Models\FabricColor;
 
 class ColorController extends Controller
 {
     private $service;
-    private $table = 'fabric_colors';
 
     public function __construct()
+    {
+        global $db;
+
+        $model = new FabricColor($db);
+        $this->service = new ColorService($model, $db);
+    }
+
+    // ======================================================
+    // LISTADO
+    // ======================================================
+    public function index()
     {
         $this->auth();
         $this->onlyAdmin();
 
-        $this->service = new CatalogService();
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+        $isSuper = $rolId === Roles::SUPER;
+
+        $colors = $this->service->getAll($isSuper);
+
+        $this->render('Modules/Products/Views/colors/index', compact('colors'));
     }
 
+    // ======================================================
+    // STORE (FORM NORMAL)
+    // ======================================================
+    public function store()
+{
+    header('Content-Type: application/json');
 
-    public function index()
-    {
-        $colors = $this->service->getAll($this->table);
+    try {
 
-        $this->render('Modules/Products/Views/products/colors', [
-            'colors' => $colors,
-            'title' => 'Colores'
+        $_POST['user_id'] = $_SESSION['user']['id'];
+
+        $id = $this->service->create($_POST);
+
+        echo json_encode([
+            'ok' => true,
+            'id' => $id,
+            'message' => 'Color creado'
+        ]);
+
+    } catch (\Throwable $e) {
+
+        http_response_code(400);
+
+        echo json_encode([
+            'ok' => false,
+            'error' => $e->getMessage()
         ]);
     }
-
-
-    public function store()
-    {
-        try {
-
-            $nombre = trim($_POST['nombre'] ?? '');
-
-            if (!$nombre) {
-                throw new \Exception("El nombre es obligatorio");
-            }
-
-            $this->service->create($this->table, $nombre);
-
-            $_SESSION['success'] = "Color creado correctamente";
-        } catch (\Exception $e) {
-
-            $_SESSION['error'] = $e->getMessage();
-        }
-
-        $this->redirect(BASE_URL . '/products/colors');
-    }
-
-
+}
+    // ======================================================
+    // UPDATE (AJAX ✅)
+    // ======================================================
     public function update()
     {
         header('Content-Type: application/json');
@@ -60,52 +75,10 @@ class ColorController extends Controller
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
         if (!Roles::canEdit($rolId)) {
-            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-            exit;
-        }
-
-        try {
-
-            $id = $_POST['id'] ?? null;
-            $nombre = trim($_POST['nombre'] ?? '');
-
-            if (!$id || !$nombre) {
-                throw new \Exception('Datos inválidos');
-            }
-
-            $this->service->update($this->table, $id, $nombre);
-
-            echo json_encode([
-                'ok' => true,
-                'message' => 'Color actualizado correctamente'
-            ]);
-        } catch (\Exception $e) {
-
-            $msg = $e->getMessage();
-
-            if (str_contains($msg, 'Duplicate entry')) {
-                $msg = "El nombre ya está registrado";
-            }
-
-            echo json_encode([
+            return print json_encode([
                 'ok' => false,
-                'error' => $msg
+                'error' => 'No autorizado'
             ]);
-        }
-
-        exit;
-    }
-
-
-    public function toggle()
-    {
-        header('Content-Type: application/json');
-
-        $rolId = $_SESSION['user']['rol_id'] ?? null;
-
-        if (!Roles::canEdit($rolId)) {
-            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-            exit;
         }
 
         try {
@@ -113,10 +86,47 @@ class ColorController extends Controller
             $id = $_POST['id'] ?? null;
 
             if (!$id) {
-                throw new \Exception('ID inválido');
+                throw new \Exception("ID inválido");
             }
 
-            $estado = $this->service->toggle($this->table, $id);
+            $_POST['user_id'] = $_SESSION['user']['id'];
+
+            $this->service->update($id, $_POST);
+
+            echo json_encode([
+                'ok' => true
+            ]);
+        } catch (\Exception $e) {
+
+            echo json_encode([
+                'ok' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    // ======================================================
+    // TOGGLE (AJAX)
+    // ======================================================
+    public function toggle()
+    {
+        header('Content-Type: application/json');
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!Roles::canEdit($rolId)) {
+            return print json_encode([
+                'ok' => false,
+                'error' => 'No autorizado'
+            ]);
+        }
+
+        try {
+
+            $estado = $this->service->toggle(
+                $_POST['id'],
+                $_SESSION['user']['id']
+            );
 
             echo json_encode([
                 'ok' => true,
@@ -129,11 +139,11 @@ class ColorController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-
-        exit;
     }
 
-
+    // ======================================================
+    // DELETE (AJAX)
+    // ======================================================
     public function delete()
     {
         header('Content-Type: application/json');
@@ -141,27 +151,21 @@ class ColorController extends Controller
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
         if (!Roles::canDelete($rolId)) {
-            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-            exit;
+            return print json_encode([
+                'ok' => false,
+                'error' => 'No autorizado'
+            ]);
         }
 
         try {
 
-            $id = $_POST['id'] ?? null;
-
-            if (!$id) {
-                throw new \Exception('ID inválido');
-            }
-
-            if ($this->service->isUsed($this->table, $id, 'products', 'color_id')) {
-                throw new \Exception("Este color está en uso");
-            }
-
-            $this->service->delete($this->table, $id);
+            $this->service->delete(
+                $_POST['id'],
+                $_SESSION['user']['id']
+            );
 
             echo json_encode([
-                'ok' => true,
-                'message' => 'Color eliminado correctamente'
+                'ok' => true
             ]);
         } catch (\Exception $e) {
 
@@ -170,35 +174,28 @@ class ColorController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-
-        exit;
     }
 
-
+    // ======================================================
+    // RESTORE (AJAX)
+    // ======================================================
     public function restore()
     {
         header('Content-Type: application/json');
 
-        $rolId = $_SESSION['user']['rol_id'] ?? null;
-
-        if (!Roles::canRestore($rolId)) {
-            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
-            exit;
-        }
-
         try {
 
-            $id = $_POST['id'] ?? null;
+            // solo validas autenticación + permiso general del módulo
+            $this->auth();
+            $this->onlyAdmin(); // o Roles::canEdit / canManageColors
 
-            if (!$id) {
-                throw new \Exception('ID inválido');
-            }
-
-            $this->service->restore($this->table, $id);
+            $this->service->restore(
+                $_POST['id'],
+                $_SESSION['user']['id']
+            );
 
             echo json_encode([
-                'ok' => true,
-                'message' => 'Registro restaurado correctamente'
+                'ok' => true
             ]);
         } catch (\Exception $e) {
 
@@ -207,7 +204,5 @@ class ColorController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-
-        exit;
     }
 }
