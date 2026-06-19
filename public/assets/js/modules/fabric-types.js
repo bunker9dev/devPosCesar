@@ -1,8 +1,14 @@
-import Events from "../core/events.js";
+import { Events } from "../core/events.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const table = $("#tablaFabricTypes").DataTable({
+    const tableElement = $("#tablaFabricTypes");
+
+    if ($.fn.DataTable.isDataTable(tableElement)) {
+        tableElement.DataTable().destroy();
+    }
+
+    const table = tableElement.DataTable({
         responsive: true,
         pageLength: 10,
         order: [[1, "desc"]],
@@ -19,9 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.querySelector("#formCreateType");
 
-    // ==========================
-    // CREATE
-    // ==========================
+    if (!form) return;
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -42,8 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         form.reset();
 
-        // 🔥 FIX IMPORTANTE
-        location.reload(); // 👈 NO AJAX reload
+        // ✔ mejor que reload
+        table.ajax ? table.ajax.reload(null, false) : location.reload();
 
         Events.emit("alerts:show", {
             type: "success",
@@ -51,16 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-
-    // ==========================
     // DELETE
-    // ==========================
     document.addEventListener("click", async (e) => {
-
         const btn = e.target.closest(".btn-delete");
         if (!btn) return;
-
-        if (!confirm("¿Eliminar?")) return;
 
         const res = await fetch(btn.dataset.url, {
             method: "POST",
@@ -75,12 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.ok) location.reload();
     });
 
-
-    // ==========================
     // TOGGLE
-    // ==========================
     document.addEventListener("click", async (e) => {
-
         const el = e.target.closest(".toggle-type");
         if (!el) return;
 

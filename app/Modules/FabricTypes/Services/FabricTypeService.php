@@ -71,9 +71,13 @@ class FabricTypeService
     {
         $row = $this->model->find($id);
 
+        if (!$row) {
+            throw new \Exception("Registro no existe");
+        }
+
         $new = $row['estado'] == 1 ? 2 : 1;
 
-        $this->model->updateEstado($id, $new);
+        $this->model->updateEstado($id, $new, $userId);
 
         return $new;
     }

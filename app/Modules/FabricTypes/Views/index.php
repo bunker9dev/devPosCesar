@@ -154,4 +154,4 @@ CREATE FORM (USERS STYLE CLEAN)
 
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/modules/fabric-types.js"></script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/core/app.js"></script>

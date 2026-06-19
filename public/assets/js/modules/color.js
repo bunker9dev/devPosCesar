@@ -2,7 +2,6 @@
 // IMPORTS
 // =========================================================
 import { Events } from "../core/events.js";
-import { showToast } from "./alerts.js";
 
 // =========================================================
 // STATE

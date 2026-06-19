@@ -72,14 +72,15 @@ require_once __DIR__ . '/../../Helpers/ui.php';
 
     <!-- 🔥 BASE URL PARA JS -->
     <script>
-        const BASE_URL = "<?= BASE_URL ?>";
-         // ROL DEL USUARIO DISPONIBLE EN TODO EL FRONT
+        window.BASE_URL = "<?= BASE_URL ?>";
+
         window.APP = {
-        user: {
-            id: "<?= $_SESSION['user']['rol'] ?? '' ?>",
-            role: "<?= $_SESSION['user']['rol_nombre'] ?? '' ?>"
-        }
-    };
+            user: {
+                id: "<?= $_SESSION['user']['id'] ?? '' ?>",
+                rol_id: "<?= $_SESSION['user']['rol_id'] ?? '' ?>",
+                rol_nombre: "<?= $_SESSION['user']['rol_nombre'] ?? '' ?>"
+            }
+        };
     </script>
 
     <!-- APP -->

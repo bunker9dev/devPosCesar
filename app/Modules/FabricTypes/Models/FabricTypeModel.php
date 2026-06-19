@@ -88,13 +88,15 @@ class FabricTypeModel
         return $stmt->insert_id;
     }
 
-    public function updateEstado($id, $estado)
+    public function updateEstado($id, $estado, $userId = null)
     {
         $stmt = $this->db->prepare("
-            UPDATE fabric_types SET estado = ? WHERE id = ?
-        ");
+        UPDATE fabric_types 
+        SET estado = ?, updated_by = ?
+        WHERE id = ?
+    ");
 
-        $stmt->bind_param("ii", $estado, $id);
+        $stmt->bind_param("iii", $estado, $userId, $id);
         $stmt->execute();
     }
 

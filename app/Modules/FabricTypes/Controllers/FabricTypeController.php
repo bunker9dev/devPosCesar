@@ -120,6 +120,9 @@ class FabricTypeController extends Controller
     {
         header('Content-Type: application/json');
 
+        var_dump($_POST);
+        exit;
+
         try {
             $estado = $this->service->toggle(
                 $_POST['id'],
