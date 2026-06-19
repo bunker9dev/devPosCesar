@@ -126,7 +126,7 @@ $rolId = $_SESSION['user']['rol_id'] ?? null;
                 </li>
 
                 <li>
-                    <a href="<?= BASE_URL ?>/products/types">
+                    <a href="<?= BASE_URL ?>/fabric-types">
                         <i data-lucide="layers"></i>
                         <span>Tipos de tela</span>
                     </a>

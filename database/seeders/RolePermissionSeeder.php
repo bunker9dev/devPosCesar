@@ -43,19 +43,25 @@ class RolePermissionSeeder
                 'products.edit',
                 'products.delete',
                 
+                'fabric_types.view',
+                'fabric_types.create',
+                'fabric_types.edit',
+                'fabric_types.delete',
+
 
                 'warehouses.view',
                 'roles.view',
                 'proveedores.view',
             ],
 
-            // 🧾 SECRETARIA
+            // 🧾 CONTABLE
             3 => [
                 'users.view',
                 'users.view_username',
 
                 'products.view',
-                'proveedores.view'
+                'proveedores.view',
+                'fabric_types.view'
             ],
 
             // 📦 BODEGUERO

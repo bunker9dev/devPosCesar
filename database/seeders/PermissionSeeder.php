@@ -18,7 +18,8 @@ class PermissionSeeder
             'products',
             'warehouses',
             'roles',
-            'proveedores'
+            'proveedores',
+            'fabric_types'
         ];
 
         // ======================================================

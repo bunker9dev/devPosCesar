@@ -77,28 +77,28 @@
                         <div class="actions">
 
                             <!-- EDITAR -->
-                            <?php if ($canEdit && $color['estado'] !== Status::ELIMINADO): ?>
-                                <a href="<?= BASE_URL ?>/products/colors/edit?id=<?= $color['id'] ?>" class="btn-action edit">
+                            <?php if ($canEdit && $u['estado'] !== \App\Core\Status::ELIMINADO): ?>
+                                <a href="<?= BASE_URL ?>/users/edit?id=<?= $u['id'] ?>" class="btn-action edit">
                                     Editar
                                 </a>
                             <?php endif; ?>
 
                             <!-- ELIMINAR -->
-                            <?php if ($canDelete && $color['estado'] !== Status::ELIMINADO): ?>
+                            <?php if ($canDelete && $u['estado'] !== \App\Core\Status::ELIMINADO): ?>
                                 <button class="btn-action delete btn-delete"
-                                    data-id="<?= $color['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/delete"
-                                    data-name="<?= htmlspecialchars($color['nombre']) ?>"
-                                    data-entity="color">
+                                    data-id="<?= $u['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/users/delete"
+                                    data-name="<?= htmlspecialchars($u['nombre']) ?>"
+                                    data-entity="usuario">
                                     Eliminar
                                 </button>
                             <?php endif; ?>
 
                             <!-- RESTAURAR -->
-                            <?php if ($canRestore && $color['estado'] === Status::ELIMINADO): ?>
+                            <?php if ($canRestore && $u['estado'] === \App\Core\Status::ELIMINADO): ?>
                                 <button class="btn-action restore btn-restore"
-                                    data-id="<?= $color['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/restore">
+                                    data-id="<?= $u['id'] ?>"
+                                    data-url="<?= BASE_URL ?>/users/restore">
                                     Restaurar
                                 </button>
                             <?php endif; ?>

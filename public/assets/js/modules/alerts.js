@@ -68,3 +68,21 @@ Events.on("alerts:init", () => {
     }
 
 });
+
+export default class Alerts {
+
+    static init() {
+        const alert = document.getElementById("alertMessage");
+
+        if (!alert) return;
+
+        setTimeout(() => {
+            alert.style.transition = "0.4s ease";
+            alert.style.opacity = "0";
+            alert.style.transform = "translateY(-10px)";
+
+            setTimeout(() => alert.remove(), 400);
+
+        }, 2500);
+    }
+}

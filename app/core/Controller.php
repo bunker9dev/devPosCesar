@@ -68,54 +68,59 @@ class Controller
     }
 
     protected function generateTitle($view)
-{
-    $parts = explode('/', strtolower($view));
+    {
+        $parts = explode('/', strtolower($view));
 
-    $module = $parts[1] ?? '';
-    $submodule = $parts[3] ?? null; // 🔥 AQUÍ ESTÁ LA CLAVE
-    $action = $parts[4] ?? null;
+        $module = $parts[1] ?? '';
+        $submodule = $parts[3] ?? null; // 🔥 AQUÍ ESTÁ LA CLAVE
+        $action = $parts[4] ?? null;
 
-    $modulesMap = [
-        'suppliers' => 'Proveedores',
-        'products' => 'Productos',
-        'users' => 'Usuarios',
-        'dashboard' => 'Dashboard'
-    ];
+        $modulesMap = [
+            'suppliers' => 'Proveedores',
+            'products' => 'Productos',
+            'users' => 'Usuarios',
+            'dashboard' => 'Dashboard',
+            'fabrictypes' => 'Tipos de tela'
 
-    $submodulesMap = [
-        'colors' => 'Colores',
-        'types' => 'Tipos de tela',
-        'warehouses' => 'Bodegas'
-    ];
+        ];
 
-    $actionsMap = [
-        'index' => 'Listado',
-        'create' => 'Crear',
-        'edit' => 'Editar'
-    ];
+        $submodulesMap = [
+            'colors' => 'Colores',
+            'fabrictypes' => 'Tipos de tela',
+            'warehouses' => 'Bodegas'
+        ];
 
-    $moduleName = $modulesMap[$module] ?? ucfirst($module);
+        $actionsMap = [
+            'index' => '',
+            'create' => 'Crear',
+            'edit' => 'Editar'
+        ];
 
-    // SI HAY SUBMÓDULO
-    if ($submodule && isset($submodulesMap[$submodule])) {
+        $moduleName = $modulesMap[$module] ?? ucfirst($module);
 
-        // index → solo nombre
-        if ($action === 'index') {
-            return $submodulesMap[$submodule];
+        // SI HAY SUBMÓDULO
+        if ($submodule && isset($submodulesMap[$submodule])) {
+
+            // index → solo nombre
+            if ($action === 'index') {
+                return $submodulesMap[$submodule];
+            }
+
+            $actionName = $actionsMap[$action] ?? ucfirst($action);
+
+            return "$actionName " . $submodulesMap[$submodule];
         }
 
-        $actionName = $actionsMap[$action] ?? ucfirst($action);
+        // SI NO HAY SUBMÓDULO
+        if ($action === 'index') {
+            return $moduleName;
+        }
 
-        return "$actionName " . $submodulesMap[$submodule];
+        $actionSafe = $action ?? 'index';
+
+        $actionName = $actionsMap[$actionSafe]
+            ?? ucfirst($actionSafe);
+
+        return "$actionName $moduleName";
     }
-
-    // SI NO HAY SUBMÓDULO
-    if ($action === 'index') {
-        return $moduleName;
-    }
-
-    $actionName = $actionsMap[$action] ?? ucfirst($action);
-
-    return "$actionName $moduleName";
-}
 }
