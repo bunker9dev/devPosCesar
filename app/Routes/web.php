@@ -100,7 +100,8 @@ $router->post('/rolls/update', 'Rolls\\Controllers\\RollController@update', ['au
 $router->post('/rolls/toggle', 'Rolls\\Controllers\\RollController@toggle', ['auth', 'rolls.edit']);
 $router->post('/rolls/delete', 'Rolls\\Controllers\\RollController@delete', ['auth', 'rolls.delete']);
 $router->post('/rolls/restore', 'Rolls\\Controllers\\RollController@restore', ['auth', 'rolls.restore']);
-
+$router->get('/rolls/edit-data', 'Rolls\\Controllers\\RollController@editData', ['auth', 'rolls.edit']);
+$router->get('/rolls/individual', 'Rolls\\Controllers\\RollController@individual', ['auth', 'rolls.view_individual']);
 
 // ==============================
 // ⚡ API / USERS

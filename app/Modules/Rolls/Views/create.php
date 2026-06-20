@@ -69,15 +69,17 @@
         <input type="number" min="1" max="200" name="cantidad" id="createCantidad" value="1" required>
     </div>
 
-    <div class="form-group">
-        <label>Precio de compra por metro (opcional)</label>
-        <input type="number" step="0.01" min="0" name="precio_compra" id="createPrecio">
-    </div>
+    <?php if ($canViewPrice): ?>
+        <div class="form-group">
+            <label>Precio de compra por metro (opcional)</label>
+            <input type="number" step="0.01" min="0" name="precio_compra" id="createPrecio">
+        </div>
+    <?php endif; ?>
 
     <div class="form-group form-actions-full">
         <label>Código de lote (vista previa)</label>
         <input type="text" id="lotePreview" readonly placeholder="Se genera automáticamente al completar los datos...">
-        <small id="rollPreviewHint"></small>
+        <!-- <small id="rollPreviewHint"></small> -->
     </div>
 
     <div class="form-actions form-actions-full">

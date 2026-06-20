@@ -90,32 +90,32 @@ class RollModel
     // CREAR / ACTUALIZAR / BORRAR / RESTAURAR LOTE
     // ======================================================
     public function createLote($data)
-{
-    $stmt = $this->db->prepare("
+    {
+        $stmt = $this->db->prepare("
         INSERT INTO roll_lotes
         (codigo, fabric_type_id, fabric_color_id, supplier_id, warehouse_id, fecha_compra, metraje_por_rollo, precio_compra, created_by, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
 
-    $stmt->bind_param(
-        "siiiisddi" . "i",
-        $data['codigo'],
-        $data['fabric_type_id'],
-        $data['fabric_color_id'],
-        $data['supplier_id'],
-        $data['warehouse_id'],
-        $data['fecha_compra'],
-        $data['metraje_por_rollo'],
-        $data['precio_compra'],
-        $data['user_id']
-    );
+        $stmt->bind_param(
+            "siiiisddi",
+            $data['codigo'],
+            $data['fabric_type_id'],
+            $data['fabric_color_id'],
+            $data['supplier_id'],
+            $data['warehouse_id'],
+            $data['fecha_compra'],
+            $data['metraje_por_rollo'],
+            $data['precio_compra'],
+            $data['user_id']
+        );
 
-    if (!$stmt->execute()) {
-        throw new Exception("Error al crear lote: " . $stmt->error);
+        if (!$stmt->execute()) {
+            throw new Exception("Error al crear lote: " . $stmt->error);
+        }
+
+        return $stmt->insert_id;
     }
-
-    return $stmt->insert_id;
-}
 
     public function updateLote($id, $data)
     {
@@ -286,6 +286,10 @@ class RollModel
         return true;
     }
 
+    // ======================================================
+    // ROLLOS INDIVIDUALES 
+    // ======================================================
+
     public function updateRollsForLote($loteId, $data)
     {
         $rolls = $this->getRollsByLote($loteId);
@@ -336,5 +340,38 @@ class RollModel
         }
 
         return false;
+    }
+
+    public function getAllIndividual($includeDeleted = false)
+    {
+        $sql = "
+        SELECT
+            r.*,
+            l.codigo AS lote_codigo,
+            t.nombre AS tipo_nombre,
+            c.nombre AS color_nombre,
+            s.nombre AS proveedor_nombre,
+            w.nombre AS bodega_nombre
+        FROM rolls r
+        JOIN roll_lotes l ON l.id = r.lote_id
+        JOIN fabric_types t ON t.id = r.fabric_type_id
+        JOIN fabric_colors c ON c.id = r.fabric_color_id
+        JOIN proveedores s ON s.id = r.supplier_id
+        JOIN warehouses w ON w.id = r.warehouse_id
+    ";
+
+        if (!$includeDeleted) {
+            $sql .= " WHERE r.deleted_at IS NULL";
+        }
+
+        $sql .= " ORDER BY r.lote_id DESC, r.id ASC";
+
+        $result = $this->db->query($sql);
+
+        if (!$result) {
+            throw new Exception("Error al obtener rollos individuales");
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 }

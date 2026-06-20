@@ -78,9 +78,10 @@ function updateCodePreview() {
 
     preview.value = loteCodigo;
 
-    if (hint) {
-        hint.textContent = `El primer rollo de este lote sería: ${loteCodigo}0001`;
-    }
+    // if (hint) {
+    //     hint.textContent = `El primer rollo de este lote sería: ${loteCodigo}0001`;
+    // }
+   
 }
 
 document.addEventListener("DOMContentLoaded", () => {

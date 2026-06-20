@@ -30,15 +30,23 @@ class RollController extends Controller
         $canViewDeleted = PermissionService::can($rolId, 'rolls', 'view_deleted');
 
         $rolls = $this->service->getAll($canViewDeleted);
+        $options = $this->service->getFormOptions();
 
         $permissions = PermissionService::getModulePermissions($rolId, 'rolls');
+        $canViewPrice = PermissionService::can($rolId, 'rolls', 'view_price');
 
         $this->render('Modules/Rolls/Views/index', [
-            'rolls'      => $rolls,
-            'canCreate'  => $permissions['create'],
-            'canEdit'    => $permissions['edit'],
-            'canDelete'  => $permissions['delete'],
-            'canRestore' => $permissions['restore'],
+            'title'        => 'Rollos',
+            'rolls'        => $rolls,
+            'types'        => $options['types'],
+            'colors'       => $options['colors'],
+            'suppliers'    => $options['suppliers'],
+            'warehouses'   => $options['warehouses'],
+            'canCreate'    => $permissions['create'],
+            'canEdit'      => $permissions['edit'],
+            'canDelete'    => $permissions['delete'],
+            'canRestore'   => $permissions['restore'],
+            'canViewPrice' => $canViewPrice,
         ]);
     }
 
@@ -51,12 +59,15 @@ class RollController extends Controller
         }
 
         $options = $this->service->getFormOptions();
+        $canViewPrice = PermissionService::can($rolId, 'rolls', 'view_price');
 
         $this->render('Modules/Rolls/Views/create', [
-            'types'      => $options['types'],
-            'colors'     => $options['colors'],
-            'suppliers'  => $options['suppliers'],
-            'warehouses' => $options['warehouses'],
+            'title'      => 'Crear rollos',
+            'types'        => $options['types'],
+            'colors'       => $options['colors'],
+            'suppliers'    => $options['suppliers'],
+            'warehouses'   => $options['warehouses'],
+            'canViewPrice' => $canViewPrice,
         ]);
     }
 
@@ -112,9 +123,12 @@ class RollController extends Controller
                 throw new \Exception("ID inválido");
             }
 
-            $this->service->update($id, $_POST, $_SESSION['user']['id']);
+            $result = $this->service->update($id, $_POST, $_SESSION['user']['id']);
 
-            echo json_encode(['ok' => true]);
+            echo json_encode([
+                'ok'     => true,
+                'codigo' => $result['codigo'],
+            ]);
         } catch (\Exception $e) {
             echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
@@ -170,5 +184,54 @@ class RollController extends Controller
         } catch (\Exception $e) {
             echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
+    }
+
+    public function editData()
+    {
+        header('Content-Type: application/json');
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'rolls', 'edit')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
+        }
+
+        try {
+            $id = $_GET['id'] ?? null;
+
+            if (!$id) {
+                throw new \Exception("ID inválido");
+            }
+
+            $lote = $this->service->getForEdit($id);
+
+            echo json_encode(['ok' => true, 'lote' => $lote]);
+        } catch (\Exception $e) {
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    // ======================================================
+    // ROLLOS INDIVIDUALES 
+    // ======================================================
+    public function individual()
+    {
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'rolls', 'view_individual')) {
+            return $this->redirect(BASE_URL . "/rolls");
+        }
+
+        $canViewDeleted = PermissionService::can($rolId, 'rolls', 'view_deleted');
+        $canViewPrice = PermissionService::can($rolId, 'rolls', 'view_price');
+
+        $rollos = $this->service->getAllIndividual($canViewDeleted);
+
+        $this->render('Modules/Rolls/Views/individual', [
+            'title'        => 'Rollos individuales',
+            'rollos'       => $rollos,
+            'canViewPrice' => $canViewPrice,
+        ]);
     }
 }

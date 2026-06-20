@@ -1,8 +1,23 @@
 <?php
 
-use App\Core\Roles;
+use App\Services\PermissionService;
 
 $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+// ============================
+// PERMISOS POR ENLACE
+// ============================
+$canViewUsers      = PermissionService::can($rolId, 'users', 'view');
+$canViewProveedores = PermissionService::can($rolId, 'proveedores', 'view');
+$canViewRolls       = PermissionService::can($rolId, 'rolls', 'view');
+$canViewWarehouses  = PermissionService::can($rolId, 'warehouses', 'view');
+$canViewFabricTypes = PermissionService::can($rolId, 'fabric_types', 'view');
+$canViewFabricColors = PermissionService::can($rolId, 'fabric_colors', 'view');
+$canViewRollsIndividual = PermissionService::can($rolId, 'rolls', 'view_individual');
+
+// Los grupos solo se muestran si AL MENOS uno de sus enlaces internos es visible
+$showOperacion = $canViewRolls; // (Productos/Kardex/Compras ocultos hasta que existan)
+$showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabricColors;
 
 ?>
 
@@ -25,7 +40,7 @@ $rolId = $_SESSION['user']['rol_id'] ?? null;
 
     <ul>
 
-        <!-- DASHBOARD -->
+        <!-- DASHBOARD (siempre visible, no requiere permiso) -->
         <li>
             <a href="<?= BASE_URL ?>/dashboard">
                 <i data-lucide="layout-dashboard"></i>
@@ -34,113 +49,112 @@ $rolId = $_SESSION['user']['rol_id'] ?? null;
         </li>
 
         <!-- USERS -->
-        <?php if (in_array($rolId, [Roles::SUPER, Roles::ADMIN, Roles::SECRETARIA])): ?>
-        <li>
-            <a href="<?= BASE_URL ?>/users">
-                <i data-lucide="users"></i>
-                <span>Usuarios</span>
-            </a>
-        </li>
+        <?php if ($canViewUsers): ?>
+            <li>
+                <a href="<?= BASE_URL ?>/users">
+                    <i data-lucide="users"></i>
+                    <span>Usuarios</span>
+                </a>
+            </li>
         <?php endif; ?>
 
         <!-- PROVEEDORES -->
-        <?php if (in_array($rolId, [Roles::SUPER, Roles::ADMIN, Roles::SECRETARIA])): ?>
-        <li>
-            <a href="<?= BASE_URL ?>/suppliers">
-                <i data-lucide="truck"></i>
-                <span>Proveedores</span>
-            </a>
-        </li>
+        <?php if ($canViewProveedores): ?>
+            <li>
+                <a href="<?= BASE_URL ?>/suppliers">
+                    <i data-lucide="truck"></i>
+                    <span>Proveedores</span>
+                </a>
+            </li>
         <?php endif; ?>
 
 
         <!-- ========================= -->
         <!-- 📦 OPERACIÓN -->
         <!-- ========================= -->
-        <?php if (in_array($rolId, [
-            Roles::SUPER,
-            Roles::ADMIN,
-            Roles::BODEGUERO,
-            Roles::VENDEDOR
-        ])): ?>
-        <li class="sidebar-group" data-menu="operations">
-            <button type="button" class="sidebar-group-toggle">
-                <i data-lucide="boxes"></i>
-                <span>Operación</span>
-                <i data-lucide="chevron-down" class="sidebar-chevron"></i>
-            </button>
+        <?php if ($showOperacion): ?>
+            <li class="sidebar-group" data-menu="operations">
+                <button type="button" class="sidebar-group-toggle">
+                    <i data-lucide="boxes"></i>
+                    <span>Operación</span>
+                    <i data-lucide="chevron-down" class="sidebar-chevron"></i>
+                </button>
 
-            <ul class="sidebar-submenu">
+                <ul class="sidebar-submenu">
 
-                <li>
-                    <a href="<?= BASE_URL ?>/products">
-                        <i data-lucide="box"></i>
-                        <span>Productos</span>
-                    </a>
-                </li>
+                    <?php if ($canViewRolls): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/rolls">
+                                <i data-lucide="scan-barcode"></i>
+                                <span>Rollos</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
-                <li>
-                    <a href="<?= BASE_URL ?>/rolls">
-                        <i data-lucide="scan-barcode"></i>
-                        <span>Rollos</span>
-                    </a>
-                </li>
+                    <?php if (\App\Services\PermissionService::can($rolId, 'rolls', 'view_individual')): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/rolls/individual">
+                                <i data-lucide="list"></i>
+                                <span>Rollos individuales</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
-                <li>
-                    <a href="<?= BASE_URL ?>/movements">
-                        <i data-lucide="arrow-left-right"></i>
-                        <span>Kardex</span>
-                    </a>
-                </li>
+                    <!--
+                    Productos / Kardex / Compras ocultos a propósito:
+                    sus rutas (/products, /movements, /purchases) todavía
+                    no existen. Cuando se construyan esos módulos, agregar
+                    aquí su propio "if ($canViewX): ... endif;" siguiendo
+                    el mismo patrón.
+                -->
 
-                <li>
-                    <a href="<?= BASE_URL ?>/purchases">
-                        <i data-lucide="shopping-cart"></i>
-                        <span>Compras</span>
-                    </a>
-                </li>
-
-            </ul>
-        </li>
+                </ul>
+            </li>
         <?php endif; ?>
 
 
         <!-- ========================= -->
         <!-- ⚙️ CONFIGURACIÓN -->
         <!-- ========================= -->
-        <?php if (in_array($rolId, [Roles::SUPER, Roles::ADMIN])): ?>
-        <li class="sidebar-group" data-menu="config">
-            <button type="button" class="sidebar-group-toggle">
-                <i data-lucide="settings"></i>
-                <span>Configuración</span>
-                <i data-lucide="chevron-down" class="sidebar-chevron"></i>
-            </button>
+        <?php if ($showConfiguracion): ?>
+            <li class="sidebar-group" data-menu="config">
+                <button type="button" class="sidebar-group-toggle">
+                    <i data-lucide="settings"></i>
+                    <span>Configuración</span>
+                    <i data-lucide="chevron-down" class="sidebar-chevron"></i>
+                </button>
 
-            <ul class="sidebar-submenu">
+                <ul class="sidebar-submenu">
 
-                <li>
-                    <a href="<?= BASE_URL ?>/warehouses">
-                        <i data-lucide="warehouse"></i>
-                        <span>Bodegas</span>
-                    </a>
-                </li>
+                    <?php if ($canViewWarehouses): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/warehouses">
+                                <i data-lucide="warehouse"></i>
+                                <span>Bodegas</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
-                <li>
-                    <a href="<?= BASE_URL ?>/fabric-types">
-                        <i data-lucide="layers"></i>
-                        <span>Tipos de tela</span>
-                    </a>
-                </li>
+                    <?php if ($canViewFabricTypes): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/fabric-types">
+                                <i data-lucide="layers"></i>
+                                <span>Tipos de tela</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
-                <li>
-                    <a href="<?= BASE_URL ?>/fabric-colors">
-                        <i data-lucide="palette"></i>
-                        <span>Colores</span>
-                    </a>
-                </li>
+                    <?php if ($canViewFabricColors): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/fabric-colors">
+                                <i data-lucide="palette"></i>
+                                <span>Colores</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
-            </ul>
-        </li>
+                </ul>
+            </li>
         <?php endif; ?>
 
     </ul>

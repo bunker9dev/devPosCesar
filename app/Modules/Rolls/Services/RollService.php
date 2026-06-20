@@ -189,7 +189,13 @@ class RollService
         $warehouseId   = (int)($data['warehouse_id'] ?? 0);
         $fechaCompra   = $data['fecha_compra'] ?? '';
         $metraje       = (float)($data['metraje_por_rollo'] ?? 0);
-        $precio        = ($data['precio_compra'] ?? '') !== '' ? (float)$data['precio_compra'] : null;
+
+        if (array_key_exists('precio_compra', $data)) {
+            $precio = ($data['precio_compra'] !== '') ? (float)$data['precio_compra'] : null;
+        } else {
+            // El usuario no tiene permiso para ver/editar precio — se conserva el valor actual
+            $precio = $row['precio_compra'];
+        }
 
         if (!$fabricTypeId || !$fabricColorId || !$supplierId || !$warehouseId) {
             throw new Exception("Tipo de tela, color, proveedor y bodega son obligatorios");
@@ -251,6 +257,9 @@ class RollService
         return ['codigo' => $nuevoCodigo];
     }
 
+    // ============================
+    // ELIMINAR ROLLOS
+    // ============================
     public function delete($id, $userId)
     {
         $row = $this->model->findLote($id);
@@ -285,6 +294,9 @@ class RollService
         return true;
     }
 
+    // ============================
+    // RESTAURAR ROLLOS
+    // ============================
     public function restore($id, $userId)
     {
         $row = $this->model->findLote($id);
@@ -336,5 +348,27 @@ class RollService
         $cmPart = str_pad((int)$centimetros, 2, '0', STR_PAD_LEFT);
 
         return $proveedorPart . $fechaPart . $tipoPart . $colorPart . $metrosPart . $cmPart;
+    }
+
+    // ============================
+    // EDITAR LOTES
+    // ============================
+    public function getForEdit($id)
+    {
+        $row = $this->model->findLote($id);
+
+        if (!$row) {
+            throw new Exception("El lote no existe");
+        }
+
+        return $row;
+    }
+
+    // ======================================================
+    // ROLLOS INDIVIDUALES 
+    // ======================================================
+    public function getAllIndividual($includeDeleted = false)
+    {
+        return $this->model->getAllIndividual($includeDeleted);
     }
 }

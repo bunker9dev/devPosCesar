@@ -20,7 +20,11 @@
                 <th>Proveedor</th>
                 <th>Bodega</th>
                 <th>Fecha compra</th>
-                <th>Valor de compra (por metro)</th>
+
+                <?php if ($canViewPrice): ?>
+                    <th>Valor de compra (por metro)</th>
+                <?php endif; ?>
+
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -38,9 +42,13 @@
                     <td data-label="Proveedor"><?= htmlspecialchars($l['proveedor_nombre']) ?></td>
                     <td data-label="Bodega"><?= htmlspecialchars($l['bodega_nombre']) ?></td>
                     <td data-label="Fecha compra"><?= htmlspecialchars($l['fecha_compra']) ?></td>
-                    <td data-label="Valor de compra (por metro)">
-                        <?= $l['precio_compra'] !== null ? '$' . number_format($l['precio_compra'], 2) : '-' ?>
-                    </td>
+
+                    <?php if ($canViewPrice): ?>
+                        <td data-label="Valor de compra (por metro)">
+                            <?= $l['precio_compra'] !== null ? '$' . number_format($l['precio_compra'], 2) : '-' ?>
+                        </td>
+                    <?php endif; ?>
+
                     <td data-label="Acciones">
                         <div class="actions">
                             <?php if (!$eliminado): ?>

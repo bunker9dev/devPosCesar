@@ -15,21 +15,28 @@ class Controller
             die("Vista no encontrada: " . $view);
         }
 
-        //  USER DATA
+        // USER DATA
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-
-        //  GLOBAL DATA PARA TODAS LAS VISTAS
+        // GLOBAL DATA PARA TODAS LAS VISTAS
         $data['Status'] = Status::class;
         $data['rolId'] = $rolId;
         $data['rolNombre'] = $_SESSION['user']['rol_nombre'] ?? '';
 
-        //  PERMISOS CENTRALIZADOS
-        $data['canEdit'] = Roles::canEdit($rolId);
-        $data['canDelete'] = Roles::canDelete($rolId);
-        $data['canRestore'] = Roles::canRestore($rolId);
+        // PERMISOS CENTRALIZADOS (solo si el Controller no los definió ya)
+        if (!array_key_exists('canEdit', $data)) {
+            $data['canEdit'] = Roles::canEdit($rolId);
+        }
 
-        //  TITLE AUTOMÁTICO
+        if (!array_key_exists('canDelete', $data)) {
+            $data['canDelete'] = Roles::canDelete($rolId);
+        }
+
+        if (!array_key_exists('canRestore', $data)) {
+            $data['canRestore'] = Roles::canRestore($rolId);
+        }
+
+        // TITLE AUTOMÁTICO
         if (!isset($data['title'])) {
             $data['title'] = $this->generateTitle($view);
         }
@@ -40,7 +47,6 @@ class Controller
 
         require __DIR__ . "/../Views/layouts/{$layout}.php";
     }
-
     protected function redirect($url)
     {
         header("Location: $url");
