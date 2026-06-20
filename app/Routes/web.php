@@ -93,8 +93,13 @@ $router->post('/warehouses/toggle', 'Warehouses\\Controllers\\WarehouseControlle
 // 🧵 ROLLS
 // ==============================
 
-$router->get('/rolls', 'Products\\Controllers\\RollController@index', ['auth', 'products.view']);
-$router->post('/rolls/store', 'Products\\Controllers\\RollController@store', ['auth', 'products.create']);
+$router->get('/rolls', 'Rolls\\Controllers\\RollController@index', ['auth', 'rolls.view']);
+$router->get('/rolls/create', 'Rolls\\Controllers\\RollController@create', ['auth', 'rolls.create']);
+$router->post('/rolls/store', 'Rolls\\Controllers\\RollController@store', ['auth', 'rolls.create']);
+$router->post('/rolls/update', 'Rolls\\Controllers\\RollController@update', ['auth', 'rolls.edit']);
+$router->post('/rolls/toggle', 'Rolls\\Controllers\\RollController@toggle', ['auth', 'rolls.edit']);
+$router->post('/rolls/delete', 'Rolls\\Controllers\\RollController@delete', ['auth', 'rolls.delete']);
+$router->post('/rolls/restore', 'Rolls\\Controllers\\RollController@restore', ['auth', 'rolls.restore']);
 
 
 // ==============================
