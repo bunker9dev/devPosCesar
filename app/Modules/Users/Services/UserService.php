@@ -4,6 +4,7 @@ namespace App\Modules\Users\Services;
 
 use App\Core\Roles;
 use App\Core\Status;
+use App\Core\Database;
 use App\Services\PermissionService;
 use App\Core\Repositories\AuditLogRepository;
 
@@ -14,9 +15,11 @@ class UserService
     // ======================================================
     public static function getAllForList(int $rolId): array
     {
-        global $db;
+        $db = Database::getConnection();
 
         $userId = $_SESSION['user']['id'] ?? 0;
+
+        $canManageSuper = PermissionService::can($rolId, 'users', 'manage_super');
 
         $query = "
         SELECT u.*, r.nombre as rol 
@@ -24,14 +27,16 @@ class UserService
         JOIN roles r ON u.rol_id = r.id
         ";
 
-        // OCULTAR SUPER A TODOS MENOS A SÍ MISMO
-        $query .= " WHERE (u.rol_id != " . Roles::SUPER . " OR u.id = {$userId})";
+        // OCULTAR SUPER A QUIEN NO TENGA EL PERMISO (salvo su propia fila)
+        if (!$canManageSuper) {
+            $query .= " WHERE (u.rol_id != " . Roles::SUPER . " OR u.id = {$userId})";
+        }
 
-        // PERMISOS RBAC (eliminados)
         $canViewDeleted = PermissionService::can($rolId, 'users', 'view_deleted');
 
         if (!$canViewDeleted) {
-            $query .= " AND u.estado IN (" . Status::ACTIVO . "," . Status::INACTIVO . ")";
+            $query .= ($canManageSuper ? " WHERE " : " AND ")
+                . "u.estado IN (" . Status::ACTIVO . "," . Status::INACTIVO . ")";
         }
 
         $result = $db->query($query);
@@ -39,7 +44,7 @@ class UserService
 
         $permissions = PermissionService::getModulePermissions($rolId, 'users');
 
-        return self::formatList($users, $permissions, $rolId);
+        return self::formatList($users, $permissions);
     }
 
     // ======================================================
@@ -47,7 +52,7 @@ class UserService
     // ======================================================
     public static function create(array $data, int $rolId): void
     {
-        global $db;
+        $db = Database::getConnection();
 
         $username = strtolower(trim($data['username'] ?? ''));
         $nombre   = trim($data['nombre'] ?? '');
@@ -59,7 +64,8 @@ class UserService
             throw new \Exception("Datos incompletos");
         }
 
-        if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
+        // ¿Se está asignando el rol Super? → requiere permiso 'users.manage_super'
+        if ((int)$rol === Roles::SUPER && !PermissionService::can($rolId, 'users', 'manage_super')) {
             throw new \Exception("No autorizado");
         }
 
@@ -102,7 +108,6 @@ class UserService
                 throw new \Exception("Error al subir archivo");
             }
 
-            // VALIDAR TAMAÑO 
             if ($file['size'] > 2 * 1024 * 1024) {
                 throw new \Exception("La imagen supera el tamaño permitido (2MB)");
             }
@@ -121,11 +126,12 @@ class UserService
                 die("No se pudo mover archivo a: " . $destino);
             }
         }
+
         // ============================
         // INSERT
         // ============================
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $estado = \App\Core\Status::ACTIVO;
+        $estado = Status::ACTIVO;
 
         $stmt = $db->prepare("
             INSERT INTO usuarios 
@@ -148,17 +154,16 @@ class UserService
             $stmt->execute();
         } catch (\mysqli_sql_exception $e) {
 
-           
             if ($e->getCode() == 1062) {
                 throw new \Exception("Usuario ya fue usado");
             }
 
-            // OTROS ERRORES
             throw new \Exception("Error al crear usuario");
         }
 
         // ============================
-        // AUDITORÍA ============================
+        // AUDITORÍA
+        // ============================
         (new AuditLogRepository($db))->log([
             'usuario_id' => $_SESSION['user']['id'] ?? null,
             'accion'     => 'create',
@@ -178,140 +183,12 @@ class UserService
         ]);
     }
 
-
     // ======================================================
     // UPDATE
     // ======================================================
-    //     public static function update(array $data, int $rolId): void
-    //     {
-    //         global $db;
-
-    //         $id       = $data['id'] ?? null;
-    //         $nombre   = trim($data['nombre'] ?? '');
-    //         $apellido = trim($data['apellido'] ?? '');
-    //         $rol      = $data['rol_id'] ?? null;
-    //         $password = $data['password'] ?? null;
-
-    //         if (!$id || !$nombre || !$rol) {
-    //             throw new \Exception("Datos inválidos");
-    //         }
-
-    //         if ($rol == Roles::SUPER && $rolId !== Roles::SUPER) {
-    //             throw new \Exception("No autorizado");
-    //         }
-
-    //         // ============================
-    //         // OBTENER IMAGEN ACTUAL
-    //         // ============================
-    //         $stmt = $db->prepare("SELECT imagen FROM usuarios WHERE id=?");
-    //         $stmt->bind_param("i", $id);
-    //         $stmt->execute();
-
-    //         $user = $stmt->get_result()->fetch_assoc();
-    //         $imagen = $user['imagen'] ?? 'default.png';
-
-    //         // ============================
-    //         // PROCESAR NUEVA IMAGEN
-    //         // ============================
-    //         if (!empty($_FILES['imagen']['name'])) {
-
-
-    //             $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/DEVPOSCESAR/public/assets/img/users/';
-
-    //             $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-    //             $nuevaImagen = uniqid('user_') . '.' . $ext;
-
-    //             $destino = $uploadDir . $nuevaImagen;
-
-    //             // if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
-    //             //     throw new \Exception("Error al subir imagen");
-    //             // }
-
-    //             if (!move_uploaded_file($_FILES['tmp_name'], $destino)) {
-    //     die("ERROR RUTA: " . $destino);
-    // }
-
-    //             // BORRAR IMAGEN ANTERIOR
-    //             if (!empty($imagen) && $imagen !== 'default.png') {
-    //                 $rutaAnterior = $uploadDir . $imagen;
-    //                 if (file_exists($rutaAnterior)) {
-    //                     unlink($rutaAnterior);
-    //                 }
-    //             }
-
-    //             $imagen = $nuevaImagen;
-    //         }
-
-    //         // ============================
-    //         // UPDATE (CON IMAGEN)
-    //         // ============================
-    //         if (!empty($password)) {
-
-    //             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
-    //             $stmt = $db->prepare("
-    //             UPDATE usuarios 
-    //             SET nombre=?, apellido=?, password=?, rol_id=?, imagen=? 
-    //             WHERE id=?
-    //         ");
-
-    //             $stmt->bind_param("sssisi", $nombre, $apellido, $passwordHash, $rol, $imagen, $id);
-    //         } else {
-
-    //             $stmt = $db->prepare("
-    //             UPDATE usuarios 
-    //             SET nombre=?, apellido=?, rol_id=?, imagen=? 
-    //             WHERE id=?
-    //         ");
-
-    //             $stmt->bind_param("ssisi", $nombre, $apellido, $rol, $imagen, $id);
-    //         }
-
-    //         if (!$stmt->execute()) {
-    //             throw new \Exception("Error al actualizar usuario");
-    //         }
-    //         // ============================
-    //         // ACTUALIZAR SESIÓN (SOLO SI ES EL MISMO USUARIO)
-    //         // ============================
-    //         if ($_SESSION['user']['id'] == $id) {
-
-    //             $stmt = $db->prepare("
-    //                 SELECT u.*, r.nombre AS rol_nombre
-    //                 FROM usuarios u
-    //                 JOIN roles r ON r.id = u.rol_id
-    //                 WHERE u.id=?
-    //             ");
-
-    //             $stmt->bind_param("i", $id);
-    //             $stmt->execute();
-
-    //             $_SESSION['user'] = $stmt->get_result()->fetch_assoc();
-    //         }
-    //         // ============================
-    //         //  AUDITORÍA
-    //         // ============================
-    //         (new AuditLogRepository($db))->log([
-    //             'usuario_id' => $_SESSION['user']['id'] ?? null,
-    //             'accion'     => 'create',
-    //             'entidad'    => 'usuarios',
-    //             'entidad_id' => $db->insert_id,
-    //             'modulo'     => 'users',
-    //             'detalle'    => [
-    //                 'after' => [
-    //                     'username' => $username,
-    //                     'nombre'   => $nombre,
-    //                     'apellido' => $apellido,
-    //                     'rol_id'   => $rol,
-    //                     'imagen'   => $imagen,
-    //                     'estado'   => $estado
-    //                 ]
-    //             ]
-    //         ]);
-    //     }
-
     public static function update(array $data, int $rolId): void
     {
-        global $db;
+        $db = Database::getConnection();
 
         $id       = $data['id'] ?? null;
         $nombre   = trim($data['nombre'] ?? '');
@@ -323,7 +200,7 @@ class UserService
             throw new \Exception("Datos inválidos");
         }
 
-        if ($rol == \App\Core\Roles::SUPER && $rolId !== \App\Core\Roles::SUPER) {
+        if ((int)$rol === Roles::SUPER && !PermissionService::can($rolId, 'users', 'manage_super')) {
             throw new \Exception("No autorizado");
         }
 
@@ -337,6 +214,11 @@ class UserService
 
         if (!$old) {
             throw new \Exception("Usuario no existe");
+        }
+
+        // Si el usuario YA ES super, también requiere el permiso para editarlo
+        if ((int)$old['rol_id'] === Roles::SUPER && !PermissionService::can($rolId, 'users', 'manage_super')) {
+            throw new \Exception("No autorizado");
         }
 
         $imagen = $old['imagen'] ?? 'default.png';
@@ -373,7 +255,6 @@ class UserService
                 throw new \Exception("Error al subir la imagen");
             }
 
-            // 🔥 BORRAR IMAGEN ANTERIOR
             if (!empty($imagen) && $imagen !== 'default.png') {
                 $rutaAnterior = $uploadDir . $imagen;
                 if (file_exists($rutaAnterior)) {
@@ -434,7 +315,7 @@ class UserService
         // ============================
         // AUDITORÍA
         // ============================
-        (new \App\Core\Repositories\AuditLogRepository($db))->log([
+        (new AuditLogRepository($db))->log([
             'usuario_id' => $_SESSION['user']['id'] ?? null,
             'accion'     => 'update',
             'entidad'    => 'usuarios',
@@ -459,7 +340,7 @@ class UserService
 
     public static function getForEdit(int $id, int $rolId): array
     {
-        global $db;
+        $db = Database::getConnection();
 
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
         $stmt->bind_param("i", $id);
@@ -487,14 +368,15 @@ class UserService
             'canEdit' => $permissions['edit']
         ];
     }
+
     // ======================================================
     // ROLES PARA CREATE / EDIT
     // ======================================================
     public static function getRolesForCreate(int $rolId): array
     {
-        global $db;
+        $db = Database::getConnection();
 
-        if ($rolId === Roles::SUPER) {
+        if (PermissionService::can($rolId, 'users', 'manage_super')) {
             $result = $db->query("SELECT id, nombre FROM roles");
 
             if (!$result) {
@@ -510,7 +392,6 @@ class UserService
             throw new \Exception("Error en consulta de roles");
         }
 
-        // CORRECCIÓN 
         $superId = Roles::SUPER;
 
         $stmt->bind_param("i", $superId);
@@ -524,10 +405,9 @@ class UserService
     // ======================================================
     public static function toggle($id, $rolId = null)
     {
-        global $db;
+        $db = Database::getConnection();
 
-
-        $stmt = $db->prepare("SELECT id, estado FROM usuarios WHERE id=?");
+        $stmt = $db->prepare("SELECT id, estado, rol_id FROM usuarios WHERE id=?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
@@ -536,31 +416,32 @@ class UserService
             throw new \Exception("Usuario no existe");
         }
 
-        if ($row['estado'] == \App\Core\Status::ELIMINADO) {
+        if ((int)$row['rol_id'] === Roles::SUPER && !PermissionService::can($rolId, 'users', 'manage_super')) {
+            throw new \Exception("No autorizado");
+        }
+
+        if ($row['estado'] == Status::ELIMINADO) {
             throw new \Exception("No se puede modificar eliminado");
         }
 
-        $nuevoEstado = ($row['estado'] == \App\Core\Status::ACTIVO)
-            ? \App\Core\Status::INACTIVO
-            : \App\Core\Status::ACTIVO;
+        $nuevoEstado = ($row['estado'] == Status::ACTIVO)
+            ? Status::INACTIVO
+            : Status::ACTIVO;
 
         $stmt = $db->prepare("UPDATE usuarios SET estado=? WHERE id=?");
         $stmt->bind_param("ii", $nuevoEstado, $id);
         $stmt->execute();
 
-
-
-        // auditoría
-        (new \App\Core\Repositories\AuditLogRepository($db))->log([
+        (new AuditLogRepository($db))->log([
             'usuario_id' => $_SESSION['user']['id'] ?? null,
             'accion' => 'toggle',
             'entidad' => 'usuarios',
             'entidad_id' => $id,
             'modulo' => 'users',
-            'detalle' => json_encode([
+            'detalle' => [
                 'before' => $row['estado'],
                 'after'  => $nuevoEstado
-            ])
+            ]
         ]);
 
         return $nuevoEstado;
@@ -571,7 +452,7 @@ class UserService
     // ======================================================
     public static function delete(int $id, int $rolId): void
     {
-        global $db;
+        $db = Database::getConnection();
 
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
         $stmt->bind_param("i", $id);
@@ -580,6 +461,10 @@ class UserService
 
         if (!$row) {
             throw new \Exception("Usuario no existe");
+        }
+
+        if ((int)$row['rol_id'] === Roles::SUPER && !PermissionService::can($rolId, 'users', 'manage_super')) {
+            throw new \Exception("No autorizado");
         }
 
         $stmt = $db->prepare("
@@ -594,7 +479,6 @@ class UserService
         $stmt->bind_param("iii", $estado, $userId, $id);
         $stmt->execute();
 
-        // auditoría
         (new AuditLogRepository($db))->log([
             'usuario_id' => $userId,
             'accion' => 'delete',
@@ -606,12 +490,13 @@ class UserService
             ]
         ]);
     }
+
     // ======================================================
     // RESTORE
     // ======================================================
     public static function restore(int $id, int $rolId): void
     {
-        global $db;
+        $db = Database::getConnection();
 
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id=?");
         $stmt->bind_param("i", $id);
@@ -620,6 +505,10 @@ class UserService
 
         if (!$row) {
             throw new \Exception("Usuario no existe");
+        }
+
+        if ((int)$row['rol_id'] === Roles::SUPER && !PermissionService::can($rolId, 'users', 'manage_super')) {
+            throw new \Exception("No autorizado");
         }
 
         $stmt = $db->prepare("
@@ -634,7 +523,6 @@ class UserService
         $stmt->bind_param("iii", $estado, $userId, $id);
         $stmt->execute();
 
-        // auditoría
         (new AuditLogRepository($db))->log([
             'usuario_id' => $userId,
             'accion' => 'restore',
@@ -697,17 +585,17 @@ class UserService
             Status::ACTIVO => 'Activo',
             Status::INACTIVO => 'Inactivo',
             Status::ELIMINADO => 'Eliminado',
+            default => 'Desconocido',
         };
     }
-    // ======================================================
-    // USERNAME
-    // ======================================================
+
     private static function estadoClass(int $estado): string
     {
         return match ($estado) {
             Status::ACTIVO => 'active',
             Status::INACTIVO => 'inactive',
             Status::ELIMINADO => 'deleted',
+            default => '',
         };
     }
 
@@ -716,7 +604,7 @@ class UserService
     // ======================================================
     public static function usernameExists(string $username): bool
     {
-        global $db;
+        $db = Database::getConnection();
 
         $user = strtolower(trim($username));
 

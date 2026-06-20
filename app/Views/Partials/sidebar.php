@@ -133,7 +133,7 @@ $rolId = $_SESSION['user']['rol_id'] ?? null;
                 </li>
 
                 <li>
-                    <a href="<?= BASE_URL ?>/products/colors">
+                    <a href="<?= BASE_URL ?>/fabric-colors">
                         <i data-lucide="palette"></i>
                         <span>Colores</span>
                     </a>

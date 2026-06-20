@@ -25,13 +25,10 @@ class AuthController extends Controller
         );
     }
 
-    
+
 
     public function login()
     {
-        // var_dump($_SERVER['REQUEST_METHOD']);
-        // die("ENTRÓ AL LOGIN");
-
         global $db;
 
         if (!$db) {
@@ -76,7 +73,14 @@ class AuthController extends Controller
             exit;
         }
 
-        if ($usuario['estado'] !=1) {
+        //VALIDAR HORARIO DE TRABAJO
+        if (!\App\Services\ScheduleService::isAllowedNow($usuario['id'], $usuario['rol_id'])) {
+            $_SESSION['error'] = "Acceso fuera del horario permitido para tu rol o usuario";
+            header("Location: " . BASE_URL . "/login");
+            exit;
+        }
+        
+        if ($usuario['estado'] != 1) {
             $_SESSION['error'] = "Usuario inactivo";
             header("Location: " . BASE_URL . "/login");
             exit;
@@ -107,11 +111,16 @@ class AuthController extends Controller
             $stmt->execute();
         }
 
-        // PRUEBA 
-        // auditoria("TEST", "usuarios", 1, "PRUEBA DIRECTA", "auth");
-        // die("se ejecutó auditoría");
+        // AUDITORIA
 
-        auditoria("LOGIN", "usuarios", $usuario['id'], "Inicio de sesión exitoso", "auth");
+        (new \App\Core\Repositories\AuditLogRepository($db))->log([
+            'usuario_id' => $usuario['id'],
+            'accion'     => 'login',
+            'entidad'    => 'usuarios',
+            'entidad_id' => $usuario['id'],
+            'modulo'     => 'auth',
+            'detalle'    => ['mensaje' => 'Inicio de sesión exitoso'],
+        ]);
 
         header("Location: " . BASE_URL . "/dashboard");
         exit;
@@ -125,17 +134,18 @@ class AuthController extends Controller
 
     public function logout()
     {
+        global $db;
         // AUDITORÍA
         if (!empty($_SESSION['user']) && isset($_SESSION['user']['id'])) {
-            auditoria(
-                "LOGOUT",
-                "usuarios",
-                $_SESSION['user']['id'],
-                "Usuario cerró sesión manualmente",
-                "auth"
-            );
+            (new \App\Core\Repositories\AuditLogRepository($db))->log([
+                'usuario_id' => $_SESSION['user']['id'],
+                'accion'     => 'logout',
+                'entidad'    => 'usuarios',
+                'entidad_id' => $_SESSION['user']['id'],
+                'modulo'     => 'auth',
+                'detalle'    => ['mensaje' => 'Usuario cerró sesión manualmente'],
+            ]);
         }
-
         // limpiar sesión
         $_SESSION = [];
 

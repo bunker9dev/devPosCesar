@@ -11,16 +11,19 @@ class FabricTypeModel
         $this->db = $db;
     }
 
-    public function getAll()
+    public function getAll(bool $includeDeleted = false)
     {
-        $stmt = $this->db->query("
-            SELECT * FROM fabric_types
-            WHERE estado != 0
-            ORDER BY id DESC
-        ");
+        $sql = "SELECT * FROM fabric_types";
+        if (!$includeDeleted) {
+            $sql .= " WHERE estado != 0";
+        }
+
+        $sql .= " ORDER BY id DESC";
+        $stmt = $this->db->query($sql);
 
         return $stmt->fetch_all(MYSQLI_ASSOC);
     }
+
 
     public function find($id)
     {
@@ -88,6 +91,19 @@ class FabricTypeModel
         return $stmt->insert_id;
     }
 
+
+    public function update($id, $data, $userId = null)
+    {
+        $stmt = $this->db->prepare("
+            UPDATE fabric_types
+            SET nombre = ?, updated_by = ?
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("sii", $data['nombre'], $userId, $id);
+        $stmt->execute();
+    }
+
     public function updateEstado($id, $estado, $userId = null)
     {
         $stmt = $this->db->prepare("
@@ -100,23 +116,29 @@ class FabricTypeModel
         $stmt->execute();
     }
 
-    public function delete($id)
+
+    public function delete($id, $userId = null)
     {
         $stmt = $this->db->prepare("
-            UPDATE fabric_types SET estado = 0 WHERE id = ?
+            UPDATE fabric_types
+            SET estado = 0, deleted_at = NOW(), deleted_by = ?
+            WHERE id = ?
         ");
 
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param("ii", $userId, $id);
         $stmt->execute();
     }
 
-    public function restore($id)
+
+    public function restore($id, $userId = null)
     {
         $stmt = $this->db->prepare("
-            UPDATE fabric_types SET estado = 1 WHERE id = ?
+            UPDATE fabric_types
+            SET estado = 1, deleted_at = NULL, deleted_by = NULL, updated_by = ?
+            WHERE id = ?
         ");
 
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param("ii", $userId, $id);
         $stmt->execute();
     }
 
@@ -132,5 +154,10 @@ class FabricTypeModel
         $stmt->execute();
 
         return $stmt->get_result()->fetch_assoc();
+    }
+
+    public function isInUse($id): bool
+    {
+        return false;
     }
 }

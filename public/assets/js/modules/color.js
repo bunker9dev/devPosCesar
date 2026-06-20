@@ -7,14 +7,19 @@ import { Events } from "../core/events.js";
 // STATE
 // =========================================================
 let deleteColorId = null;
+let deleteColorRow = null;
+let colorsInitialized = false;
 
 // =========================================================
 // HELPERS
 // =========================================================
+function notify(message, type = "success") {
+  Events.emit("alerts:show", { type, message });
+}
+
 async function safeFetch(url, options) {
   try {
     const response = await fetch(url, options);
-
     const text = await response.text();
 
     let data;
@@ -22,26 +27,26 @@ async function safeFetch(url, options) {
       data = JSON.parse(text);
     } catch (e) {
       console.error("❌ Respuesta inválida:", text);
-      showToast("Error del servidor", "error");
+      notify("Error del servidor", "error");
       return null;
     }
 
     if (!response.ok) {
-      showToast(data.error || `Error HTTP ${response.status}`, "error");
+      notify(data.error || `Error HTTP ${response.status}`, "error");
       return null;
     }
 
     return data;
   } catch (error) {
     console.error(error);
-    showToast("Error de conexión", "error");
+    notify("Error de conexión", "error");
     return null;
   }
 }
+
 // =========================================================
 // CREATE COLOR
 // =========================================================
-
 function initColorCreate() {
   const form = document.getElementById("formCreateColor");
   if (!form) return;
@@ -51,28 +56,26 @@ function initColorCreate() {
 
     const nombre = form.querySelector("[name='nombre']").value;
 
-    const data = await safeFetch("/products/colors/store", {
+    const data = await safeFetch("/fabric-colors/store", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `nombre=${encodeURIComponent(nombre)}`,
     });
 
     if (!data) return;
 
     if (!data.ok) {
-      showToast(data.error || "Error", "error");
+      notify(data.error || "Error", "error");
       return;
     }
 
-    showToast("Color creado", "success");
+    notify("Color creado", "success");
     location.reload();
   });
 }
 
 // =========================================================
-// TOGGLE COLOR
+// TOGGLE COLOR 
 // =========================================================
 function initColorToggle() {
   document.addEventListener("click", async (e) => {
@@ -81,15 +84,18 @@ function initColorToggle() {
 
     const id = el.dataset.id;
 
-    const data = await safeFetch("/products/colors/toggle", {
+    const data = await safeFetch("/fabric-colors/toggle", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `id=${id}`,
     });
 
     if (!data) return;
+
+    if (!data.ok) {
+      notify(data.error || "Error al cambiar estado", "error");
+      return;
+    }
 
     const estado = parseInt(data.estado);
 
@@ -103,6 +109,8 @@ function initColorToggle() {
       el.classList.add("inactive");
       el.textContent = "Inactivo";
     }
+
+    notify("Estado actualizado", "success");
   });
 }
 
@@ -143,25 +151,25 @@ function initColorUpdate() {
     const id = document.getElementById("editColorId").value;
     const nombre = document.getElementById("editColorName").value;
 
-    const data = await safeFetch(`/products/colors/update`, {
+    const data = await safeFetch(`/fabric-colors/update`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `id=${id}&nombre=${encodeURIComponent(nombre)}`,
     });
 
     if (!data) return;
 
-    // 💥 AQUÍ ESTABA EL ERROR
     if (!data.ok) {
-      showToast(data.error || "Error", "error");
+      notify(data.error || "Error", "error");
       return;
     }
 
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    const cell = row?.querySelector('td[data-label="Color"]');
+    if (cell) cell.textContent = nombre;
+
     document.getElementById("modalEditColor").classList.add("hidden");
-    showToast("Color actualizado", "success");
-    location.reload();
+    notify("Color actualizado", "success");
   });
 }
 
@@ -174,6 +182,7 @@ function initColorDeleteModal() {
     if (!btn) return;
 
     deleteColorId = btn.dataset.id;
+    deleteColorRow = btn.closest("tr");
 
     const msg = document.getElementById("deleteColorMessage");
     const modal = document.getElementById("modalDeleteColor");
@@ -189,7 +198,7 @@ function initColorDeleteModal() {
 }
 
 // =========================================================
-// CONFIRM DELETE
+// CONFIRM DELETE 
 // =========================================================
 function initConfirmDelete() {
   const btn = document.getElementById("btnConfirmDeleteColor");
@@ -198,29 +207,42 @@ function initConfirmDelete() {
   btn.addEventListener("click", async () => {
     if (!deleteColorId) return;
 
-    const data = await safeFetch(`/products/colors/delete`, {
+    const data = await safeFetch(`/fabric-colors/delete`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `id=${deleteColorId}`,
     });
 
+    document.getElementById("modalDeleteColor").classList.add("hidden");
+
     if (!data) return;
 
-    // 💥 FALTA ESTO
     if (!data.ok) {
-      showToast(data.error || "Error al eliminar", "error");
+      notify(data.error || "Error al eliminar", "error");
       return;
     }
 
-    showToast("Color eliminado", "success");
-    location.reload();
+    if (deleteColorRow) {
+      const badge = deleteColorRow.querySelector(".toggle-color, .badge");
+      if (badge) {
+        badge.outerHTML = `<span class="badge deleted">Eliminado</span>`;
+      }
+
+      const actions = deleteColorRow.querySelector('td[data-label="Acciones"]');
+      if (actions) actions.innerHTML = "";
+
+      deleteColorRow.classList.add("deleted");
+    }
+
+    notify("Color eliminado", "success");
+
+    deleteColorId = null;
+    deleteColorRow = null;
   });
 }
 
 // =========================================================
-// RESTORE
+// RESTORE — ahora actualiza en sitio, sin recargar
 // =========================================================
 function initColorRestore() {
   document.addEventListener("click", async (e) => {
@@ -229,21 +251,18 @@ function initColorRestore() {
 
     const data = await safeFetch(btn.dataset.url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `id=${btn.dataset.id}`,
     });
 
     if (!data) return;
 
-    // 💥 FALTA ESTO
     if (!data.ok) {
-      showToast(data.error || "Error al restaurar", "error");
+      notify(data.error || "Error al restaurar", "error");
       return;
     }
 
-    showToast("Color restaurado", "success");
+    notify("Color restaurado", "success");
     location.reload();
   });
 }
@@ -262,9 +281,12 @@ function initCloseModals() {
 }
 
 // =========================================================
-// INIT
+// INIT (con guard contra doble inicialización)
 // =========================================================
 Events.on("colors:index", () => {
+  if (colorsInitialized) return;
+  colorsInitialized = true;
+
   initColorCreate();
   initColorToggle();
   initColorEdit();

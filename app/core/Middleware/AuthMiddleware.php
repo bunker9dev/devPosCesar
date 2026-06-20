@@ -4,9 +4,11 @@ namespace App\Core\Middleware;
 
 use App\Core\Status;
 
-class AuthMiddleware {
+class AuthMiddleware
+{
 
-    public static function handle() {
+    public static function handle()
+    {
 
         //  No logueado
         if (empty($_SESSION['user'])) {
@@ -15,15 +17,20 @@ class AuthMiddleware {
         }
 
         // BLOQUEO POR ESTADO
-        if (($_SESSION['user']['estado'] ?? null) !== Status::ACTIVO) {
+        if (($_SESSION['user']['estado'] ?? null) !== Status::ACTIVO)
 
-            // destruir sesión
-            $_SESSION = [];
-            session_destroy();
+            // Validar Horiario
+            if (!empty($_SESSION['user']) && !\App\Services\ScheduleService::isAllowedNow(
+                $_SESSION['user']['id'],
+                $_SESSION['user']['rol_id']
+            )) {
 
-            header("Location: " . BASE_URL . "/login");
-            exit;
-        }
+                // destruir sesión
+                $_SESSION = [];
+                session_destroy();
 
+                header("Location: " . BASE_URL . "/login");
+                exit;
+            }
     }
 }

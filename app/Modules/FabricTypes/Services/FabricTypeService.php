@@ -17,9 +17,9 @@ class FabricTypeService
         $this->audit = new AuditLogRepository($db);
     }
 
-    public function getAll()
+    public function getAll(bool $includeDeleted = false)
     {
-        return $this->model->getAll();
+        return $this->model->getAll($includeDeleted);
     }
 
     public function create($data, $userId)
@@ -33,7 +33,16 @@ class FabricTypeService
         $deleted = $this->model->findDeletedByNombre($nombre);
 
         if ($deleted) {
-            $this->model->restore($deleted['id']);
+            $this->model->restore($deleted['id'], $userId);
+
+            $this->audit->log([
+                'usuario_id' => $userId,
+                'accion'     => 'restore',
+                'entidad'    => 'fabric_types',
+                'entidad_id' => $deleted['id'],
+                'modulo'     => 'inventory',
+                'detalle'    => ['mensaje' => 'Restaurado automáticamente al recrear con el mismo nombre'],
+            ]);
 
             return $deleted['id'];
         }
@@ -49,6 +58,15 @@ class FabricTypeService
             'nombre' => $nombre
         ]);
 
+        $this->audit->log([
+            'usuario_id' => $userId,
+            'accion'     => 'create',
+            'entidad'    => 'fabric_types',
+            'entidad_id' => $id,
+            'modulo'     => 'inventory',
+            'detalle'    => ['after' => ['codigo' => $codigo, 'nombre' => $nombre]],
+        ]);
+
         return $id;
     }
 
@@ -60,11 +78,34 @@ class FabricTypeService
             throw new Exception("No existe");
         }
 
-        if ($this->model->existsByNombre($data['nombre'], $id)) {
-            throw new Exception("Duplicado");
+        $nombre = trim($data['nombre'] ?? '');
+
+        if (!$nombre) {
+            throw new Exception("Nombre obligatorio");
         }
 
-        $this->model->update($id, $data);
+        if ($this->model->isInUse($id)) {
+            throw new Exception("No se puede modificar: el tipo de tela está en uso");
+        }
+
+
+        if ($this->model->existsByNombre($nombre, $id)) {
+            throw new Exception("Nombre ya existe");
+        }
+
+        $this->model->update($id, ['nombre' => $nombre], $userId);
+
+        $this->audit->log([
+            'usuario_id' => $userId,
+            'accion'     => 'update',
+            'entidad'    => 'fabric_types',
+            'entidad_id' => $id,
+            'modulo'     => 'inventory',
+            'detalle'    => [
+                'before' => ['nombre' => $row['nombre']],
+                'after'  => ['nombre' => $nombre],
+            ],
+        ]);
     }
 
     public function toggle($id, $userId)
@@ -72,25 +113,71 @@ class FabricTypeService
         $row = $this->model->find($id);
 
         if (!$row) {
-            throw new \Exception("Registro no existe");
+            throw new Exception("Registro no existe");
         }
 
         $new = $row['estado'] == 1 ? 2 : 1;
 
         $this->model->updateEstado($id, $new, $userId);
 
+        $this->audit->log([
+            'usuario_id' => $userId,
+            'accion'     => 'toggle',
+            'entidad'    => 'fabric_types',
+            'entidad_id' => $id,
+            'modulo'     => 'inventory',
+            'detalle'    => ['before' => $row['estado'], 'after' => $new],
+        ]);
+
         return $new;
     }
 
     public function delete($id, $userId)
     {
-        $this->model->delete($id);
+        $row = $this->model->find($id);
+
+        if (!$row) {
+            throw new Exception("No existe");
+        }
+
+        if ($this->model->isInUse($id)) {
+            throw new Exception("No se puede eliminar: el tipo de tela está en uso");
+        }
+
+
+        $this->model->delete($id, $userId);
+
+        $this->audit->log([
+            'usuario_id' => $userId,
+            'accion'     => 'delete',
+            'entidad'    => 'fabric_types',
+            'entidad_id' => $id,
+            'modulo'     => 'inventory',
+            'detalle'    => ['before' => $row],
+        ]);
+
         return true;
     }
 
     public function restore($id, $userId)
     {
-        $this->model->restore($id);
+        $row = $this->model->find($id);
+
+        if (!$row) {
+            throw new Exception("No existe");
+        }
+
+        $this->model->restore($id, $userId);
+
+        $this->audit->log([
+            'usuario_id' => $userId,
+            'accion'     => 'restore',
+            'entidad'    => 'fabric_types',
+            'entidad_id' => $id,
+            'modulo'     => 'inventory',
+            'detalle'    => ['after' => $row],
+        ]);
+
         return true;
     }
 

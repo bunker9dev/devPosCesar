@@ -48,24 +48,17 @@ class Router
         $action = $route['action'];
         $middlewares = $route['middlewares'] ?? [];
 
-        // 🔥 MIDDLEWARES
+        // MIDDLEWARES
+        
         foreach ($middlewares as $mw) {
 
-            switch ($mw) {
-
-                case 'auth':
-                    \App\Core\Middleware\AuthMiddleware::handle();
-                    break;
-
-                case 'admin':
-                case 'super':
-                case 'view':
-                case 'edit':
-                case 'delete':
-                case 'restore':
-                    \App\Core\Middleware\PermissionMiddleware::handle($mw);
-                    break;
+            if ($mw === 'auth') {
+                \App\Core\Middleware\AuthMiddleware::handle();
+                continue;
             }
+
+            //
+            \App\Core\Middleware\PermissionMiddleware::handle($mw);
         }
 
         // 🔴 Validar formato Controller@method

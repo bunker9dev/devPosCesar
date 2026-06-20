@@ -242,49 +242,6 @@ function initWarehouseToggle() {
   });
 }
 
-// // ================================
-// // TOGGLE COLORS
-// // ================================
-// function initColorToggle() {
-//   document.addEventListener("click", async (e) => {
-//     const btn = e.target.closest(".toggle-color");
-//     if (!btn) return;
-
-//     const id = btn.dataset.id;
-//     const url = btn.dataset.url;
-
-//     try {
-//       const res = await post(url, { id });
-
-//       if (!res || res.ok !== true) {
-//         throw new Error(res?.error || "Error cambiando estado");
-//       }
-
-//       // 🔥 ACTUALIZA EL MISMO BOTÓN
-//       btn.dataset.estado = res.estado;
-
-//       btn.classList.remove("active", "inactive");
-
-//       if (res.estado == 1) {
-//         btn.classList.add("active");
-//         btn.textContent = "Activo";
-//       } else {
-//         btn.classList.add("inactive");
-//         btn.textContent = "Inactivo";
-//       }
-
-//       Events.emit("alerts:show", {
-//         type: "success",
-//         message: "Estado actualizado",
-//       });
-//     } catch (err) {
-//       Events.emit("alerts:show", {
-//         type: "error",
-//         message: err.message,
-//       });
-//     }
-//   });
-// }
 
 // ================================
 // INIT CONTROLADO
@@ -292,12 +249,6 @@ function initWarehouseToggle() {
 document.addEventListener("DOMContentLoaded", () => {
   // console.log("INIT PRODUCTS OK");
 
-  if (document.querySelector("#tablaFabricTypes")) {
-    initDataTable("#tablaFabricTypes", "tipos");
-    initEditModal();
-    initDelete();
-    initRestore();
-  }
 
  
 

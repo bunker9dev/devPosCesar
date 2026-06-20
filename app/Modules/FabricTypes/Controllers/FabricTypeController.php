@@ -31,7 +31,9 @@ class FabricTypeController extends Controller
             return $this->redirect(BASE_URL);
         }
 
-        $types = $this->service->getAll();
+        $canViewDeleted = PermissionService::can($rolId, 'fabric_types', 'view_deleted');
+
+        $types = $this->service->getAll($canViewDeleted);
 
         $permissions = PermissionService::getModulePermissions($rolId, 'fabric_types');
 
@@ -67,35 +69,40 @@ class FabricTypeController extends Controller
     // ======================================================
     public function store()
     {
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return $this->redirect(BASE_URL . "/fabric-types");
+            echo json_encode(['ok' => false, 'error' => 'Método no permitido']);
+            return;
         }
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
         if (!PermissionService::can($rolId, 'fabric_types', 'create')) {
-            $_SESSION['error'] = "No autorizado";
-            return $this->redirect(BASE_URL . "/fabric-types");
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
         }
 
         try {
             $this->service->create($_POST, $_SESSION['user']['id']);
-
             $_SESSION['success'] = "Tipo de tela creado";
+            echo json_encode(['ok' => true]);
         } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
-
-        return $this->redirect(BASE_URL . "/fabric-types");
     }
-
     // ======================================================
-    // UPDATE
+    // UPDATE (AJAX → JSON)
     // ======================================================
     public function update()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return $this->redirect(BASE_URL . "/fabric-types");
+        header('Content-Type: application/json');
+
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'fabric_types', 'edit')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
         }
 
         try {
@@ -105,12 +112,10 @@ class FabricTypeController extends Controller
                 $_SESSION['user']['id']
             );
 
-            $_SESSION['success'] = "Actualizado";
+            echo json_encode(['ok' => true]);
         } catch (\Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
-
-        return $this->redirect(BASE_URL . "/fabric-types");
     }
 
     // ======================================================
@@ -120,8 +125,12 @@ class FabricTypeController extends Controller
     {
         header('Content-Type: application/json');
 
-        var_dump($_POST);
-        exit;
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'fabric_types', 'edit')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
+        }
 
         try {
             $estado = $this->service->toggle(
@@ -142,6 +151,13 @@ class FabricTypeController extends Controller
     {
         header('Content-Type: application/json');
 
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'fabric_types', 'delete')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
+        }
+
         try {
             $this->service->delete(
                 $_POST['id'],
@@ -161,12 +177,20 @@ class FabricTypeController extends Controller
     {
         header('Content-Type: application/json');
 
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'fabric_types', 'restore')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
+        }
+
         try {
             $this->service->restore(
                 $_POST['id'],
                 $_SESSION['user']['id']
             );
 
+            $_SESSION['success'] = "Tipo de tela restaurado";
             echo json_encode(['ok' => true]);
         } catch (\Exception $e) {
             echo json_encode(['ok' => false, 'error' => $e->getMessage()]);

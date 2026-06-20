@@ -22,7 +22,8 @@ endif; ?>
 <!-- =========================
    CREAR COLOR
 ========================= -->
-<form method="POST" action="<?= BASE_URL ?>/products/colors/store" id="formCreateColor">
+<?php if ($canCreate): ?>
+<form method="POST" action="<?= BASE_URL ?>/fabric-colors/store" id="formCreateColor">
 
     <div class="inline-create-pro">
 
@@ -45,6 +46,7 @@ endif; ?>
     </div>
 
 </form>
+<?php endif; ?>
 
 
 <!-- =========================
@@ -74,22 +76,16 @@ endif; ?>
 
                     <td></td>
 
-                    <!-- ID -->
                     <td data-label="ID"><?= $color['id'] ?></td>
 
-                    <!-- CODIGO -->
                     <td data-label="Código">
                         <?= htmlspecialchars($color['codigo']) ?>
                     </td>
 
-                    <!-- NOMBRE -->
                     <td data-label="Color">
                         <?= htmlspecialchars($color['nombre']) ?>
                     </td>
 
-                    <!-- =========================
-                         ESTADO
-                    ========================== -->
                     <td data-label="Estado">
 
                         <?php if ($color['estado'] === Status::ELIMINADO): ?>
@@ -103,7 +99,7 @@ endif; ?>
                             <button
                                 class="badge toggle-color <?= $color['estado'] == Status::ACTIVO ? 'active' : 'inactive' ?>"
                                 data-id="<?= $color['id'] ?>"
-                                data-url="<?= BASE_URL ?>/products/colors/toggle"
+                                data-url="<?= BASE_URL ?>/fabric-colors/toggle"
                                 data-estado="<?= $color['estado'] ?>">
 
                                 <?= Status::label($color['estado']) ?>
@@ -114,9 +110,6 @@ endif; ?>
 
                     </td>
 
-                    <!-- =========================
-                         ACCIONES
-                    ========================== -->
                     <td data-label="Acciones">
                         <div class="actions">
 
@@ -135,7 +128,7 @@ endif; ?>
                                 <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $color['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/delete"
+                                    data-url="<?= BASE_URL ?>/fabric-colors/delete"
                                     data-name="<?= htmlspecialchars($color['nombre']) ?>">
                                     Eliminar
                                 </button>
@@ -146,7 +139,7 @@ endif; ?>
                                 <button
                                     class="btn-action restore btn-restore"
                                     data-id="<?= $color['id'] ?>"
-                                    data-url="<?= BASE_URL ?>/products/colors/restore">
+                                    data-url="<?= BASE_URL ?>/fabric-colors/restore">
                                     Restaurar
                                 </button>
                             <?php endif; ?>
@@ -163,15 +156,6 @@ endif; ?>
 
 </div>
 
-
-<!-- =========================
-   MODALES
-========================= -->
 <?php require __DIR__ . '/modals.php'; ?>
-
-
-<!-- =========================
-   JS PAGE
-========================= -->
 
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/colors-index.js"></script>

@@ -2,6 +2,7 @@ console.log("APP JS CARGADO 🔥");
 
 import { Events } from "./events.js";
 import { initNavbar } from "../modules/navbar.js";
+import "./alerts.js";
 
 // ==========================
 // CORE MODULES

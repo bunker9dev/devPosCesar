@@ -3,14 +3,16 @@
         <i data-lucide="check-circle"></i>
         <?= $_SESSION['success'] ?>
     </div>
-<?php unset($_SESSION['success']); endif; ?>
+<?php unset($_SESSION['success']);
+endif; ?>
 
 <?php if (!empty($_SESSION['error'])): ?>
     <div class="alert alert-error" id="alertMessage">
         <i data-lucide="alert-circle"></i>
         <?= $_SESSION['error'] ?>
     </div>
-<?php unset($_SESSION['error']); endif; ?>
+<?php unset($_SESSION['error']);
+endif; ?>
 
 
 <!-- ======================================================
@@ -110,10 +112,12 @@ CREATE FORM (USERS STYLE CLEAN)
                         <div class="actions">
 
                             <!-- EDIT -->
-                            <?php if ($canEdit): ?>
+                            <!-- EDIT -->
+                            <?php if ($estado !== $Status::ELIMINADO && $canEdit): ?>
                                 <button
                                     class="btn-action edit btn-edit"
                                     data-id="<?= $type['id'] ?>"
+                                    data-name="<?= htmlspecialchars($type['nombre']) ?>"
                                     data-url="<?= BASE_URL ?>/fabric-types/update">
                                     Editar
                                 </button>
@@ -124,6 +128,7 @@ CREATE FORM (USERS STYLE CLEAN)
                                 <button
                                     class="btn-action delete btn-delete"
                                     data-id="<?= $type['id'] ?>"
+                                    data-name="<?= htmlspecialchars($type['nombre']) ?>"
                                     data-url="<?= BASE_URL ?>/fabric-types/delete"
                                     data-entity="tipo de tela">
                                     Eliminar
@@ -154,4 +159,10 @@ CREATE FORM (USERS STYLE CLEAN)
 
 </div>
 
+<!-- =========================
+   MODALES
+========================= -->
+<?php require __DIR__ . '/modals.php'; ?>
+
 <script type="module" src="<?= BASE_URL ?>/assets/js/core/app.js"></script>
+<script type="module" src="<?= BASE_URL ?>/assets/js/modules/fabric-types.js"></script>
