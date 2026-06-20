@@ -1,34 +1,38 @@
-// =========================================================
-// PAGE: SUPPLIERS EDIT
-// =========================================================
-
-import { initSuppliers } from "../modules/suppliers.js";
+import { Events } from "../core/events.js";
+import "../modules/suppliers.js";
 import { post } from "../core/api.js";
 
+function notify(message, type = "success") {
+    Events.emit("alerts:show", { type, message });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    initSuppliers();
+
+    Events.emit("suppliers:form");
 
     const form = document.querySelector(".form-suppliers");
     if (!form) return;
 
     const nitInput = document.getElementById("nit");
     const nitMsg = document.getElementById("nit-msg");
-
-    // 🔥 ID ACTUAL DEL REGISTRO (CLAVE)
     const supplierId = form.dataset.id;
 
     let timeout;
 
+    function showMsg(el, text, type) {
+        if (!el) return;
+        el.textContent = text;
+        el.className = `input-msg ${type}`;
+    }
+
     // =====================================================
-    // VALIDACIÓN NIT (IGNORANDO EL MISMO ID)
+    // VALIDACIÓN NIT (ignorando el propio registro)
     // =====================================================
     nitInput?.addEventListener("input", () => {
         clearTimeout(timeout);
 
         const nit = nitInput.value.trim().toLowerCase();
         nitInput.value = nit;
-
-        if (!nitMsg) return;
 
         if (nit.length < 5) {
             showMsg(nitMsg, "Mínimo 5 caracteres", "error");
@@ -40,12 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         timeout = setTimeout(async () => {
             try {
-                const res = await post("/api/suppliers/check-nit", {
+                const res = await post("/suppliers/check-nit", {
                     nit,
-                    id: supplierId // 🔥 IGNORA ESTE REGISTRO
+                    id: supplierId
                 });
 
-                if (!res || !res.success) {
+                if (!res || !res.ok) {
                     showMsg(nitMsg, "Error al validar", "error");
                     return;
                 }
@@ -74,24 +78,21 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", (e) => {
         let valid = true;
 
-        // 🔥 NIT duplicado
         if (nitInput && nitInput.dataset.exists === "true") {
             valid = false;
-            showToast("El NIT ya está registrado", "error");
+            notify("El NIT ya está registrado", "error");
         }
 
-        // 🔥 NOMBRE
         const nombre = document.getElementById("nombre");
         if (nombre && nombre.value.trim().length < 2) {
             valid = false;
-            showToast("El nombre es obligatorio (mínimo 2 caracteres)", "error");
+            notify("El nombre es obligatorio (mínimo 2 caracteres)", "error");
         }
 
-        // 🔥 TELÉFONO
         const telefono = document.getElementById("telefono");
         if (telefono && telefono.value.trim().length > 0 && telefono.value.trim().length < 7) {
             valid = false;
-            showToast("Teléfono inválido", "error");
+            notify("Teléfono inválido", "error");
         }
 
         if (!valid) {
@@ -99,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 🔥 UX: bloquear botón
         const btn = form.querySelector("button[type='submit']");
         if (btn) {
             btn.disabled = true;

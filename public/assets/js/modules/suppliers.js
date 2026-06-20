@@ -221,13 +221,26 @@ function initFormValidation() {
 // =========================================================
 // INIT EVENTS
 // =========================================================
+// =========================================================
+// INIT EVENTS (con guard contra doble inicialización)
+// =========================================================
+let suppliersIndexInitialized = false;
+let suppliersFormInitialized = false;
+
 Events.on("suppliers:index", () => {
+  if (suppliersIndexInitialized) return;
+  suppliersIndexInitialized = true;
+
+  initDataTable("#tablaSuppliers");
   initSupplierToggle();
   initSupplierDelete();
   initSupplierRestore();
 });
 
 Events.on("suppliers:form", () => {
+  if (suppliersFormInitialized) return;
+  suppliersFormInitialized = true;
+
   initSupplierValidation();
   initFormValidation();
 });

@@ -51,6 +51,7 @@ $router->post('/suppliers/restore', 'Suppliers\\Controllers\\SupplierController@
 $router->post('/suppliers/toggle', 'Suppliers\\Controllers\\SupplierController@toggle', ['auth', 'proveedores.edit']);
 
 $router->get('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController@checkNit', ['auth']);
+$router->post('/suppliers/check-nit', 'Suppliers\\Controllers\\SupplierController@checkNit', ['auth']);
 
 
 // ==============================

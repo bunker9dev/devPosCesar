@@ -3,7 +3,8 @@
 namespace App\Modules\Suppliers\Controllers;
 
 use App\Core\Controller;
-use App\Core\Roles;
+use App\Core\Database;
+use App\Services\PermissionService;
 use App\Modules\Suppliers\Services\SupplierService;
 use App\Modules\Suppliers\Models\Supplier;
 
@@ -13,48 +14,55 @@ class SupplierController extends Controller
 
     public function __construct()
     {
-        global $db;
+        $db = Database::getConnection();
         $model = new Supplier($db);
         $this->service = new SupplierService($model, $db);
     }
 
-    // ======================================================
-    // LISTADO
-    // ======================================================
     public function index()
     {
-        $this->auth();
-        $this->onlyAdmin();
-
         $rolId = $_SESSION['user']['rol_id'] ?? null;
-        $isSuper = $rolId === Roles::SUPER;
 
-        $suppliers = $this->service->getAll($isSuper);
+        if (!PermissionService::can($rolId, 'proveedores', 'view')) {
+            return $this->redirect(BASE_URL . "/dashboard");
+        }
 
-        $this->render('Modules/Suppliers/Views/index', compact('suppliers'));
+        $canViewDeleted = PermissionService::can($rolId, 'proveedores', 'view_deleted');
+
+        $suppliers = $this->service->getAll($canViewDeleted);
+
+        $permissions = PermissionService::getModulePermissions($rolId, 'proveedores');
+
+        $this->render('Modules/Suppliers/Views/index', [
+            'suppliers'  => $suppliers,
+            'canCreate'  => $permissions['create'],
+            'canEdit'    => $permissions['edit'],
+            'canDelete'  => $permissions['delete'],
+            'canRestore' => $permissions['restore'],
+        ]);
     }
 
-    // ======================================================
-    // CREATE
-    // ======================================================
     public function create()
     {
-        $this->auth();
-        $this->onlyAdmin();
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'proveedores', 'create')) {
+            return $this->redirect(BASE_URL . "/suppliers");
+        }
 
         $this->render('Modules/Suppliers/Views/create');
     }
 
-    // ======================================================
-    // STORE
-    // ======================================================
     public function store()
     {
-        $this->auth();
-        $this->onlyAdmin();
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'proveedores', 'create')) {
+            $_SESSION['error'] = "No autorizado";
+            return $this->redirect(BASE_URL . "/suppliers");
+        }
 
         try {
-
             $_POST['user_id'] = $_SESSION['user']['id'];
 
             $this->service->create($_POST);
@@ -73,13 +81,13 @@ class SupplierController extends Controller
         }
     }
 
-    // ======================================================
-    // EDIT
-    // ======================================================
     public function edit()
     {
-        $this->auth();
-        $this->onlyAdmin();
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'proveedores', 'edit')) {
+            return $this->redirect(BASE_URL . "/suppliers");
+        }
 
         $id = $_GET['id'] ?? null;
 
@@ -96,13 +104,14 @@ class SupplierController extends Controller
         $this->render('Modules/Suppliers/Views/edit', compact('supplier'));
     }
 
-    // ======================================================
-    // UPDATE
-    // ======================================================
     public function update()
     {
-        $this->auth();
-        $this->onlyAdmin();
+        $rolId = $_SESSION['user']['rol_id'] ?? null;
+
+        if (!PermissionService::can($rolId, 'proveedores', 'edit')) {
+            $_SESSION['errors'] = ['general' => 'No autorizado'];
+            return $this->redirect(BASE_URL . "/suppliers");
+        }
 
         $id = $_POST['id'] ?? null;
 
@@ -112,7 +121,6 @@ class SupplierController extends Controller
         }
 
         try {
-
             $_POST['user_id'] = $_SESSION['user']['id'];
 
             $this->service->update($id, $_POST);
@@ -131,154 +139,104 @@ class SupplierController extends Controller
         }
     }
 
-    // ======================================================
-    // TOGGLE
-    // ======================================================
     public function toggle()
     {
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!Roles::canEdit($rolId)) {
-            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        if (!PermissionService::can($rolId, 'proveedores', 'edit')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
         }
 
         $id = $_POST['id'] ?? null;
 
         if (!$id) {
-            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+            return;
         }
 
         try {
+            $estado = $this->service->toggle($id, $_SESSION['user']['id']);
 
-            $estado = $this->service->toggle(
-                $id,
-                $_SESSION['user']['id']
-            );
-
-            echo json_encode([
-                'ok' => true,
-                'estado' => $estado
-            ]);
-
+            echo json_encode(['ok' => true, 'estado' => $estado]);
         } catch (\Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
     }
 
-    // ======================================================
-    // DELETE (SOFT)
-    // ======================================================
     public function delete()
     {
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!Roles::canDelete($rolId)) {
-            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        if (!PermissionService::can($rolId, 'proveedores', 'delete')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
         }
 
         $id = $_POST['id'] ?? null;
 
         if (!$id) {
-            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+            return;
         }
 
         try {
-
-            $this->service->delete(
-                $id,
-                $_SESSION['user']['id']
-            );
-
+            $this->service->delete($id, $_SESSION['user']['id']);
             echo json_encode(['ok' => true]);
-
         } catch (\Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
     }
 
-    // ======================================================
-    // RESTORE
-    // ======================================================
     public function restore()
     {
         header('Content-Type: application/json');
 
         $rolId = $_SESSION['user']['rol_id'] ?? null;
 
-        if (!Roles::canRestore($rolId)) {
-            return print json_encode(['ok' => false, 'error' => 'No autorizado']);
+        if (!PermissionService::can($rolId, 'proveedores', 'restore')) {
+            echo json_encode(['ok' => false, 'error' => 'No autorizado']);
+            return;
         }
 
         $id = $_POST['id'] ?? null;
 
         if (!$id) {
-            return print json_encode(['ok' => false, 'error' => 'ID inválido']);
+            echo json_encode(['ok' => false, 'error' => 'ID inválido']);
+            return;
         }
 
         try {
-
-            $this->service->restore(
-                $id,
-                $_SESSION['user']['id']
-            );
-
+            $this->service->restore($id, $_SESSION['user']['id']);
             echo json_encode(['ok' => true]);
-
         } catch (\Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'error' => $e->getMessage()
-            ]);
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
         }
     }
 
-    // ======================================================
-    // VALIDAR NIT (AJAX)
-    // ======================================================
     public function checkNit()
     {
         header('Content-Type: application/json');
 
         try {
-
             $nit = $_POST['nit'] ?? '';
+            $excludeId = $_POST['id'] ?? null;
 
             if (!$nit) {
-                echo json_encode([
-                    'ok' => true,
-                    'exists' => false
-                ]);
+                echo json_encode(['ok' => true, 'exists' => false]);
                 return;
             }
 
-            $exists = $this->service->existsByNit($nit);
+            $exists = $this->service->existsByNit($nit, $excludeId);
 
-            echo json_encode([
-                'ok' => true,
-                'exists' => $exists
-            ]);
+            echo json_encode(['ok' => true, 'exists' => $exists]);
 
         } catch (\Exception $e) {
-
-            echo json_encode([
-                'ok' => false,
-                'exists' => false
-            ]);
+            echo json_encode(['ok' => false, 'exists' => false]);
         }
-
-        exit;
     }
 }
