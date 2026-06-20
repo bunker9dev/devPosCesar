@@ -81,13 +81,12 @@ $router->post('/fabric-colors/toggle', 'Colors\\Controllers\\ColorController@tog
 // 🏬 WAREHOUSES
 // ==============================
 
-$router->get('/warehouses', 'Products\\Controllers\\WarehouseController@index', ['auth', 'warehouses.view']);
-$router->post('/warehouses/store', 'Products\\Controllers\\WarehouseController@store', ['auth', 'warehouses.create']);
-$router->post('/warehouses/update', 'Products\\Controllers\\WarehouseController@update', ['auth', 'warehouses.edit']);
-$router->post('/warehouses/delete', 'Products\\Controllers\\WarehouseController@delete', ['auth', 'warehouses.delete']);
-$router->post('/warehouses/restore', 'Products\\Controllers\\WarehouseController@restore', ['auth', 'warehouses.restore']);
-$router->post('/warehouses/toggle', 'Products\\Controllers\\WarehouseController@toggle', ['auth', 'warehouses.edit']);
-
+$router->get('/warehouses', 'Warehouses\\Controllers\\WarehouseController@index', ['auth', 'warehouses.view']);
+$router->post('/warehouses/store', 'Warehouses\\Controllers\\WarehouseController@store', ['auth', 'warehouses.create']);
+$router->post('/warehouses/update', 'Warehouses\\Controllers\\WarehouseController@update', ['auth', 'warehouses.edit']);
+$router->post('/warehouses/delete', 'Warehouses\\Controllers\\WarehouseController@delete', ['auth', 'warehouses.delete']);
+$router->post('/warehouses/restore', 'Warehouses\\Controllers\\WarehouseController@restore', ['auth', 'warehouses.restore']);
+$router->post('/warehouses/toggle', 'Warehouses\\Controllers\\WarehouseController@toggle', ['auth', 'warehouses.edit']);
 
 // ==============================
 // 🧵 ROLLS

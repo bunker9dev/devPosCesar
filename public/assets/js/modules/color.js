@@ -2,6 +2,7 @@
 // IMPORTS
 // =========================================================
 import { Events } from "../core/events.js";
+import { initDataTable } from "./table.js";
 
 // =========================================================
 // STATE
@@ -75,7 +76,7 @@ function initColorCreate() {
 }
 
 // =========================================================
-// TOGGLE COLOR 
+// TOGGLE COLOR
 // =========================================================
 function initColorToggle() {
   document.addEventListener("click", async (e) => {
@@ -198,7 +199,7 @@ function initColorDeleteModal() {
 }
 
 // =========================================================
-// CONFIRM DELETE 
+// CONFIRM DELETE
 // =========================================================
 function initConfirmDelete() {
   const btn = document.getElementById("btnConfirmDeleteColor");
@@ -286,7 +287,8 @@ function initCloseModals() {
 Events.on("colors:index", () => {
   if (colorsInitialized) return;
   colorsInitialized = true;
-
+  
+  initDataTable("#tablaColors");
   initColorCreate();
   initColorToggle();
   initColorEdit();

@@ -1,5 +1,8 @@
-import { Events } from "../core/events.js";
+import { initDataTable } from "./table.js";
 
+// =========================================================
+// HELPERS
+// =========================================================
 async function safeFetch(url, options) {
   try {
     const response = await fetch(url, options);
@@ -20,10 +23,6 @@ async function safeFetch(url, options) {
   }
 }
 
-function notify(type, message) {
-  Events.emit("alerts:show", { type, message });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
 
     const tableElement = $("#tablaFabricTypes");
@@ -32,17 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tableElement.DataTable().destroy();
     }
 
-    const table = tableElement.DataTable({
-        responsive: true,
-        pageLength: 10,
-        order: [[1, "desc"]],
-        language: {
-            search: "Buscar:",
-            lengthMenu: "Mostrar _MENU_ registros",
-            info: "Mostrando _START_ a _END_ de _TOTAL_",
-            paginate: { next: "→", previous: "←" }
-        }
-    });
+    const table = initDataTable("#tablaFabricTypes");
 
     // ============================
     // CREATE
@@ -61,18 +50,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!data) return;
 
             if (!data.ok) {
-                notify("error", data.error || "Error al crear");
+                alert(data.error || "Error");
                 return;
             }
 
             form.reset();
-            notify("success", "Tipo de tela creado");
-            location.reload();
+            table.ajax ? table.ajax.reload(null, false) : location.reload();
         });
     }
 
     // ============================
-    // TOGGLE — actualiza en sitio, sin recargar
+    // TOGGLE
     // ============================
     document.addEventListener("click", async (e) => {
         const el = e.target.closest(".toggle-type");
@@ -87,23 +75,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!data) return;
 
         if (!data.ok) {
-            notify("error", data.error || "Error al cambiar estado");
+            alert(data.error || "Error al cambiar estado");
             return;
         }
 
-        const estado = parseInt(data.estado);
-        el.dataset.estado = estado;
-        el.classList.remove("active", "inactive", "deleted");
-
-        if (estado === 1) {
-            el.classList.add("active");
-            el.textContent = "Activo";
-        } else {
-            el.classList.add("inactive");
-            el.textContent = "Inactivo";
-        }
-
-        notify("success", "Estado actualizado");
+        location.reload();
     });
 
     // ============================
@@ -129,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ============================
-    // UPDATE — actualiza en sitio, sin recargar
+    // UPDATE — enviar edición
     // ============================
     const formEdit = document.getElementById("formEditType");
 
@@ -149,16 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!data) return;
 
             if (!data.ok) {
-                notify("error", data.error || "Error al actualizar");
+                alert(data.error || "Error al actualizar");
                 return;
             }
 
-            const row = document.querySelector(`tr[data-id="${id}"]`);
-            const cell = row?.querySelector('td[data-label="Nombre"]');
-            if (cell) cell.textContent = nombre;
-
             document.getElementById("modalEditType").classList.add("hidden");
-            notify("success", "Tipo de tela actualizado");
+            location.reload();
         });
     }
 
@@ -167,7 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     let deleteTypeId = null;
     let deleteTypeUrl = null;
-    let deleteTypeRow = null;
 
     document.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-delete");
@@ -175,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         deleteTypeId = btn.dataset.id;
         deleteTypeUrl = btn.dataset.url;
-        deleteTypeRow = btn.closest("tr");
 
         const msg = document.getElementById("deleteTypeMessage");
         const modal = document.getElementById("modalDeleteType");
@@ -190,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ============================
-    // DELETE — confirmar (sin recarga completa)
+    // DELETE — confirmar
     // ============================
     const btnConfirmDelete = document.getElementById("btnConfirmDeleteType");
 
@@ -204,30 +174,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: new URLSearchParams({ id: deleteTypeId })
             });
 
-            document.getElementById("modalDeleteType").classList.add("hidden");
-
             if (!data) return;
 
             if (!data.ok) {
-                notify("error", data.error || "Error al eliminar");
+                alert(data.error || "Error al eliminar");
                 return;
             }
 
-            const badge = deleteTypeRow?.querySelector(".estado-toggle");
-            if (badge) {
-                badge.textContent = "Eliminado";
-                badge.classList.remove("active", "inactive");
-                badge.classList.add("deleted");
-            }
-
-            const actions = deleteTypeRow?.querySelector('td[data-label="Acciones"]');
-            if (actions) actions.innerHTML = "";
-
-            notify("success", "Tipo de tela eliminado");
-
-            deleteTypeId = null;
-            deleteTypeUrl = null;
-            deleteTypeRow = null;
+            location.reload();
         });
     }
 
@@ -247,11 +201,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!data) return;
 
         if (!data.ok) {
-            notify("error", data.error || "Error al restaurar");
+            alert(data.error || "Error al restaurar");
             return;
         }
 
-        notify("success", "Tipo de tela restaurado");
         location.reload();
     });
 

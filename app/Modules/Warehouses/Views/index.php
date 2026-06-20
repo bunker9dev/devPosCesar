@@ -10,44 +10,20 @@
     </div>
 <?php unset($_SESSION['error']); endif; ?>
 
-
-<!-- ================================
-   FORM CREATE
-================================ -->
+<?php if ($canCreate): ?>
 <form method="POST" action="<?= BASE_URL ?>/warehouses/store">
-
     <div class="inline-create-pro">
-
         <div class="input-group-pro">
-            <input
-                type="text"
-                name="nombre"
-                placeholder="Nombre de bodega"
-                required>
-
-            <input
-                type="text"
-                name="ubicacion"
-                placeholder="Ubicación (opcional)">
+            <input type="text" name="nombre" placeholder="Nombre de bodega" required>
+            <input type="text" name="ubicacion" placeholder="Ubicación (opcional)">
         </div>
-
-        <button class="btn-primary btn-create">
-            + Crear
-        </button>
-
+        <button class="btn-primary btn-create">+ Crear</button>
     </div>
-
 </form>
-
-
-<!-- ================================
-   TABLE
-================================ -->
+<?php endif; ?>
 
 <div class="table-container">
-
     <table id="tablaWarehouses" class="table-main display">
-
         <thead>
             <tr>
                 <th></th>
@@ -58,58 +34,32 @@
                 <th>Acciones</th>
             </tr>
         </thead>
-
         <tbody>
             <?php foreach ($warehouses as $w): ?>
-
                 <?php $estado = (int)$w['estado']; ?>
-
-                <tr
-                    data-id="<?= $w['id'] ?>"
-                    class="<?= $estado === 0 ? 'deleted' : '' ?>">
-
+                <tr data-id="<?= $w['id'] ?>" class="<?= $estado === 0 ? 'deleted' : '' ?>">
                     <td></td>
-
                     <td data-label="ID"><?= $w['id'] ?></td>
+                    <td data-label="Nombre"><?= htmlspecialchars($w['nombre']) ?></td>
+                    <td data-label="Ubicación"><?= htmlspecialchars($w['ubicacion'] ?? '-') ?></td>
 
-                    <td data-label="Nombre">
-                        <?= htmlspecialchars($w['nombre']) ?>
-                    </td>
-
-                    <td data-label="Ubicación">
-                        <?= htmlspecialchars($w['ubicacion'] ?? '-') ?>
-                    </td>
-
-                    <!-- ======================
-                        ESTADO (TOGGLE)
-                    ====================== -->
                     <td data-label="Estado">
-                        <span
-                            class="badge estado-toggle is-clickable
-                            <?= $estado === 1 ? 'active' : ($estado === 2 ? 'inactive' : 'deleted') ?>"
-
-                            data-id="<?= $w['id'] ?>"
-                           data-url="/warehouses/toggle"
-                            data-estado="<?= $estado ?>"
-
-                            data-label-active="Activo"
-                            data-label-inactive="Inactivo"
-                            data-label-deleted="Eliminado">
-
-                            <?= $estado === 1 ? 'Activo' : ($estado === 2 ? 'Inactivo' : 'Eliminado') ?>
-
-                        </span>
+                        <?php if ($estado === 0): ?>
+                            <span class="badge deleted">Eliminado</span>
+                        <?php else: ?>
+                            <button
+                                class="badge estado-toggle is-clickable <?= $estado === 1 ? 'active' : 'inactive' ?>"
+                                data-id="<?= $w['id'] ?>"
+                                data-url="<?= BASE_URL ?>/warehouses/toggle"
+                                data-estado="<?= $estado ?>">
+                                <?= $estado === 1 ? 'Activo' : 'Inactivo' ?>
+                            </button>
+                        <?php endif; ?>
                     </td>
 
-                    <!-- ======================
-                        ACCIONES
-                    ====================== -->
                     <td data-label="Acciones">
                         <div class="actions">
-
                             <?php if ($estado !== 0): ?>
-
-                                <!-- EDIT -->
                                 <?php if ($canEdit): ?>
                                     <button
                                         class="btn-action edit btn-edit-warehouse"
@@ -120,51 +70,32 @@
                                     </button>
                                 <?php endif; ?>
 
-                                <!-- DELETE -->
                                 <?php if ($canDelete): ?>
                                     <button
-                                        class="btn-action delete btn-delete"
+                                        class="btn-action delete btn-delete-warehouse"
                                         data-id="<?= $w['id'] ?>"
-                                        data-url="/warehouses/delete"
-                                        data-name="<?= htmlspecialchars($w['nombre']) ?>"
-                                        data-entity="bodega">
+                                        data-name="<?= htmlspecialchars($w['nombre']) ?>">
                                         Eliminar
                                     </button>
                                 <?php endif; ?>
-
                             <?php else: ?>
-
-                                <!-- RESTORE -->
                                 <?php if ($canRestore): ?>
                                     <button
                                         class="btn-action restore btn-restore"
                                         data-id="<?= $w['id'] ?>"
-                                        data-url="/warehouses/restore">
+                                        data-url="<?= BASE_URL ?>/warehouses/restore">
                                         Restaurar
                                     </button>
                                 <?php endif; ?>
-
                             <?php endif; ?>
-
                         </div>
                     </td>
-
                 </tr>
-
             <?php endforeach; ?>
         </tbody>
-
     </table>
-
 </div>
 
-<script>
-    window.BASE_URL = "<?= BASE_URL ?>";
-</script>
+<?php require __DIR__ . '/modals.php'; ?>
 
 <script type="module" src="<?= BASE_URL ?>/assets/js/pages/warehouses-index.js"></script>
-
-<script type="module">
-    import { Events } from "<?= BASE_URL ?>/assets/js/core/events.js";
-    Events.emit("warehouses:index");
-</script>

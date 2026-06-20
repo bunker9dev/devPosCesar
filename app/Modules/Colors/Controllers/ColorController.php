@@ -36,6 +36,7 @@ class ColorController extends Controller
         $permissions = PermissionService::getModulePermissions($rolId, 'fabric_colors');
 
         $this->render('Modules/Colors/Views/index', [
+            'title' => 'Colores',
             'colors' => $colors,
             'canCreate' => $permissions['create'],
             'canEdit' => $permissions['edit'],
