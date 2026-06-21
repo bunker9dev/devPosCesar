@@ -61,16 +61,40 @@ class RollController extends Controller
         $options = $this->service->getFormOptions();
         $canViewPrice = PermissionService::can($rolId, 'rolls', 'view_price');
 
+        $purchaseId = $_GET['purchase_id'] ?? null;
+        $lockedSupplier = null;
+
+        if ($purchaseId) {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+            SELECT pu.id, pu.numero_documento, pu.supplier_id, s.nombre AS proveedor_nombre
+            FROM purchases pu
+            JOIN proveedores s ON s.id = pu.supplier_id
+            WHERE pu.id = ? AND pu.deleted_at IS NULL
+        ");
+            $stmt->bind_param("i", $purchaseId);
+            $stmt->execute();
+            $lockedSupplier = $stmt->get_result()->fetch_assoc();
+
+            if (!$lockedSupplier) {
+                $_SESSION['error'] = "La compra indicada no existe";
+                return $this->redirect(BASE_URL . "/purchases");
+            }
+        }
+
         $this->render('Modules/Rolls/Views/create', [
-            'title'      => 'Crear rollos',
-            'types'        => $options['types'],
-            'colors'       => $options['colors'],
-            'suppliers'    => $options['suppliers'],
-            'warehouses'   => $options['warehouses'],
-            'canViewPrice' => $canViewPrice,
+            'title'          => 'Crear rollos',
+            'types'          => $options['types'],
+            'colors'         => $options['colors'],
+            'suppliers'      => $options['suppliers'],
+            'warehouses'     => $options['warehouses'],
+            'purchaseId'     => $purchaseId,
+            'lockedSupplier' => $lockedSupplier,
+            'canViewPrice'   => $canViewPrice,
         ]);
     }
 
+    
     public function store()
     {
         header('Content-Type: application/json');

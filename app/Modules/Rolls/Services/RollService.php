@@ -45,6 +45,7 @@ class RollService
         $precio        = ($data['precio_compra'] ?? '') !== '' ? (float)$data['precio_compra'] : null;
         $cantidad      = (int)($data['cantidad'] ?? 1);
         $confirmMerge  = !empty($data['confirm_merge']);
+        $purchaseId    = !empty($data['purchase_id']) ? (int)$data['purchase_id'] : null;
 
         if (!$fabricTypeId || !$fabricColorId || !$supplierId || !$warehouseId) {
             throw new Exception("Tipo de tela, color, proveedor y bodega son obligatorios");
@@ -91,6 +92,7 @@ class RollService
                 'fecha_compra'      => $fechaCompra,
                 'metraje_por_rollo' => $metraje,
                 'precio_compra'     => $precio,
+                'purchase_id'       => $purchaseId,
                 'user_id'           => $userId,
             ]);
 

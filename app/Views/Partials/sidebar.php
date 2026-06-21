@@ -14,6 +14,19 @@ $canViewWarehouses  = PermissionService::can($rolId, 'warehouses', 'view');
 $canViewFabricTypes = PermissionService::can($rolId, 'fabric_types', 'view');
 $canViewFabricColors = PermissionService::can($rolId, 'fabric_colors', 'view');
 $canViewRollsIndividual = PermissionService::can($rolId, 'rolls', 'view_individual');
+$canViewPurchases = PermissionService::can($rolId, 'purchases', 'view');
+$canViewPedidos = PermissionService::can($rolId, 'pedidos', 'view');
+$pedidosVencidos = 0;
+
+if ($canViewPedidos) {
+    $db = \App\Core\Database::getConnection();
+    $result = $db->query("
+        SELECT COUNT(*) AS total FROM pedidos
+        WHERE estado = 'aprobado' AND deleted_at IS NULL AND DATEDIFF(NOW(), approved_at) >= 7
+    ");
+    $pedidosVencidos = (int)$result->fetch_assoc()['total'];
+}
+
 
 // Los grupos solo se muestran si AL MENOS uno de sus enlaces internos es visible
 $showOperacion = $canViewRolls; // (Productos/Kardex/Compras ocultos hasta que existan)
@@ -82,6 +95,27 @@ $showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabric
 
                 <ul class="sidebar-submenu">
 
+<?php if ($canViewPedidos): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/pedidos">
+                                <i data-lucide="clipboard-list"></i>
+                                <span>Pedidos</span>
+                                <?php if ($pedidosVencidos > 0): ?>
+                                    <span class="badge-counter"><?= $pedidosVencidos ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if ($canViewPurchases): ?>
+                        <li>
+                            <a href="<?= BASE_URL ?>/purchases">
+                                <i data-lucide="shopping-cart"></i>
+                                <span>Compras</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
                     <?php if ($canViewRolls): ?>
                         <li>
                             <a href="<?= BASE_URL ?>/rolls">
@@ -100,6 +134,8 @@ $showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabric
                         </li>
                     <?php endif; ?>
 
+
+                    
                     <!--
                     Productos / Kardex / Compras ocultos a propósito:
                     sus rutas (/products, /movements, /purchases) todavía

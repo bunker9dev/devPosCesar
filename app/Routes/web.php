@@ -90,7 +90,7 @@ $router->post('/warehouses/restore', 'Warehouses\\Controllers\\WarehouseControll
 $router->post('/warehouses/toggle', 'Warehouses\\Controllers\\WarehouseController@toggle', ['auth', 'warehouses.edit']);
 
 // ==============================
-// 🧵 ROLLS
+// ROLLS
 // ==============================
 
 $router->get('/rolls', 'Rolls\\Controllers\\RollController@index', ['auth', 'rolls.view']);
@@ -102,6 +102,44 @@ $router->post('/rolls/delete', 'Rolls\\Controllers\\RollController@delete', ['au
 $router->post('/rolls/restore', 'Rolls\\Controllers\\RollController@restore', ['auth', 'rolls.restore']);
 $router->get('/rolls/edit-data', 'Rolls\\Controllers\\RollController@editData', ['auth', 'rolls.edit']);
 $router->get('/rolls/individual', 'Rolls\\Controllers\\RollController@individual', ['auth', 'rolls.view_individual']);
+
+
+
+// ==============================
+// PURCHASES - COMPRAS
+// ==============================
+
+$router->get('/purchases', 'Purchases\\Controllers\\PurchaseController@index', ['auth', 'purchases.view']);
+$router->get('/purchases/create', 'Purchases\\Controllers\\PurchaseController@create', ['auth', 'purchases.create']);
+$router->post('/purchases/store', 'Purchases\\Controllers\\PurchaseController@store', ['auth', 'purchases.create']);
+$router->get('/purchases/show', 'Purchases\\Controllers\\PurchaseController@show', ['auth', 'purchases.view']);
+$router->post('/purchases/update', 'Purchases\\Controllers\\PurchaseController@update', ['auth', 'purchases.edit']);
+$router->get('/purchases/basic-info', 'Purchases\\Controllers\\PurchaseController@getBasicInfo', ['auth', 'purchases.view']);
+$router->post('/purchases/register-payment', 'Purchases\\Controllers\\PurchaseController@registerPayment', ['auth', 'purchases.manage_payments']);
+$router->post('/purchases/delete', 'Purchases\\Controllers\\PurchaseController@delete', ['auth', 'purchases.delete']);
+$router->post('/purchases/restore', 'Purchases\\Controllers\\PurchaseController@restore', ['auth', 'purchases.restore']);
+$router->post('/purchases/quick-supplier', 'Purchases\\Controllers\\PurchaseController@quickSupplier', ['auth', 'proveedores.create']);
+
+
+
+
+// ==============================
+// PEDIDOS
+// ==============================
+
+
+$router->get('/pedidos', 'Purchases\\Controllers\\PedidoController@index', ['auth', 'pedidos.view']);
+$router->get('/pedidos/create', 'Purchases\\Controllers\\PedidoController@create', ['auth', 'pedidos.create']);
+$router->post('/pedidos/store', 'Purchases\\Controllers\\PedidoController@store', ['auth', 'pedidos.create']);
+$router->get('/pedidos/show', 'Purchases\\Controllers\\PedidoController@show', ['auth', 'pedidos.view']);
+$router->post('/pedidos/approve', 'Purchases\\Controllers\\PedidoController@approve', ['auth', 'pedidos.approve']);
+$router->post('/pedidos/mark-as', 'Purchases\\Controllers\\PedidoController@markAs', ['auth', 'pedidos.view']);
+$router->post('/pedidos/delete', 'Purchases\\Controllers\\PedidoController@delete', ['auth', 'pedidos.delete']);
+$router->post('/pedidos/restore', 'Purchases\\Controllers\\PedidoController@restore', ['auth', 'pedidos.restore']);
+$router->get('/pedidos/aprobados-by-supplier', 'Purchases\\Controllers\\PedidoController@aprobadosBySupplier', ['auth', 'purchases.view']);
+
+
+
 
 // ==============================
 // ⚡ API / USERS

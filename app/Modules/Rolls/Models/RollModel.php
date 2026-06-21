@@ -93,12 +93,12 @@ class RollModel
     {
         $stmt = $this->db->prepare("
         INSERT INTO roll_lotes
-        (codigo, fabric_type_id, fabric_color_id, supplier_id, warehouse_id, fecha_compra, metraje_por_rollo, precio_compra, created_by, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        (codigo, fabric_type_id, fabric_color_id, supplier_id, warehouse_id, fecha_compra, metraje_por_rollo, precio_compra, purchase_id, created_by, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
 
         $stmt->bind_param(
-            "siiiisddi",
+            "siiiisddii",
             $data['codigo'],
             $data['fabric_type_id'],
             $data['fabric_color_id'],
@@ -107,6 +107,7 @@ class RollModel
             $data['fecha_compra'],
             $data['metraje_por_rollo'],
             $data['precio_compra'],
+            $data['purchase_id'],
             $data['user_id']
         );
 
@@ -116,6 +117,7 @@ class RollModel
 
         return $stmt->insert_id;
     }
+
 
     public function updateLote($id, $data)
     {

@@ -1,6 +1,10 @@
 <div class="page-header">
-    <h2>Crear rollo(s)</h2>
-    <a href="<?= BASE_URL ?>/rolls" class="btn-secondary">← Volver al listado</a>
+    <!-- <h2>Crear rollo(s)</h2> -->
+    <?php if ($purchaseId): ?>
+        <a href="<?= BASE_URL ?>/purchases/show?id=<?= $purchaseId ?>" class="btn-secondary">← Volver a la compra</a>
+    <?php else: ?>
+        <a href="<?= BASE_URL ?>/rolls" class="btn-secondary">← Volver al listado</a>
+    <?php endif; ?>
 </div>
 
 <form id="formCreateRoll" class="form-grid-2col">
