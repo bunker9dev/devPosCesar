@@ -9,6 +9,20 @@
   align-items: stretch;
   margin: 0 0 18px;
 }
+.page-header {
+  margin-bottom: 20px;
+}
+.summary-item{
+  margin-block: 5px;
+  padding: 6px 12px;
+
+}
+
+.estado-recibido {
+
+  font-size: 14px;
+}
+
 
 .inventory-scan input,
 .inventory-form input,

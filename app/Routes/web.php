@@ -137,6 +137,8 @@ $router->post('/pedidos/mark-as', 'Purchases\\Controllers\\PedidoController@mark
 $router->post('/pedidos/delete', 'Purchases\\Controllers\\PedidoController@delete', ['auth', 'pedidos.delete']);
 $router->post('/pedidos/restore', 'Purchases\\Controllers\\PedidoController@restore', ['auth', 'pedidos.restore']);
 $router->get('/pedidos/aprobados-by-supplier', 'Purchases\\Controllers\\PedidoController@aprobadosBySupplier', ['auth', 'purchases.view']);
+$router->get('/pedidos/edit', 'Purchases\\Controllers\\PedidoController@edit', ['auth', 'pedidos.edit']);
+$router->post('/pedidos/update', 'Purchases\\Controllers\\PedidoController@update', ['auth', 'pedidos.edit']);
 
 
 

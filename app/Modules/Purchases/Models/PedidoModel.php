@@ -287,4 +287,37 @@ class PedidoModel
 
         return (int)$result->fetch_assoc()['total'];
     }
+
+    public function updateHeader($id, $data)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE pedidos
+        SET supplier_id = ?, fecha_solicitud = ?, observaciones = ?, updated_by = ?, updated_at = NOW()
+        WHERE id = ?
+    ");
+
+        $stmt->bind_param(
+            "issii",
+            $data['supplier_id'],
+            $data['fecha_solicitud'],
+            $data['observaciones'],
+            $data['user_id'],
+            $id
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al actualizar pedido: " . $stmt->error);
+        }
+
+        return true;
+    }
+
+    public function deleteAllItems($pedidoId)
+    {
+        $stmt = $this->db->prepare("DELETE FROM pedido_items WHERE pedido_id = ?");
+        $stmt->bind_param("i", $pedidoId);
+        $stmt->execute();
+
+        return true;
+    }
 }

@@ -22,12 +22,19 @@ async function safeFetch(url, options) {
 
 let itemsPendientes = [];
 
+try {
+  const raw = document.getElementById("itemsExistentes")?.textContent || "[]";
+  itemsPendientes = JSON.parse(raw);
+} catch (e) {
+  console.error("Error al cargar items existentes:", e);
+}
+
 function renderItems() {
   const tbody = document.getElementById("itemsPendientesBody");
   tbody.innerHTML = "";
 
   if (itemsPendientes.length === 0) {
-    tbody.innerHTML = `<tr id="emptyItemsRow"><td colspan="6" class="empty-state">Todavía no has agregado ninguna tela.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay telas en este pedido.</td></tr>`;
     return;
   }
 
@@ -49,6 +56,8 @@ function renderItems() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  renderItems();
+
   document.getElementById("btnAgregarItem")?.addEventListener("click", () => {
     const tipoSelect = document.getElementById("itemFabricType");
     const colorSelect = document.getElementById("itemFabricColor");
@@ -162,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       if (itemsPendientes.length === 0) {
-        notify("Agrega al menos una tela", "error");
+        notify("El pedido debe tener al menos una tela", "error");
         return;
       }
 
@@ -171,30 +180,31 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.textContent = "Guardando...";
 
       const formData = new FormData();
+      formData.append("id", window.PEDIDO_ID);
       formData.append("supplier_id", supplierId);
       formData.append("fecha_solicitud", fecha);
       formData.append("observaciones", observaciones);
       formData.append("items_json", JSON.stringify(itemsPendientes));
 
-      const data = await safeFetch(`${window.BASE_URL}/pedidos/store`, {
+      const data = await safeFetch(`${window.BASE_URL}/pedidos/update`, {
         method: "POST",
         body: formData,
       });
 
       btn.disabled = false;
-      btn.textContent = "Guardar pedido";
+      btn.textContent = "Guardar cambios";
 
       if (!data) return;
 
       if (!data.ok) {
-        notify(data.error || "Error al crear el pedido", "error");
+        notify(data.error || "Error al actualizar", "error");
         return;
       }
 
-      notify(`Pedido ${data.consecutivo} creado`, "success");
+      notify("Pedido actualizado", "success");
 
       setTimeout(() => {
-        window.location.href = `${window.BASE_URL}/pedidos/show?id=${data.id}`;
+        window.location.href = `${window.BASE_URL}/pedidos/show?id=${window.PEDIDO_ID}`;
       }, 1000);
     });
 });

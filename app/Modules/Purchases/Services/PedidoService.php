@@ -58,6 +58,7 @@ class PedidoService
             throw new Exception("Debes agregar al menos una tela al pedido");
         }
 
+
         $consecutivo = $this->generateCode();
 
         $pedidoId = $this->model->create([
@@ -67,7 +68,15 @@ class PedidoService
             'observaciones' => $observaciones ?: null,
             'user_id' => $userId,
         ]);
+        $combinaciones = [];
 
+        foreach ($items as $item) {
+            $clave = ($item['fabric_type_id'] ?? '') . '-' . ($item['fabric_color_id'] ?? '') . '-' . ($item['unidad'] ?? '');
+            if (in_array($clave, $combinaciones, true)) {
+                throw new Exception("Hay telas duplicadas (mismo tipo, color y unidad) en el pedido — combínalas en una sola línea");
+            }
+            $combinaciones[] = $clave;
+        }
         foreach ($items as $index => $item) {
             $fabricTypeId = (int)($item['fabric_type_id'] ?? 0);
             $fabricColorId = (int)($item['fabric_color_id'] ?? 0);
@@ -107,6 +116,101 @@ class PedidoService
         return ['id' => $pedidoId, 'consecutivo' => $consecutivo];
     }
 
+
+    // ======================================================
+    // UPDATE
+    // ======================================================
+    public function update($id, array $header, array $items, int $userId, \mysqli $db)
+    {
+        $row = $this->model->find($id);
+
+        if (!$row) {
+            throw new Exception("El pedido no existe");
+        }
+
+        if ($row['estado'] !== 'borrador') {
+            throw new Exception("Solo se pueden editar pedidos en estado borrador");
+        }
+
+        $supplierId = (int)($header['supplier_id'] ?? 0);
+        $fecha = $header['fecha_solicitud'] ?? '';
+        $observaciones = trim($header['observaciones'] ?? '');
+
+        if (!$supplierId) {
+            throw new Exception("Debes seleccionar un proveedor");
+        }
+
+        if (!$fecha) {
+            throw new Exception("La fecha de solicitud es obligatoria");
+        }
+
+        if (count($items) === 0) {
+            throw new Exception("Debes mantener al menos una tela en el pedido");
+        }
+
+        $db->begin_transaction();
+
+        try {
+            $this->model->updateHeader($id, [
+                'supplier_id' => $supplierId,
+                'fecha_solicitud' => $fecha,
+                'observaciones' => $observaciones ?: null,
+                'user_id' => $userId,
+            ]);
+
+            $this->model->deleteAllItems($id);
+
+            $combinaciones = [];
+            foreach ($items as $item) {
+                $clave = ($item['fabric_type_id'] ?? '') . '-' . ($item['fabric_color_id'] ?? '') . '-' . ($item['unidad'] ?? '');
+                if (in_array($clave, $combinaciones, true)) {
+                    throw new Exception("Hay telas duplicadas (mismo tipo, color y unidad) en el pedido — combínalas en una sola línea");
+                }
+                $combinaciones[] = $clave;
+            }
+
+
+            foreach ($items as $index => $item) {
+                $fabricTypeId = (int)($item['fabric_type_id'] ?? 0);
+                $fabricColorId = (int)($item['fabric_color_id'] ?? 0);
+                $cantidad = (float)($item['cantidad'] ?? 0);
+                $unidad = ($item['unidad'] ?? 'metros') === 'rollos' ? 'rollos' : 'metros';
+                $nota = trim($item['nota'] ?? '');
+
+                if (!$fabricTypeId || !$fabricColorId || $cantidad <= 0) {
+                    throw new Exception("Ítem #" . ($index + 1) . " incompleto: tipo, color y cantidad son obligatorios");
+                }
+
+                $this->model->createItem([
+                    'pedido_id' => $id,
+                    'fabric_type_id' => $fabricTypeId,
+                    'fabric_color_id' => $fabricColorId,
+                    'cantidad' => $cantidad,
+                    'unidad' => $unidad,
+                    'nota' => $nota ?: null,
+                ]);
+            }
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollback();
+            throw new Exception($e->getMessage());
+        }
+
+        $this->audit->log([
+            'usuario_id' => $userId,
+            'accion' => 'update',
+            'entidad' => 'pedidos',
+            'entidad_id' => $id,
+            'modulo' => 'purchases',
+            'detalle' => [
+                'before' => ['supplier_id' => $row['supplier_id'], 'fecha_solicitud' => $row['fecha_solicitud']],
+                'after' => ['supplier_id' => $supplierId, 'fecha_solicitud' => $fecha, 'cantidad_items' => count($items)],
+            ],
+        ]);
+
+        return true;
+    }
     // ======================================================
     // APROBAR
     // ======================================================

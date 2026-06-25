@@ -7,16 +7,16 @@ $rolId = $_SESSION['user']['rol_id'] ?? null;
 // ============================
 // PERMISOS POR ENLACE
 // ============================
-$canViewUsers      = PermissionService::can($rolId, 'users', 'view');
-$canViewProveedores = PermissionService::can($rolId, 'proveedores', 'view');
-$canViewRolls       = PermissionService::can($rolId, 'rolls', 'view');
-$canViewWarehouses  = PermissionService::can($rolId, 'warehouses', 'view');
-$canViewFabricTypes = PermissionService::can($rolId, 'fabric_types', 'view');
-$canViewFabricColors = PermissionService::can($rolId, 'fabric_colors', 'view');
+$canViewUsers           = PermissionService::can($rolId, 'users', 'view');
+$canViewProveedores     = PermissionService::can($rolId, 'proveedores', 'view');
+$canViewRolls           = PermissionService::can($rolId, 'rolls', 'view');
+$canViewWarehouses      = PermissionService::can($rolId, 'warehouses', 'view');
+$canViewFabricTypes     = PermissionService::can($rolId, 'fabric_types', 'view');
+$canViewFabricColors    = PermissionService::can($rolId, 'fabric_colors', 'view');
 $canViewRollsIndividual = PermissionService::can($rolId, 'rolls', 'view_individual');
-$canViewPurchases = PermissionService::can($rolId, 'purchases', 'view');
-$canViewPedidos = PermissionService::can($rolId, 'pedidos', 'view');
-$pedidosVencidos = 0;
+$canViewPurchases       = PermissionService::can($rolId, 'purchases', 'view');
+$canViewPedidos         = PermissionService::can($rolId, 'pedidos', 'view');
+$pedidosVencidos        = 0;
 
 if ($canViewPedidos) {
     $db = \App\Core\Database::getConnection();
@@ -27,9 +27,8 @@ if ($canViewPedidos) {
     $pedidosVencidos = (int)$result->fetch_assoc()['total'];
 }
 
-
 // Los grupos solo se muestran si AL MENOS uno de sus enlaces internos es visible
-$showOperacion = $canViewRolls; // (Productos/Kardex/Compras ocultos hasta que existan)
+$showOperacion = $canViewRolls || $canViewRollsIndividual || $canViewPurchases || $canViewPedidos;
 $showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabricColors;
 
 ?>
@@ -95,7 +94,7 @@ $showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabric
 
                 <ul class="sidebar-submenu">
 
-<?php if ($canViewPedidos): ?>
+                    <?php if ($canViewPedidos): ?>
                         <li>
                             <a href="<?= BASE_URL ?>/pedidos">
                                 <i data-lucide="clipboard-list"></i>
@@ -125,7 +124,7 @@ $showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabric
                         </li>
                     <?php endif; ?>
 
-                    <?php if (\App\Services\PermissionService::can($rolId, 'rolls', 'view_individual')): ?>
+                    <?php if ($canViewRollsIndividual): ?>
                         <li>
                             <a href="<?= BASE_URL ?>/rolls/individual">
                                 <i data-lucide="list"></i>
@@ -134,11 +133,9 @@ $showConfiguracion = $canViewWarehouses || $canViewFabricTypes || $canViewFabric
                         </li>
                     <?php endif; ?>
 
-
-                    
                     <!--
-                    Productos / Kardex / Compras ocultos a propósito:
-                    sus rutas (/products, /movements, /purchases) todavía
+                    Productos / Kardex ocultos a propósito:
+                    sus rutas (/products, /movements) todavía
                     no existen. Cuando se construyan esos módulos, agregar
                     aquí su propio "if ($canViewX): ... endif;" siguiendo
                     el mismo patrón.
